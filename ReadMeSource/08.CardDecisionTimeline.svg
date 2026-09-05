@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 880 250" width="880" height="250" role="img" aria-label="유지 규칙이 세 번 결정된 경로"><rect x="0" y="0" width="880" height="250" fill="#FFFDFA"/>
+  <defs><marker id="r1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1B1A1E"/></marker></defs>
+  <g font-family="IBM Plex Sans KR,Apple SD Gothic Neo,Malgun Gothic,Noto Sans KR,system-ui,sans-serif" font-size="12" fill="#1B1A1E">
+    <text x="20" y="22" font-weight="600">「유지」 규칙 — 같은 증상이 두 번 올라오고, 두 번째에 규칙을 바꿨다</text>
+    <line x1="60" y1="120" x2="840" y2="120" stroke="#1B1A1E" opacity=".35"/>
+    <g font-family="IBM Plex Mono,SFMono-Regular,Menlo,Consolas,monospace" font-size="11">
+      <circle cx="120" cy="120" r="6" fill="#1B1A1E"/>
+      <text x="120" y="98" text-anchor="middle" font-weight="600">2026-08-07</text>
+      <text x="120" y="145" text-anchor="middle">DEC-08-07-01 · cs:991</text>
+      <circle cx="380" cy="120" r="6" fill="#1B1A1E"/>
+      <text x="380" y="98" text-anchor="middle" font-weight="600">2026-08-19 #11</text>
+      <text x="380" y="145" text-anchor="middle">DEC-08-19-05 「판정(수정 없음)」</text>
+      <circle cx="640" cy="120" r="6" fill="#B33A35"/>
+      <text x="640" y="98" text-anchor="middle" font-weight="600">2026-09-02 #6</text>
+      <text x="640" y="145" text-anchor="middle">DEC-09-02-01 · cs:1287~1288</text>
+    </g>
+    <text x="120" y="170" text-anchor="middle" font-size="11">유지 카드가 <tspan font-weight="600">자리를 차지</tspan> · 드로우는 상한까지</text>
+    <text x="120" y="186" text-anchor="middle" font-size="11" opacity=".7">「무조건 유지가 정답이 되는 것을 막음」</text>
+    <text x="380" y="170" text-anchor="middle" font-size="11">「T5-2 규칙이므로 <tspan font-weight="600">버그 아님</tspan>」</text>
+    <text x="380" y="186" text-anchor="middle" font-size="11" opacity=".7">「재개봉하려면 별도 판정」</text>
+    <text x="640" y="170" text-anchor="middle" font-size="11">유지 카드는 <tspan font-weight="600">정원 밖</tspan> · 손 = 정원 + 유지분</text>
+    <text x="640" y="186" text-anchor="middle" font-size="11" opacity=".7">「남기지 않는 것이 거의 항상 옳은 수 — 축이 죽어 있었다」</text>
+    <text x="640" y="204" text-anchor="middle" font-size="11" opacity=".7">기각: 현행 유지 · 유지 카드에 별도 비용</text>
+    <text x="120" y="60" text-anchor="middle" font-size="11" opacity=".7">근거: 설계 문서 T5 「StS보다 강한 문법」</text>
+    <text x="380" y="60" text-anchor="middle" font-size="11" opacity=".7">증상: 지름길을 남겼는데 이동 카드 1장만 옴</text>
+    <text x="640" y="60" text-anchor="middle" font-size="11" opacity=".7">같은 증상 · 사용자 확정 · 테스트 2건 같은 파일에서 갱신</text>
+    <text x="800" y="230" text-anchor="end" font-size="11" opacity=".7">코드: DrawNewTurnHands 목표 += CountRetainedInHand · 손패 상한 코드는 원래 없음</text>
+  </g>
+</svg>

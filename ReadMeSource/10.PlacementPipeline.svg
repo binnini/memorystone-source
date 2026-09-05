@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 900 300" width="900" height="300" font-family="IBM Plex Mono,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" fill="#1B1A1E"><rect x="0" y="0" width="900" height="300" fill="#FFFDFA"/>
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1B1A1E"/></marker></defs>
+        <g stroke="#1B1A1E" fill="none" stroke-width="1.2">
+          <rect x="10" y="20" width="150" height="54" rx="3"/><rect x="200" y="20" width="150" height="54" rx="3"/>
+          <rect x="390" y="20" width="150" height="54" rx="3"/><rect x="580" y="20" width="150" height="54" rx="3"/><rect x="740" y="20" width="150" height="54" rx="3"/>
+          <rect x="200" y="130" width="690" height="60" rx="3" stroke-dasharray="4 3"/>
+          <rect x="10" y="230" width="880" height="44" rx="3"/>
+        </g>
+        <g stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar)" fill="none">
+          <path d="M160 47H198"/><path d="M350 47H388"/><path d="M540 47H578"/><path d="M730 47H738"/>
+          <path d="M85 74V252"/><path d="M275 74V128"/><path d="M465 74V128"/><path d="M655 74V128"/><path d="M815 74V128"/>
+          <path d="M545 190V228"/>
+        </g>
+        <text x="85" y="41" text-anchor="middle">① 몬스터</text><text x="85" y="60" text-anchor="middle" font-size="10">RandomizeWithProfile · 원시 seed</text>
+        <text x="275" y="41" text-anchor="middle">② 함정</text><text x="275" y="60" text-anchor="middle" font-size="10">RandomizeTraps · Derive(seed,1)</text>
+        <text x="465" y="41" text-anchor="middle">③ 서비스</text><text x="465" y="60" text-anchor="middle" font-size="10">PlaceServices · Derive(seed,3)</text>
+        <text x="655" y="41" text-anchor="middle">④ 상자</text><text x="655" y="60" text-anchor="middle" font-size="10">ShuffleChests · Derive(seed,2)</text>
+        <text x="815" y="41" text-anchor="middle">BuildRandomizedMap</text><text x="815" y="60" text-anchor="middle" font-size="10">new HexMapData(…)</text>
+        <text x="545" y="152" text-anchor="middle" font-size="11">순서가 곧 계약: ②는 ①의 좌표·태그를 bans로 대조 · ④는 ③이 옮긴 좌표를 반경 2로 비운다</text>
+        <text x="545" y="172" text-anchor="middle" font-size="11">③을 ④ 뒤로 돌리면 예외도 로그도 없이 조용히 틀린다 (HexMapPlacementRandomization.cs:204)</text>
+        <text x="450" y="257" text-anchor="middle" font-size="11">어느 단계든 실패 → 전체 저작 원본 폴백 + 경고 (부분 적용 없음 · P1 실패는 P0로 갈아타지 않는다)</text>
+      </svg>

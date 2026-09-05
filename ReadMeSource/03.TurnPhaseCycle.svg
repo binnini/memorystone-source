@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 760 330" role="img" aria-label="턴 페이즈 순환. 플레이어 이동, 몬스터 이동, 플레이어 행동, 몬스터 행동 네 페이즈가 순환하며 전환은 모두 EndAction 또는 해소 함수에서 일어난다. 승리와 패배는 순환 밖에서 별도로 진입한다."><rect x="0" y="0" width="760" height="330" fill="#FFFDFA"/>
+        <defs>
+          <marker id="s2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1B1A1E"/>
+          </marker>
+          <marker id="s2s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B33A35"/>
+          </marker>
+        </defs>
+
+        <rect x="30" y="56" width="150" height="52" fill="none" stroke="#B33A35" stroke-width="1.8"/>
+        <text x="105" y="79" text-anchor="middle" font-size="12.5" fill="#B33A35" font-weight="600">PlayerMovement</text>
+        <text x="105" y="95" text-anchor="middle" font-size="10.5" fill="#B33A35">플레이어 이동</text>
+
+        <rect x="245" y="56" width="150" height="52" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="320" y="79" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">MonsterMovement</text>
+        <text x="320" y="95" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">몬스터 이동</text>
+
+        <rect x="460" y="56" width="150" height="52" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="535" y="79" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">PlayerAction</text>
+        <text x="535" y="95" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">플레이어 행동</text>
+
+        <rect x="460" y="180" width="150" height="52" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="535" y="203" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">MonsterAction</text>
+        <text x="535" y="219" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">몬스터 행동</text>
+
+        <line x1="180" y1="82" x2="241" y2="82" stroke="#B33A35" stroke-width="1.8" marker-end="url(#s2s)"/>
+        <text x="210" y="72" text-anchor="middle" font-size="10" fill="#B33A35">EndAction</text>
+        <line x1="395" y1="82" x2="456" y2="82" stroke="#1B1A1E" stroke-width="1.4" marker-end="url(#s2a)"/>
+        <text x="425" y="72" text-anchor="middle" font-size="9.5" fill="#1B1A1E" opacity=".65">해소</text>
+        <line x1="535" y1="108" x2="535" y2="176" stroke="#B33A35" stroke-width="1.8" marker-end="url(#s2s)"/>
+        <text x="545" y="146" font-size="10" fill="#B33A35">EndAction</text>
+        <path d="M456,206 C 250,206 130,175 105,112" fill="none" stroke="#1B1A1E" stroke-width="1.4" marker-end="url(#s2a)"/>
+        <text x="286" y="224" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".7">해소 → 턴 경계 16단계 → 다음 턴</text>
+
+        <rect x="655" y="56" width="86" height="36" fill="none" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="698" y="79" text-anchor="middle" font-size="11.5" fill="#1B1A1E">Victory</text>
+        <rect x="655" y="196" width="86" height="36" fill="none" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="698" y="219" text-anchor="middle" font-size="11.5" fill="#1B1A1E">Defeat</text>
+        <line x1="610" y1="74" x2="651" y2="74" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#s2a)"/>
+        <line x1="610" y1="214" x2="651" y2="214" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#s2a)"/>
+
+        <line x1="30" y1="286" x2="66" y2="286" stroke="#B33A35" stroke-width="1.8"/>
+        <text x="74" y="290" font-size="11" fill="#1B1A1E">EndAction() — 밖에서 부를 수 있는 유일한 전환 진입점</text>
+        <line x1="30" y1="308" x2="66" y2="308" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="3 3"/>
+        <text x="74" y="312" font-size="11" fill="#1B1A1E">순환 밖 종료 — EndAction 없이도 선다</text>
+      </svg>

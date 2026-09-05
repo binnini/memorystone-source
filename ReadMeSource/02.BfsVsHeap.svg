@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 720 300" role="img" aria-label="최솟값 추출 방식 비교. 현재 구현은 매 반복마다 프론티어 전체를 정렬해 첫 개만 쓰고 버린다. BFS는 비용이 균일하다는 전제 아래 큐에서 앞을 꺼내기만 한다."><rect x="0" y="0" width="720" height="300" fill="#FFFDFA"/>
+        <text x="30" y="26" font-size="12.5" fill="#1B1A1E" font-weight="600">지금 — 매 반복 전체를 다시 정렬</text>
+        <g transform="translate(30,42)">
+          <rect x="0" y="0" width="290" height="28" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <text x="145" y="19" text-anchor="middle" font-size="11" fill="#1B1A1E">미확정 칸 전부 · 정렬</text>
+          <text x="0" y="46" font-size="11" fill="#B33A35">↓ 첫 개만</text>
+          <text x="112" y="46" font-size="11" fill="#1B1A1E" opacity=".5">나머지 정렬 결과는 버려짐</text>
+          <rect x="0" y="58" width="290" height="28" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <text x="145" y="77" text-anchor="middle" font-size="11" fill="#1B1A1E">다시 전부 · 다시 정렬</text>
+          <text x="0" y="104" font-size="11" fill="#B33A35">↓ 첫 개만</text>
+          <rect x="0" y="116" width="290" height="28" fill="none" stroke="#1B1A1E" stroke-width="1" opacity=".5"/>
+          <text x="145" y="135" text-anchor="middle" font-size="11" fill="#1B1A1E" opacity=".6">다시 전부 · 다시 정렬 …</text>
+          <text x="0" y="176" font-size="11.5" fill="#B33A35" font-weight="600">추출 1회 = 프론티어 전체</text>
+          <text x="0" y="196" font-size="11.5" fill="#1B1A1E" opacity=".7">V번 추출 → V × V (정렬이면 ×log V)</text>
+        </g>
+
+        <line x1="370" y1="16" x2="370" y2="284" stroke="#1B1A1E" stroke-width="1" opacity=".25"/>
+
+        <text x="400" y="26" font-size="12.5" fill="#1B1A1E" font-weight="600">BFS — 비용이 균일하므로 고를 필요가 없다</text>
+        <g transform="translate(400,42)">
+          <rect x="0" y="0" width="46" height="30" fill="none" stroke="#B33A35" stroke-width="1.6"/>
+          <text x="23" y="20" text-anchor="middle" font-size="11" fill="#B33A35">앞</text>
+          <rect x="46" y="0" width="46" height="30" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <rect x="92" y="0" width="46" height="30" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <rect x="138" y="0" width="46" height="30" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <rect x="184" y="0" width="46" height="30" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+          <text x="253" y="20" font-size="11" fill="#1B1A1E" opacity=".6">← 뒤에 추가</text>
+          <text x="0" y="58" font-size="11.5" fill="#B33A35">앞에서 꺼내고 뒤에 넣는다. 끝.</text>
+          <text x="0" y="88" font-size="11.5" fill="#1B1A1E" opacity=".75">먼저 발견한 칸이 곧 최단이므로</text>
+          <text x="0" y="106" font-size="11.5" fill="#1B1A1E" opacity=".75">비교도 정렬도 힙도 필요 없다.</text>
+          <text x="0" y="140" font-size="11.5" fill="#B33A35" font-weight="600">추출 1회 = O(1)</text>
+          <text x="0" y="160" font-size="11.5" fill="#1B1A1E" opacity=".7">전체 → V + E (선형)</text>
+          <text x="0" y="196" font-size="11" fill="#1B1A1E" opacity=".55">힙(우선순위 큐)보다도 싸다 — log 인수까지 없앤다</text>
+        </g>
+        <text x="30" y="278" font-size="12" fill="#1B1A1E" font-weight="500">차이는 알고리즘이 아니라 <tspan fill="#B33A35">자료구조</tspan>다. 실측에서 두 방식의 경로는 <tspan fill="#B33A35">78칸 전부 동일</tspan>했다.</text>
+      </svg>

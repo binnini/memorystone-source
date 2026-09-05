@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 720 300" role="img" aria-label="높이 평면 스윕 방식의 피킹. 카메라 광선을 높이 평면마다 교차시켜, 가장 높은 평면부터 내려오며 그 높이에 실제로 칸이 존재하는 첫 후보를 채택한다."><rect x="0" y="0" width="720" height="300" fill="#FFFDFA"/>
+        <defs>
+          <marker id="rayA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B33A35"/>
+          </marker>
+        </defs>
+
+        <!-- height planes -->
+        <line x1="120" y1="90" x2="640" y2="90" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="5 4" opacity=".5"/>
+        <text x="112" y="94" text-anchor="end" font-size="11" fill="#1B1A1E" opacity=".65">height 2</text>
+        <line x1="120" y1="150" x2="640" y2="150" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="5 4" opacity=".5"/>
+        <text x="112" y="154" text-anchor="end" font-size="11" fill="#1B1A1E" opacity=".65">height 1</text>
+        <line x1="120" y1="210" x2="640" y2="210" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="5 4" opacity=".5"/>
+        <text x="112" y="214" text-anchor="end" font-size="11" fill="#1B1A1E" opacity=".65">height 0</text>
+
+        <!-- ray -->
+        <line x1="150" y1="30" x2="600" y2="250" stroke="#B33A35" stroke-width="1.8" marker-end="url(#rayA)"/>
+        <text x="152" y="24" font-size="11.5" fill="#B33A35">카메라 광선</text>
+
+        <!-- intersections -->
+        <circle cx="272" cy="90" r="4.5" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="272" y="78" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".7">① 여기엔 칸 없음</text>
+        <circle cx="395" cy="150" r="5.5" fill="#B33A35"/>
+        <text x="395" y="138" text-anchor="middle" font-size="10.5" fill="#B33A35" font-weight="600">② 칸 있음 → 채택, 종료</text>
+        <circle cx="518" cy="210" r="4.5" fill="none" stroke="#1B1A1E" stroke-width="1" opacity=".4"/>
+        <text x="518" y="230" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".45">③ 검사 안 함</text>
+
+        <!-- order arrow -->
+        <line x1="668" y1="86" x2="668" y2="214" stroke="#1B1A1E" stroke-width="1" opacity=".45" marker-end="url(#rayA)"/>
+        <text x="682" y="150" font-size="10.5" fill="#1B1A1E" opacity=".6">위에서</text>
+        <text x="682" y="166" font-size="10.5" fill="#1B1A1E" opacity=".6">아래로</text>
+
+        <text x="120" y="278" font-size="11.5" fill="#1B1A1E" opacity=".75">높은 칸이 낮은 칸을 가린다 — 그래서 높은 평면부터 훑고, 첫 일치에서 멈춘다.</text>
+      </svg>

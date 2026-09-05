@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 740 480" role="img" aria-label="어셈블리 참조 그래프. Flow가 최상위이고, 화살표는 모두 아래를 향한다. 점선 아래의 Combat.Runtime, CardCore, Map.Runtime 세 어셈블리는 noEngineReferences가 true라 UnityEngine 참조가 컴파일 레벨에서 금지된다."><rect x="0" y="0" width="740" height="480" fill="#FFFDFA"/>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1B1A1E"/>
+          </marker>
+          <marker id="arS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B33A35"/>
+          </marker>
+        </defs>
+
+        <!-- L4 -->
+        <rect x="285" y="24" width="170" height="42" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="370" y="43" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">Flow</text>
+        <text x="370" y="58" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">최상위 합성 · 씬 전환</text>
+
+        <!-- L3 -->
+        <rect x="285" y="110" width="170" height="42" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="370" y="129" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">Combat</text>
+        <text x="370" y="144" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">MapCombatController</text>
+
+        <!-- L2 row -->
+        <rect x="30" y="196" width="140" height="38" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+        <text x="100" y="220" text-anchor="middle" font-size="12" fill="#1B1A1E">Cards.Unity</text>
+        <rect x="188" y="196" width="140" height="38" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+        <text x="258" y="220" text-anchor="middle" font-size="12" fill="#1B1A1E">Map.Unity</text>
+        <rect x="346" y="196" width="120" height="38" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+        <text x="406" y="220" text-anchor="middle" font-size="12" fill="#1B1A1E">Audio</text>
+        <rect x="484" y="196" width="120" height="38" fill="none" stroke="#1B1A1E" stroke-width="1"/>
+        <text x="544" y="220" text-anchor="middle" font-size="12" fill="#1B1A1E">Tutorial</text>
+        <rect x="622" y="196" width="92" height="38" fill="none" stroke="#B33A35" stroke-width="1.4"/>
+        <text x="668" y="214" text-anchor="middle" font-size="10.5" fill="#B33A35">Combat.</text>
+        <text x="668" y="227" text-anchor="middle" font-size="10.5" fill="#B33A35">Contracts</text>
+
+        <!-- arrows L4->L3 -->
+        <line x1="370" y1="66" x2="370" y2="106" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar)"/>
+        <!-- L3 -> L2 -->
+        <path d="M310,152 L100,192" fill="none" stroke="#1B1A1E" stroke-width="1" marker-end="url(#ar)"/>
+        <path d="M330,152 L258,192" fill="none" stroke="#1B1A1E" stroke-width="1" marker-end="url(#ar)"/>
+        <path d="M370,152 L406,192" fill="none" stroke="#1B1A1E" stroke-width="1" marker-end="url(#ar)"/>
+        <path d="M400,152 L544,192" fill="none" stroke="#1B1A1E" stroke-width="1" marker-end="url(#ar)"/>
+        <path d="M430,152 L660,192" fill="none" stroke="#B33A35" stroke-width="1.2" marker-end="url(#arS)"/>
+        <!-- Cards.Unity -> Contracts (cycle break) -->
+        <path d="M170,208 C 400,262 560,258 640,236" fill="none" stroke="#B33A35" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arS)"/>
+        <text x="392" y="276" text-anchor="middle" font-size="10.5" fill="#B33A35">순환을 끊으려 신설한 공유 계약</text>
+
+        <!-- divider -->
+        <line x1="20" y1="308" x2="720" y2="308" stroke="#B33A35" stroke-width="1.2" stroke-dasharray="7 5"/>
+        <text x="20" y="301" font-size="11" fill="#B33A35" font-weight="500">noEngineReferences: true — 아래로는 UnityEngine 참조가 컴파일 레벨에서 금지된다</text>
+
+        <!-- L1 -->
+        <rect x="255" y="336" width="230" height="46" fill="none" stroke="#1B1A1E" stroke-width="1.8"/>
+        <text x="370" y="356" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">Combat.Runtime</text>
+        <text x="370" y="371" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">전투 규칙 42,420줄</text>
+
+        <!-- L0 -->
+        <rect x="90" y="424" width="150" height="40" fill="none" stroke="#1B1A1E" stroke-width="1.8"/>
+        <text x="165" y="443" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">CardCore</text>
+        <text x="165" y="457" text-anchor="middle" font-size="10" fill="#1B1A1E" opacity=".6">참조 0</text>
+        <rect x="500" y="424" width="150" height="40" fill="none" stroke="#1B1A1E" stroke-width="1.8"/>
+        <text x="575" y="443" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">Map.Runtime</text>
+        <text x="575" y="457" text-anchor="middle" font-size="10" fill="#1B1A1E" opacity=".6">참조 0</text>
+
+        <!-- arrows into runtime -->
+        <path d="M330,234 L340,332" fill="none" stroke="#1B1A1E" stroke-width="1" marker-end="url(#ar)"/>
+        <path d="M668,234 L420,332" fill="none" stroke="#B33A35" stroke-width="1.2" marker-end="url(#arS)"/>
+        <path d="M330,382 L180,420" fill="none" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar)"/>
+        <path d="M410,382 L560,420" fill="none" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar)"/>
+
+        <text x="723" y="404" text-anchor="end" font-size="10.5" fill="#1B1A1E" opacity=".55">화살표 = "참조한다"</text>
+      </svg>

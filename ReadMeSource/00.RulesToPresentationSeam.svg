@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="color:#1B1A1E" viewBox="0 0 860 400" role="img" aria-label="규칙 층과 연출 층의 이음매. CombatState가 구조화된 산출물을 남기면, Unity 쪽의 MapCombatController가 그것을 읽어 순수 정적 함수인 CombatTimelineAssembler에 넣고, 순서가 박힌 CombatTimeline을 돌려받는다. PresentationScheduler가 그 비트를 하나씩 재생하며 ICombatPresentationSink를 호출한다."><rect x="0" y="0" width="860" height="400" fill="#FFFDFA"/>
+        <defs>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#1B1A1E"/>
+          </marker>
+          <marker id="ar3s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B33A35"/>
+          </marker>
+        </defs>
+
+        <!-- zone labels -->
+        <line x1="20" y1="128" x2="840" y2="128" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="6 5" opacity=".45"/>
+        <text x="20" y="120" font-size="10.5" fill="#1B1A1E" opacity=".6">순수 C# — UnityEngine 금지</text>
+        <text x="840" y="146" text-anchor="end" font-size="10.5" fill="#1B1A1E" opacity=".6">Unity 쪽</text>
+
+        <!-- rules -->
+        <rect x="34" y="34" width="186" height="66" fill="none" stroke="#1B1A1E" stroke-width="1.6"/>
+        <text x="127" y="60" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">CombatState</text>
+        <text x="127" y="78" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">규칙 해소 · 상태 변경</text>
+        <text x="127" y="92" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">BufferedEffects 기록</text>
+
+        <!-- assembler -->
+        <rect x="300" y="34" width="212" height="66" fill="none" stroke="#B33A35" stroke-width="1.8"/>
+        <text x="406" y="58" text-anchor="middle" font-size="12.5" fill="#B33A35" font-weight="500">CombatTimelineAssembler</text>
+        <text x="406" y="76" text-anchor="middle" font-size="10.5" fill="#B33A35">static · 순수 · 결정적</text>
+        <text x="406" y="90" text-anchor="middle" font-size="10.5" fill="#B33A35">"무엇이 어떤 순서로 나오는가"</text>
+
+        <!-- timeline data -->
+        <rect x="592" y="34" width="216" height="66" fill="none" stroke="#1B1A1E" stroke-width="1.6"/>
+        <text x="700" y="58" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">CombatTimeline</text>
+        <text x="700" y="76" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">순서가 박힌 비트 목록</text>
+        <text x="700" y="90" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">EnemyMoveStep · AttackImpact …</text>
+
+        <line x1="220" y1="67" x2="296" y2="67" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar3)"/>
+        <line x1="512" y1="67" x2="588" y2="67" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar3)"/>
+
+        <!-- caller -->
+        <rect x="220" y="180" width="330" height="58" fill="none" stroke="#1B1A1E" stroke-width="1.4"/>
+        <text x="385" y="203" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">MapCombatController.Presentation</text>
+        <text x="385" y="222" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">:2347 :2361 :2385 :2417 — 조립을 부르는 쪽</text>
+
+        <path d="M340,176 L392,104" fill="none" stroke="#B33A35" stroke-width="1.6" marker-end="url(#ar3s)"/>
+        <text x="300" y="150" font-size="10.5" fill="#B33A35">호출은 Unity 쪽에서 올라간다</text>
+
+        <!-- scheduler -->
+        <rect x="592" y="176" width="216" height="66" fill="none" stroke="#1B1A1E" stroke-width="1.6"/>
+        <text x="700" y="200" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">PresentationScheduler</text>
+        <text x="700" y="218" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">비트를 하나씩 재생 · 215줄</text>
+        <text x="700" y="232" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">Unity 참조 0 — 단위 테스트 가능</text>
+
+        <line x1="700" y1="104" x2="700" y2="172" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar3)"/>
+        <text x="710" y="142" font-size="10.5" fill="#1B1A1E" opacity=".6">Play(timeline, timing, sink)</text>
+
+        <!-- sink -->
+        <rect x="592" y="296" width="216" height="62" fill="none" stroke="#1B1A1E" stroke-width="1.6" stroke-dasharray="5 4"/>
+        <text x="700" y="320" text-anchor="middle" font-size="12.5" fill="#1B1A1E" font-weight="500">ICombatPresentationSink</text>
+        <text x="700" y="338" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">구현체 = MapCombatController</text>
+        <text x="700" y="352" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".65">IEnumerator — 코루틴 · 초 단위 연출</text>
+
+        <line x1="700" y1="246" x2="700" y2="292" stroke="#1B1A1E" stroke-width="1.2" marker-end="url(#ar3)"/>
+        <path d="M592,327 L400,327 L400,242" fill="none" stroke="#1B1A1E" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#ar3)"/>
+        <text x="470" y="342" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">같은 객체다</text>
+
+        <text x="34" y="330" font-size="11" fill="#1B1A1E" opacity=".75">규칙 층에서 연출 층으로 가는</text>
+        <text x="34" y="348" font-size="11" fill="#1B1A1E" opacity=".75">화살표가 하나도 없다 —</text>
+        <text x="34" y="366" font-size="11" fill="#1B1A1E" opacity=".75">그게 이 구조의 전부다.</text>
+      </svg>

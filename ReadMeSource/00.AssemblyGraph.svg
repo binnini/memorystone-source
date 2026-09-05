@@ -50,7 +50,7 @@
         <!-- L1 -->
         <rect x="255" y="336" width="230" height="46" fill="none" stroke="#1B1A1E" stroke-width="1.8"/>
         <text x="370" y="356" text-anchor="middle" font-size="13" fill="#1B1A1E" font-weight="500">Combat.Runtime</text>
-        <text x="370" y="371" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">전투 규칙 42,420줄</text>
+        <text x="370" y="371" text-anchor="middle" font-size="10.5" fill="#1B1A1E" opacity=".6">전투 규칙 45,827줄 (cs:1391)</text>
 
         <!-- L0 -->
         <rect x="90" y="424" width="150" height="40" fill="none" stroke="#1B1A1E" stroke-width="1.8"/>

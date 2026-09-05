@@ -1,0 +1,17 @@
+{
+    "name": "SeoulPlayup.Combat.Contracts",
+    "rootNamespace": "SeoulPlayup.Combat.Unity",
+    "references": [
+        "SeoulPlayup.CardCore",
+        "SeoulPlayup.Combat.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

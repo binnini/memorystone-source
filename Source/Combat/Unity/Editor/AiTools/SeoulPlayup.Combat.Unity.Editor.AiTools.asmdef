@@ -1,0 +1,33 @@
+{
+    "name": "SeoulPlayup.Combat.Unity.Editor.AiTools",
+    "rootNamespace": "SeoulPlayup.Combat.Unity.Editor.AiTools",
+    "references": [
+        "com.IvanMurzak.Unity.MCP.Editor",
+        "com.IvanMurzak.Unity.MCP.Runtime",
+        "SeoulPlayup.Combat",
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.Combat.Contracts",
+        "SeoulPlayup.Cards.Unity",
+        "SeoulPlayup.CardCore",
+        "SeoulPlayup.Audio",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "ReflectorNet.dll",
+        "McpPlugin.dll",
+        "McpPlugin.Common.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_MCP_READY"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

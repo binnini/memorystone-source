@@ -1,0 +1,21 @@
+{
+    "name": "SeoulPlayup.Map.Runtime.EditModeTests",
+    "rootNamespace": "SeoulPlayup.Map.Runtime.Tests.EditMode",
+    "references": [
+        "SeoulPlayup.Map.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "name": "SeoulPlayup.Map.Unity.EditModeTests",
+    "rootNamespace": "SeoulPlayup.Map.Unity.Tests.EditMode",
+    "references": [
+        "SeoulPlayup.Map.Runtime",
+        "SeoulPlayup.Map.Unity",
+        "SeoulPlayup.MapDesign.Editor",
+        "SeoulPlayup.Combat.Runtime",
+        "Unity.PerformanceTesting",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "name": "SeoulPlayup.Map.PlayModeTests",
+    "rootNamespace": "SeoulPlayup.Map.Tests.PlayMode",
+    "references": [
+        "SeoulPlayup.Map.Runtime",
+        "SeoulPlayup.Map.Unity",
+        "Unity.PerformanceTesting"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

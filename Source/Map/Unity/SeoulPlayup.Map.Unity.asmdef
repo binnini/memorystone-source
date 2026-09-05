@@ -1,0 +1,18 @@
+{
+    "name": "SeoulPlayup.Map.Unity",
+    "rootNamespace": "SeoulPlayup.Map.Unity",
+    "references": [
+        "SeoulPlayup.Map.Runtime",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

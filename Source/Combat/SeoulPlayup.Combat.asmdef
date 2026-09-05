@@ -1,0 +1,26 @@
+﻿{
+    "name": "SeoulPlayup.Combat",
+    "rootNamespace": "SeoulPlayup.Combat",
+    "references": [
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.Audio",
+        "SeoulPlayup.Tutorial",
+        "SeoulPlayup.Map.Runtime",
+        "Unity.InputSystem",
+        "SeoulPlayup.CardCore",
+        "SeoulPlayup.Map.Unity",
+        "Unity.TextMeshPro",
+        "Cinemachine",
+        "SeoulPlayup.Combat.Contracts",
+        "SeoulPlayup.Cards.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

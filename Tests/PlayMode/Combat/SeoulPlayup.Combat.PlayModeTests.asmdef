@@ -1,0 +1,27 @@
+{
+    "name": "SeoulPlayup.Combat.PlayModeTests",
+    "rootNamespace": "SeoulPlayup.Combat.Tests.PlayMode",
+    "references": [
+        "SeoulPlayup.Combat",
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.Map.Runtime",
+        "SeoulPlayup.Map.Unity",
+        "SeoulPlayup.CardCore",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Unity.PerformanceTesting",
+        "SeoulPlayup.Cards.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

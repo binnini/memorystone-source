@@ -1,0 +1,28 @@
+{
+    "name": "SeoulPlayup.Map.Unity.Editor.AiTools",
+    "rootNamespace": "SeoulPlayup.Map.Unity.Editor.AiTools",
+    "references": [
+        "com.IvanMurzak.Unity.MCP.Editor",
+        "com.IvanMurzak.Unity.MCP.Runtime",
+        "SeoulPlayup.Map.Unity",
+        "SeoulPlayup.Map.Runtime",
+        "SeoulPlayup.MapDesign.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "ReflectorNet.dll",
+        "McpPlugin.dll",
+        "McpPlugin.Common.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_MCP_READY"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

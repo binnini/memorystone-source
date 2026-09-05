@@ -1,0 +1,32 @@
+{
+    "name": "SeoulPlayup.Combat.EditModeTests",
+    "rootNamespace": "SeoulPlayup.Combat.Tests.EditMode",
+    "references": [
+        "SeoulPlayup.Combat",
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.Audio",
+        "SeoulPlayup.Map.Runtime",
+        "SeoulPlayup.CardCore",
+        "SeoulPlayup.Map.Unity",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Cinemachine",
+        "SeoulPlayup.Combat.Contracts",
+        "SeoulPlayup.Cards.Unity",
+        "SeoulPlayup.Dev"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

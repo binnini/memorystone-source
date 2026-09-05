@@ -1,0 +1,19 @@
+{
+    "name": "SeoulPlayup.Tutorial",
+    "rootNamespace": "SeoulPlayup.Combat.Unity.Tutorial",
+    "references": [
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.Map.Runtime",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

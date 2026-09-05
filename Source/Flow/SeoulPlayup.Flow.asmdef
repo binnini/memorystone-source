@@ -1,0 +1,25 @@
+{
+    "name": "SeoulPlayup.Flow",
+    "rootNamespace": "SeoulPlayup.Flow",
+    "references": [
+        "SeoulPlayup.Combat",
+        "SeoulPlayup.Combat.Runtime",
+        "SeoulPlayup.CardCore",
+        "SeoulPlayup.Audio",
+        "SeoulPlayup.Tutorial",
+        "SeoulPlayup.Map.Unity",
+        "SeoulPlayup.Map.Runtime",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "SeoulPlayup.Cards.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

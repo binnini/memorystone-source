@@ -84,8 +84,9 @@ def check():
             print("  BANNED:", w); ok = False
     for m in PERF.finditer(prose):
         print("  PERF-NUMBER:", prose[max(0, m.start() - 20):m.end() + 10].replace("\n", " ")); ok = False
-    # 3. image links exist
-    for src in re.findall(r'src="([^"]+)"', md):
+    # 3. image links exist (HTML comments = placeholders, skipped)
+    live = re.sub(r"<!--.*?-->", "", md, flags=re.S)
+    for src in re.findall(r'src="([^"]+)"', live):
         if not os.path.exists(os.path.join(REPO, src)):
             print("  MISSING IMAGE:", src); ok = False
     # 4. backtick paths exist

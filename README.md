@@ -158,12 +158,12 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 - **IMonsterPlanningContext** — 플래너가 읽을 수 있는 게임플레이 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
 - **MonsterFsmContext** — 몬스터 하나에 대한 판단 재료(플레이어까지 거리 · 플레이어가 숨었는지 · 죽었는지).
-- **① RefreshAllIntents** — 행동 순서대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤 몬스터에 넘깁니다.
-- **② SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다. if/else 한 함수입니다.
-- **③ ChooseEnemyMovementStep** — `HexPathfinder.FindPath`로 목적지를 고릅니다. 예약된 목적지는 막힌 칸으로 취급해 두 몬스터가 같은 칸으로 몰리지 않게 합니다.
-- **④ SelectWeightedAttackPattern** — `monster_attack_patterns.csv`의 가중치로 공격 패턴을 추첨합니다. 난수는 시드 스트림 4를 씁니다.
-- **⑤ TryPlanLeapAttack** — 도약 공격이 가능하면 착지 칸과 패턴을 정합니다.
-- **⑥ MonsterTurnPlan 커밋** — 이동 의도 · 목적지 · 조준 · 도약을 `monster.TurnPlan`에 기록합니다.
+- **RefreshAllIntents** — 행동 순서대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤 몬스터에 넘깁니다.
+- **SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다. if/else 한 함수입니다.
+- **ChooseEnemyMovementStep** — `HexPathfinder.FindPath`로 목적지를 고릅니다. 예약된 목적지는 막힌 칸으로 취급해 두 몬스터가 같은 칸으로 몰리지 않게 합니다.
+- **SelectWeightedAttackPattern** — `monster_attack_patterns.csv`의 가중치로 공격 패턴을 추첨합니다. 난수는 시드 스트림 4를 씁니다.
+- **TryPlanLeapAttack** — 도약 공격이 가능하면 착지 칸과 패턴을 정합니다.
+- **MonsterTurnPlan 커밋** — 이동 의도 · 목적지 · 조준 · 도약을 `monster.TurnPlan`에 기록합니다.
 - **GetMonsterIntentPreviews** — 화면에 보여 줄 예고. `TurnPlan`을 그대로 펼칩니다.
 - **ResolveMonsterMovementStep / ResolveMonsterAttackStep** — 같은 `TurnPlan`을 실제로 실행합니다.
 - **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상. 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 씁니다. `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.

@@ -13,58 +13,62 @@
 <text x="110" y="359" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">IsMonsterSenseBlindedAt  (실명)</text>
 <text x="110" y="376" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">GetBehaviorProfileRef  (행동 프로파일 · 매복 등)</text>
 <rect x="90" y="700" width="480" height="200" rx="16" fill="url(#ha5d8ff)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="330" y="728" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterFsmContext (몬스터별 판단 재료)</text>
+<text x="330" y="728" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterFsmContext (각 몬스터에게 주어지는 정보)</text>
 <text x="110" y="754" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">DistanceToPlayer  (플레이어까지 거리)</text>
 <text x="110" y="772" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">PlayerHidden  (플레이어가 숨었는가)</text>
-<text x="110" y="789" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">PlayerIsDead  (플레이어 사망)</text>
+<text x="110" y="789" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">PlayerIsDead  (플레이어 사망 여부)</text>
 <text x="110" y="806" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterCoord  (몬스터 좌표)</text>
 <polyline points="330,600 330,700" fill="none" stroke="#1971c2" stroke-width="2.5"  marker-end="url(#ah1971c2)" />
 <text x="350" y="644" font-size="14" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">② CreateMonsterFsmContext (몬스터별로 생성)</text>
 <rect x="660" y="140" width="700" height="1400" rx="16" fill="#ebfbee" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>
-<text x="1010" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterAiPlanner (계획기 · 몬스터마다 위 → 아래로 한 번)</text>
+<text x="1010" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterAiPlanner (각 몬스터의 AI 연산 담당)</text>
 <rect x="700" y="220" width="620" height="120" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="269" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① RefreshAllIntents</text>
+<text x="1010" y="269" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">RefreshAllIntents</text>
 <text x="1010" y="294" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">행동 순서대로 몬스터를 돌며 계획</text>
-<text x="1010" y="310" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">reservedDestinations (앞 몬스터의 목적지 모음)</text>
+<text x="1010" y="310" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">reservedDestinations (먼저 행동한 몬스터의 목적지 모음, 좌표 충돌 방지용)</text>
 <rect x="700" y="400" width="620" height="120" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="449" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">② SelectMovementIntent</text>
+<text x="1010" y="449" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">SelectMovementIntent</text>
 <text x="1010" y="474" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">이동 의도 결정 (if/else 한 함수)</text>
 <text x="1010" y="490" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterFsmMemory.State: Patrol · Chase · Attack · Search · Alert · Return</text>
 <rect x="700" y="580" width="620" height="130" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="634" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ ChooseEnemyMovementStep</text>
+<text x="1010" y="634" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ChooseEnemyMovementStep</text>
 <text x="1010" y="658" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">목적지 선택 — HexPathfinder.FindPath</text>
 <text x="1010" y="675" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">예약된 목적지 = temporaryBlocked (막힌 칸으로 취급)</text>
 <rect x="700" y="780" width="620" height="120" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="829" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ SelectWeightedAttackPattern</text>
+<text x="1010" y="829" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">SelectWeightedAttackPattern</text>
 <text x="1010" y="854" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">공격 패턴 추첨 — monster_attack_patterns.csv 가중치</text>
-<text x="1010" y="870" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">난수 = 시드 스트림 4</text>
+<text x="1010" y="870" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">난수는 시드 스트림 4번으로 부여</text>
 <rect x="700" y="960" width="620" height="100" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="1007" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑤ TryPlanLeapAttack</text>
-<text x="1010" y="1032" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">도약 공격 — 착지 칸 · 패턴 결정</text>
+<text x="1010" y="1007" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">TryPlanLeapAttack</text>
+<text x="1010" y="1032" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">도약 공격 실행 여부 - 착지 칸 · 패턴 결정</text>
 <rect x="700" y="1120" width="620" height="130" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1010" y="1181" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑥ monster.TurnPlan = new MonsterTurnPlan(…)</text>
+<text x="1010" y="1181" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">monster.TurnPlan = new MonsterTurnPlan(…)</text>
 <text x="1010" y="1205" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">계획 커밋 — 이동 의도 · 목적지 · 조준 · 도약</text>
 <polyline points="1010,340 1010,400" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1030" y="374" font-size="16" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④</text>
 <polyline points="1010,520 1010,580" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1030" y="554" font-size="16" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑤</text>
 <polyline points="1010,710 1010,780" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1030" y="744" font-size="16" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑥</text>
 <polyline points="1010,900 1010,960" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1030" y="934" font-size="16" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑦</text>
 <polyline points="1010,1060 1010,1120" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1030" y="1094" font-size="16" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑧</text>
 <polyline points="570,850 640,850 640,460 700,460" fill="none" stroke="#1971c2" stroke-width="2.5"  marker-end="url(#ah1971c2)" />
-<text x="100" y="922" font-size="14" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ MonsterFsmContext → ② SelectMovementIntent (거리 · PlayerHidden)</text>
+<text x="100" y="922" font-size="14" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ MonsterFsmContext → SelectMovementIntent (거리 · PlayerHidden)</text>
 <polyline points="1600,140 1600,100 330,100 330,200" fill="none" stroke="#1971c2" stroke-width="2.5"  marker-end="url(#ah1971c2)" />
-<text x="960" y="93" font-size="15" fill="#1971c2" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① CombatState 가 인터페이스를 구현 — 계획기는 이 밖의 상태를 건드리지 않는다</text>
+<text x="960" y="93" font-size="15" fill="#1971c2" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① CombatState에서 인터페이스 구현</text>
 <polyline points="1320,1215 1370,1215 1370,280 1320,280" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
-<text x="1010" y="1289" font-size="14" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑨ 목적지를 reservedDestinations 에 추가 → 다음 몬스터는 ①부터</text>
+<text x="1010" y="1289" font-size="14" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑨ 목적지를 reservedDestinations 에 추가 → 다음 몬스터는 RefreshAllIntents 루프의 다음 회차</text>
 <rect x="1520" y="140" width="620" height="700" rx="16" fill="#fff4e6" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>
-<text x="1830" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">CombatState (계획의 소비자 둘)</text>
+<text x="1830" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">CombatState (몬스터 AI 행동 예고와 실행 담당)</text>
 <rect x="1560" y="220" width="540" height="160" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1830" y="289" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">GetMonsterIntentPreviews</text>
-<text x="1830" y="314" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">화면에 보여줄 예고</text>
-<text x="1830" y="330" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">TurnPlan 을 그대로 펼친다 — AI 재실행 없음</text>
+<text x="1830" y="297" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">GetMonsterIntentPreviews</text>
+<text x="1830" y="322" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">화면에 TurnPlan(행동 예고) 출력</text>
 <rect x="1560" y="560" width="540" height="160" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1830" y="624" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ResolveMonsterMovementStep</text>
 <text x="1830" y="649" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ResolveMonsterAttackStep</text>
-<text x="1830" y="673" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">계획 실행 — 이동 · 공격 해소</text>
+<text x="1830" y="673" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">이동, 공격 계획 실행</text>
 <polyline points="1320,1160 1410,1160 1410,300 1560,300" fill="none" stroke="#2f9e44" stroke-width="3"  marker-end="url(#ah2f9e44)" />
 <text x="1415" y="345" font-size="15" fill="#2f9e44" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑩ 예고</text>
 <polyline points="1320,1200 1450,1200 1450,640 1560,640" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
@@ -76,11 +80,10 @@
 <text x="1700" y="1014" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">형상 저작 원본</text>
 <polyline points="1700,1030 1700,1080" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
 <rect x="1560" y="1080" width="540" height="130" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1830" y="1134" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackShapeLibrary</text>
-<text x="1830" y="1158" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">형상 로더 — 정동(East) 기준 오프셋을</text>
-<text x="1830" y="1175" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">RotateSteps((6 − dir) % 6) 로 방향에 맞춰 회전</text>
+<text x="1830" y="1142" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackShapeLibrary</text>
+<text x="1830" y="1167" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">형상 로더</text>
 <rect x="1560" y="1250" width="540" height="130" rx="16" fill="url(#hffec99)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="1830" y="1278" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackShapeAdjacency (몸체 칸과의 관계)</text>
+<text x="1830" y="1278" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackShapeAdjacency</text>
 <text x="1830" y="1305" font-size="15" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Full · None · Open · Body · BodyShell</text>
 <polyline points="1560,1145 1490,1145 1490,870 1320,870" fill="none" stroke="#1971c2" stroke-width="2.5" stroke-dasharray="14,10" marker-end="url(#ah1971c2)" />
 <text x="1100" y="922" font-size="14" fill="#1971c2" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑫ 형상 조회</text>

@@ -74,7 +74,7 @@
 <text x="1400" y="1198" font-size="15" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ReactActorHit · ReactActorDeath  (피격 · 사망 반응)</text>
 <text x="1400" y="1216" font-size="15" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">DispatchEffect · HitStop (효과 표시 · 히트스톱)</text>
 <polyline points="1380,520 720,520" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
-<text x="1050" y="494" font-size="16" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① 「휘둘러치기 카드 사용」  「턴 종료」 요청</text>
+<text x="1050" y="494" font-size="16" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① 「카드 사용」  「턴 종료」 요청 등</text>
 <polyline points="440,795 440,840" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
 <text x="470" y="820" font-size="15" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">② 규칙대로 연산 후 결과 기록</text>
 <polyline points="1420,640 1420,680 740,680 740,900 690,900" fill="none" stroke="#1971c2" stroke-width="3"  marker-end="url(#ah1971c2)" />

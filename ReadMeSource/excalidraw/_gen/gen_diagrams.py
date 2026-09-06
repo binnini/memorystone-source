@@ -76,7 +76,7 @@ def d1():
 
     # arrows
     d.arrow([(1380, 520), (720, 520)], color=RED, sw=3)
-    d.note(1050, 478, "① 「휘둘러치기 카드 사용」  「턴 종료」 요청", fs=16, color=RED)
+    d.note(1050, 478, "① 「카드 사용」  「턴 종료」 요청 등", fs=16, color=RED)
 
     d.arrow([(440, 795), (440, 840)], color=BLACK, sw=2)
     d.note(470, 805, "② 규칙대로 연산 후 결과 기록", fs=15, anchor="topleft", align="left")
@@ -185,35 +185,36 @@ def d3():
              "ClassifyMonsterActivity  (활성 / 휴면)", "IsMonsterMovementBlocked / Rooted  (이동 제한)",
              "IsPlayerHiddenFromMonsters  (은신)", "IsMonsterSenseBlindedAt  (실명)",
              "GetBehaviorProfileRef  (행동 프로파일 · 매복 등)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
-    d.field(90, 700, 480, 200, "MonsterFsmContext (몬스터별 판단 재료)",
+    d.field(90, 700, 480, 200, "MonsterFsmContext (각 몬스터에게 주어지는 정보)",
             ["DistanceToPlayer  (플레이어까지 거리)", "PlayerHidden  (플레이어가 숨었는가)",
-             "PlayerIsDead  (플레이어 사망)", "MonsterCoord  (몬스터 좌표)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
+             "PlayerIsDead  (플레이어 사망 여부)", "MonsterCoord  (몬스터 좌표)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
     d.arrow([(330, 600), (330, 700)], color=BLUE, sw=2.5)
     d.note(350, 630, "② CreateMonsterFsmContext (몬스터별로 생성)", fs=14, color=BLUE, anchor="topleft", align="left")
 
-    d.zone(660, 140, 700, 1400, "MonsterAiPlanner (계획기 · 몬스터마다 위 → 아래로 한 번)", bg=BG_GREEN)
+    d.zone(660, 140, 700, 1400, "MonsterAiPlanner (각 몬스터의 AI 연산 담당)", bg=BG_GREEN)
     ys = [220, 400, 580, 780, 960, 1120]
-    d.box(700, ys[0], 620, 120, "① RefreshAllIntents", sub="행동 순서대로 몬스터를 돌며 계획\nreservedDestinations (앞 몬스터의 목적지 모음)", fs=22, sfs=13)
-    d.box(700, ys[1], 620, 120, "② SelectMovementIntent", sub="이동 의도 결정 (if/else 한 함수)\nMonsterFsmMemory.State: Patrol · Chase · Attack · Search · Alert · Return", fs=22, sfs=13)
-    d.box(700, ys[2], 620, 130, "③ ChooseEnemyMovementStep", sub="목적지 선택 — HexPathfinder.FindPath\n예약된 목적지 = temporaryBlocked (막힌 칸으로 취급)", fs=22, sfs=13)
-    d.box(700, ys[3], 620, 120, "④ SelectWeightedAttackPattern", sub="공격 패턴 추첨 — monster_attack_patterns.csv 가중치\n난수 = 시드 스트림 4", fs=22, sfs=13)
-    d.box(700, ys[4], 620, 100, "⑤ TryPlanLeapAttack", sub="도약 공격 — 착지 칸 · 패턴 결정", fs=22, sfs=13)
-    d.box(700, ys[5], 620, 130, "⑥ monster.TurnPlan = new MonsterTurnPlan(…)", sub="계획 커밋 — 이동 의도 · 목적지 · 조준 · 도약", fs=20, sfs=13)
-    for y0, y1 in ((340, 400), (520, 580), (710, 780), (900, 960), (1060, 1120)):
+    d.box(700, ys[0], 620, 120, "RefreshAllIntents", sub="행동 순서대로 몬스터를 돌며 계획\nreservedDestinations (먼저 행동한 몬스터의 목적지 모음, 좌표 충돌 방지용)", fs=22, sfs=13)
+    d.box(700, ys[1], 620, 120, "SelectMovementIntent", sub="이동 의도 결정 (if/else 한 함수)\nMonsterFsmMemory.State: Patrol · Chase · Attack · Search · Alert · Return", fs=22, sfs=13)
+    d.box(700, ys[2], 620, 130, "ChooseEnemyMovementStep", sub="목적지 선택 — HexPathfinder.FindPath\n예약된 목적지 = temporaryBlocked (막힌 칸으로 취급)", fs=22, sfs=13)
+    d.box(700, ys[3], 620, 120, "SelectWeightedAttackPattern", sub="공격 패턴 추첨 — monster_attack_patterns.csv 가중치\n난수는 시드 스트림 4번으로 부여", fs=22, sfs=13)
+    d.box(700, ys[4], 620, 100, "TryPlanLeapAttack", sub="도약 공격 실행 여부 - 착지 칸 · 패턴 결정", fs=22, sfs=13)
+    d.box(700, ys[5], 620, 130, "monster.TurnPlan = new MonsterTurnPlan(…)", sub="계획 커밋 — 이동 의도 · 목적지 · 조준 · 도약", fs=20, sfs=13)
+    for n, (y0, y1) in zip("④⑤⑥⑦⑧", ((340, 400), (520, 580), (710, 780), (900, 960), (1060, 1120))):
         d.arrow([(1010, y0), (1010, y1)], color=RED, sw=3)
+        d.note(1030, y0 + 18, n, fs=16, color=RED, anchor="topleft", align="left")
 
     d.arrow([(570, 850), (640, 850), (640, 460), (700, 460)], color=BLUE, sw=2.5)
-    d.note(100, 908, "③ MonsterFsmContext → ② SelectMovementIntent (거리 · PlayerHidden)", fs=14, color=BLUE, anchor="topleft", align="left")
+    d.note(100, 908, "③ MonsterFsmContext → SelectMovementIntent (거리 · PlayerHidden)", fs=14, color=BLUE, anchor="topleft", align="left")
 
     d.arrow([(1600, 140), (1600, 100), (330, 100), (330, 200)], color=BLUE, sw=2.5)
-    d.note(960, 78, "① CombatState 가 인터페이스를 구현 — 계획기는 이 밖의 상태를 건드리지 않는다", fs=15, color=BLUE, anchor="top")
+    d.note(960, 78, "① CombatState에서 인터페이스 구현", fs=15, color=BLUE, anchor="top")
 
     d.arrow([(1320, 1215), (1370, 1215), (1370, 280), (1320, 280)], color=BLACK, sw=2)
-    d.note(1010, 1275, "⑨ 목적지를 reservedDestinations 에 추가 → 다음 몬스터는 ①부터", fs=14, anchor="top")
+    d.note(1010, 1275, "⑨ 목적지를 reservedDestinations 에 추가 → 다음 몬스터는 RefreshAllIntents 루프의 다음 회차", fs=14, anchor="top")
 
-    d.zone(1520, 140, 620, 700, "CombatState (계획의 소비자 둘)", bg=BG_ORANGE)
-    d.box(1560, 220, 540, 160, "GetMonsterIntentPreviews", sub="화면에 보여줄 예고\nTurnPlan 을 그대로 펼친다 — AI 재실행 없음", fs=22, sfs=13)
-    d.box(1560, 560, 540, 160, "ResolveMonsterMovementStep\nResolveMonsterAttackStep", sub="계획 실행 — 이동 · 공격 해소", fs=20, sfs=13)
+    d.zone(1520, 140, 620, 700, "CombatState (몬스터 AI 행동 예고와 실행 담당)", bg=BG_ORANGE)
+    d.box(1560, 220, 540, 160, "GetMonsterIntentPreviews", sub="화면에 TurnPlan(행동 예고) 출력", fs=22, sfs=13)
+    d.box(1560, 560, 540, 160, "ResolveMonsterMovementStep\nResolveMonsterAttackStep", sub="이동, 공격 계획 실행", fs=20, sfs=13)
     d.arrow([(1320, 1160), (1410, 1160), (1410, 300), (1560, 300)], color=GREEN, sw=3)
     d.note(1415, 330, "⑩ 예고", fs=15, color=GREEN, anchor="topleft", align="left")
     d.arrow([(1320, 1200), (1450, 1200), (1450, 640), (1560, 640)], color=RED, sw=3)
@@ -222,8 +223,8 @@ def d3():
     d.zone(1520, 900, 620, 520, "공격 범위 형상", bg=BG_YELLOW)
     d.box(1560, 960, 280, 70, "attack_shapes.csv", sub="형상 저작 원본", fs=18, sfs=12)
     d.arrow([(1700, 1030), (1700, 1080)], color=BLACK, sw=2)
-    d.box(1560, 1080, 540, 130, "AttackShapeLibrary", sub="형상 로더 — 정동(East) 기준 오프셋을\nRotateSteps((6 − dir) % 6) 로 방향에 맞춰 회전", fs=22, sfs=13)
-    d.field(1560, 1250, 540, 130, "AttackShapeAdjacency (몸체 칸과의 관계)",
+    d.box(1560, 1080, 540, 130, "AttackShapeLibrary", sub="형상 로더", fs=22, sfs=13)
+    d.field(1560, 1250, 540, 130, "AttackShapeAdjacency",
             ["Full · None · Open · Body · BodyShell"], bg="#ffec99", fs=16, lfs=15)
     d.arrow([(1560, 1145), (1490, 1145), (1490, 870), (1320, 870)], color=BLUE, sw=2.5, style="dashed")
     d.note(1100, 908, "⑫ 형상 조회", fs=14, color=BLUE, anchor="top")

@@ -150,27 +150,29 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 <p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 계획과 예고 도식"></p>
 
-몬스터 AI는 `MonsterAiPlanner` 한 클래스에서 각 몬스터마다 실행되는 동기식 planner입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
+몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
 
 플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **IMonsterPlanningContext** — 플래너가 읽을 수 있는 게임플레이 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일).
-- **MonsterFsmContext** — 몬스터의 행동 결정 근거(플레이어까지 거리 · 플레이어가 숨었는지 · 죽었는지).
-- **RefreshAllIntents** — 행동 순서(공격 속도)대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤에 넘겨 몬스터와 충돌을 방지합니다.
-- **SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다.
+- **IMonsterPlanningContext** — 플래너가 읽을 수 있는 게임플레이 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
+- **MonsterFsmContext** — 몬스터 하나에 대한 판단 재료(플레이어까지 거리 · 플레이어가 숨었는지 · 죽었는지).
+- **RefreshAllIntents** — 행동 순서대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤 몬스터에 넘깁니다.
+- **SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다. if/else 한 함수입니다.
 - **ChooseEnemyMovementStep** — `HexPathfinder.FindPath`로 목적지를 고릅니다. 예약된 목적지는 막힌 칸으로 취급해 두 몬스터가 같은 칸으로 몰리지 않게 합니다.
-- **SelectWeightedAttackPattern** — `monster_attack_patterns.csv`의 가중치로 공격 패턴을 추첨합니다. 난수는 시드 스트림 4번을 사용하여 시드의 재현성을 확보합니다.
+- **SelectWeightedAttackPattern** — `monster_attack_patterns.csv`의 가중치로 공격 패턴을 추첨합니다. 난수는 시드 스트림 4를 씁니다.
 - **TryPlanLeapAttack** — 도약 공격이 가능하면 착지 칸과 패턴을 정합니다.
 - **MonsterTurnPlan 커밋** — 이동 의도 · 목적지 · 조준 · 도약을 `monster.TurnPlan`에 기록합니다.
-- **GetMonsterIntentPreviews** — 화면에 출력할 몬스터의 공격 예고.
+- **GetMonsterIntentPreviews** — 화면에 보여 줄 예고. `TurnPlan`을 그대로 펼칩니다.
 - **ResolveMonsterMovementStep / ResolveMonsterAttackStep** — 같은 `TurnPlan`을 실제로 실행합니다.
-- **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상.
+- **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상. 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 씁니다. `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-예고가 곧 계획입니다. 화면에 그려지는 예고와 다음 턴에 실행되는 행동이 같은 `TurnPlan` 객체에서 나오므로 둘이 어긋날 여지가 없습니다. 플래너는 컨텍스트 밖의 상태를 건드리지 않고, 유일한 가변 상태는 패턴 추첨 난수뿐입니다.
+몬스터의 판단은 행동 트리나 유틸리티 AI 같은 별도 체계 대신 if/else 한 함수(`SelectMovementIntent`)로 구현했습니다. 몬스터의 수가 많지 않아 상태 여섯 개와 프로파일 분기 몇 개면 충분히 표현할 수 있다고 판단했기 때문입니다. 함수 하나를 위에서 아래로 읽으면 규칙 전체가 보입니다.
+
+공격 방식은 코드가 아니라 데이터로 정의했습니다. 보스 몬스터를 제외하면 모든 몬스터의 공격이 「형상 + 피해 + 가중치」로 정형화되어 있어서, 패턴은 `monster_attack_patterns.csv`, 형상은 `attack_shapes.csv`에 두고 계획기는 몬스터 종류를 모른 채 데이터만 읽도록 했습니다. 새 몬스터는 행을 추가하는 것으로 끝납니다. 규격을 벗어나는 보스 기믹만 코드(`CombatState.Boss*`)에 있습니다.
 
 ### 코드
 

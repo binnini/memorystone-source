@@ -104,6 +104,10 @@
 
 턴과 턴 사이의 처리(턴 경계)는 `BeginNextOverallTurn` 한 함수가 16단계를 정해진 순서로 실행합니다. 「다음 턴에 발동하는 효과」는 `PendingEffects`에 예약해 두었다가 이 경계에서 꺼내 적용합니다.
 
+<!-- TODO(이미지): 턴 페이즈 순서 정리 그림 — ReadMeSource/2.TurnPhaseOrder.png -->
+<!-- <p align="center"><img src="ReadMeSource/2.TurnPhaseOrder.png" width="700" alt="턴 페이즈 순서"></p> -->
+(턴 페이즈 순서 그림 첨부 예정)
+
 도식의 상자는 각각 이런 역할입니다.
 
 - **EndAction()** — 플레이어가 페이즈를 끝낼 때 부르는 진입점입니다. 이동 페이즈라면 몬스터 공격 예고를 확정하고 몬스터 이동으로, 행동 페이즈라면 턴 끝 효과(상태이상 · 저주 · 유물)를 처리하고 몬스터 액션으로 넘깁니다.
@@ -154,6 +158,10 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
 
+<!-- TODO(이미지): 인게임 행동 예고 오버레이 스크린샷 — ReadMeSource/3.IntentPreview.png -->
+<!-- <p align="center"><img src="ReadMeSource/3.IntentPreview.png" width="700" alt="몬스터 행동 예고 오버레이"></p> -->
+(행동 예고 오버레이 이미지 첨부 예정)
+
 도식의 상자는 각각 이런 역할입니다.
 
 - **IMonsterPlanningContext** — 플래너가 읽을 수 있는 게임플레이 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
@@ -167,6 +175,13 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 - **GetMonsterIntentPreviews** — 화면에 보여 줄 예고. `TurnPlan`을 그대로 펼칩니다.
 - **ResolveMonsterMovementStep / ResolveMonsterAttackStep** — 같은 `TurnPlan`을 실제로 실행합니다.
 - **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상. 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 씁니다. `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.
+
+<!-- TODO(이미지): 공격 범위 형상 예시 2장 — ReadMeSource/3.AttackShape_1.png · 3.AttackShape_2.png -->
+<!-- <p align="center">
+<img src="ReadMeSource/3.AttackShape_1.png" width="440" alt="공격 범위 형상 예시 1">
+<img src="ReadMeSource/3.AttackShape_2.png" width="440" alt="공격 범위 형상 예시 2">
+</p> -->
+(공격 범위 형상 이미지 2장 첨부 예정)
 
 ### 이 시스템에서 중점을 둔 것
 

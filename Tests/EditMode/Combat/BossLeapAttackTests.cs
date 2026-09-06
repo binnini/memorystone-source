@@ -334,19 +334,17 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static CombatState CreateArenaState(int leapRange, int arenaRadius)
         {
             var move = new CardDefinition(
-                "arena-move", "Arena Move", CardCategory.Movement, CardEffectType.Move, 0, PlayerMoveRange, 0,
-                effectRef: CardEffectRefs.MoveBasic, targeting: "walkable_in_range",
+                "arena-move", "Arena Move", CardCategory.Movement, CardEffectType.Move, 0, PlayerMoveRange, 0, targeting: "walkable_in_range",
                 status: CardCatalogStatus.Approved, instanceId: "arena-move-instance");
             var strike = new CardDefinition(
-                "arena-strike", "Arena Strike", CardCategory.Action, CardEffectType.Attack, 1, 1, 0,
-                effectRef: CardEffectRefs.AttackDamage, targeting: "living_monster_in_range",
+                "arena-strike", "Arena Strike", CardCategory.Action, CardEffectType.Attack, 1, 1, 0, targeting: "living_monster_in_range",
                 status: CardCatalogStatus.Approved, instanceId: "arena-strike-instance");
             var catalog = new CardCatalogDefinition(
                 "test.boss-leap", "Boss leap test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.EffectRef, move.Targeting, status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.EffectRef, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
+                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.Targeting, status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
                 });
 
             var monsters = new List<MonsterConfig>

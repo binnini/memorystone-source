@@ -3,75 +3,22 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using UnityEngine;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
 {
     /// <summary>
-    /// 키워드-텍스트 정합 감사(2026-08-06 키워드 체계화 패스). 키워드 바인딩이 컬럼이 아니라
-    /// 설명 텍스트 substring 매칭이라, 문안이 단어를 빠뜨리면 <b>조용히</b> 미연결이 된다 —
-    /// 실제로 횃불(U04)·상태 카드(X01~X03)가 그렇게 끊어진 채 출하돼 있었다.
-    /// 기대 목록은 docs/design/keyword-systematization-and-sts-insights.md §2.3의 확정 표가 정본.
-    ///
-    /// 범용어 키워드(해체 등)의 <b>오매칭</b>도 여기서 잡는다: 새 키워드/문안이 의도하지 않은
-    /// 카드에 걸리면 그 카드의 기대 목록에 없으므로 아래 역방향 검사가 실패한다.
+    /// 키워드-문안 정합 감사(2026-08-06 키워드 체계화 패스 → 2026-09-06 P5 키워드 명시화).
+    /// 키워드는 이제 카드 클래스가 <see cref="CardBehavior.Keywords"/>로 <b>선언</b>하고 장식기는 선언된 것만 건다 —
+    /// 부분 문자열 우연 매칭(해체·회수 같은 범용어)이 카드에 걸릴 길이 없다. 대신 선언과 문안이 갈라지는 두 방향을 잰다:
+    /// ① 선언한 키워드는 문안(설명·선택지 문안·연마 문안)에 실제로 등장해야 한다(빠지면 툴팁이 조용히 끊긴다).
+    /// ② 문안에 등장하는 규칙 키워드는 전부 선언돼 있어야 한다(선언을 빠뜨리면 강조가 조용히 사라진다).
     /// </summary>
     [Category("ShippingData")]
     public sealed class CardKeywordTextBindingTests
     {
-        /// <summary>카드 id → 설명 텍스트에 걸려야 하는 키워드(원형) 전부. 여기 없는 카드는 키워드 0이 기대값.</summary>
-        private static readonly Dictionary<string, string[]> ExpectedKeywordsByCard = new Dictionary<string, string[]>
-        {
-            ["M05"] = new[] { "민첩" },
-            ["A03"] = new[] { "갈림길" },
-            ["A08"] = new[] { "복사" },
-            ["A09"] = new[] { "아지랑이" },
-            ["A10"] = new[] { "소멸" },
-            ["A11"] = new[] { "속박" },
-            ["A12"] = new[] { "전염" },
-            ["A13"] = new[] { "소멸" },
-            ["A14"] = new[] { "쇠약" },
-            ["D00"] = new[] { "방어막" },
-            ["D01"] = new[] { "방어막" },
-            ["D02"] = new[] { "무적", "강화" },
-            ["D03"] = new[] { "반사" },
-            ["D04"] = new[] { "속박", "방어막" },
-            ["D05"] = new[] { "무적", "소멸" },
-            ["D06"] = new[] { "속박", "방어막", "정화" },
-            ["D07"] = new[] { "방어막", "유지" },
-            ["M07"] = new[] { "유지" },
-            ["S00"] = new[] { "탐색" },
-            ["S01"] = new[] { "탐색" },
-            ["S02"] = new[] { "탐색" },
-            ["S03"] = new[] { "탐색", "기절" },
-            ["S04"] = new[] { "탐색" },
-            // 2026-08-20 #5: S05가 「범위 1을 탐색하고 발견된 함정을 해체합니다」로 진짜 정찰이 되며 탐색 획득.
-            ["S05"] = new[] { "탐색", "해체" },
-            ["S06"] = new[] { "탐색", "허점" },
-            ["F01"] = new[] { "장판" },
-            ["F02"] = new[] { "장판" },
-            ["F03"] = new[] { "속박", "장판" },
-            ["F04"] = new[] { "흡혈", "장판" },
-            ["F05"] = new[] { "장판" },
-            ["U02"] = new[] { "갈림길", "소멸" },
-            ["U03"] = new[] { "정화" },
-            ["U04"] = new[] { "등불" },
-            ["X01"] = new[] { "사용 불가", "아지랑이" },
-            ["X04"] = new[] { "소멸" },
-            ["X05"] = new[] { "사용 불가" },
-            ["X06"] = new[] { "사용 불가" },
-            ["X07"] = new[] { "사용 불가" },
-            ["X08"] = new[] { "사용 불가" },
-            ["X09"] = new[] { "사용 불가", "쇠약" },
-            ["X10"] = new[] { "사용 불가", "실명" },
-            ["X11"] = new[] { "사용 불가", "봉인", "아지랑이" },
-            // 원귀는 「손에 있는 동안 허점 1턴 부여」로 바뀌며 허점 어휘를 실제로 들고 있다(#18).
-            ["X12"] = new[] { "사용 불가", "허점" },
-            ["X02"] = new[] { "사용 불가" },
-            ["X03"] = new[] { "사용 불가", "봉인" },
-        };
-
         private static KeywordCatalogDefinition LoadKeywordCatalog()
             => KeywordCatalogCsv.ConvertFile(CombatCsvPaths.GameKeywordsCsv);
 
@@ -80,27 +27,22 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
         private static string LinkMarkup(string keyword) => $"<link=\"kw:{keyword}\"";
 
+        /// <summary>카드가 화면에 내는 문안 전부 — 설명·갈림길 선택지 문안·연마 문안.</summary>
+        private static string AllCardText(CardCatalogCsvRow row)
+            => string.Join("\n", new[] { row.Description, row.ChoiceTexts, row.DescriptionUpgraded }.Where(text => !string.IsNullOrWhiteSpace(text)));
+
         [Test]
-        public void EveryExpectedKeywordDecoratesItsCardText()
+        public void EveryDeclaredKeywordExistsInTheCatalog()
         {
             var catalog = LoadKeywordCatalog();
-            var rows = LoadCardRows().ToDictionary(row => row.Id);
             var failures = new List<string>();
-
-            foreach (var pair in ExpectedKeywordsByCard)
+            foreach (var id in CardBehaviorRegistry.RegisteredIds)
             {
-                if (!rows.TryGetValue(pair.Key, out var row))
+                foreach (var keyword in CardBehaviorRegistry.Get(id).Keywords)
                 {
-                    failures.Add($"{pair.Key}: cards.csv에 없음 — 기대 목록이 낡았다.");
-                    continue;
-                }
-
-                var decorated = CardKeywordDecorator.Decorate(row.Description, catalog);
-                foreach (var keyword in pair.Value)
-                {
-                    if (!decorated.Contains(LinkMarkup(keyword)))
+                    if (!catalog.TryGet(keyword, out _))
                     {
-                        failures.Add($"{pair.Key}: '{keyword}' 미연결 — 설명 문안에 키워드 단어가 없다: \"{row.Description}\"");
+                        failures.Add($"{id}: 선언한 키워드 '{keyword}'가 game_keywords.csv에 없다 — 원형(키워드 컬럼)으로 선언해야 한다.");
                     }
                 }
             }
@@ -109,28 +51,77 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         }
 
         [Test]
-        public void NoCardGainsAnUnexpectedKeyword()
+        public void EveryDeclaredKeywordAppearsInTheCardText()
+        {
+            var catalog = LoadKeywordCatalog();
+            var rows = LoadCardRows().ToDictionary(row => row.Id);
+            var failures = new List<string>();
+
+            foreach (var id in CardBehaviorRegistry.RegisteredIds)
+            {
+                var keywords = CardBehaviorRegistry.Get(id).Keywords;
+                if (keywords.Count == 0)
+                {
+                    continue;
+                }
+
+                if (!rows.TryGetValue(id, out var row))
+                {
+                    failures.Add($"{id}: cards.csv에 없음 — 등록부와 카탈로그가 갈라졌다.");
+                    continue;
+                }
+
+                var decorated = CardKeywordDecorator.Decorate(AllCardText(row), catalog, keywords);
+                foreach (var keyword in keywords)
+                {
+                    if (!decorated.Contains(LinkMarkup(keyword)))
+                    {
+                        failures.Add($"{id}: 선언한 '{keyword}'가 문안에 없다 — 툴팁이 조용히 끊긴다: \"{AllCardText(row)}\"");
+                    }
+                }
+            }
+
+            Assert.That(failures, Is.Empty, string.Join("\n", failures));
+        }
+
+        [Test]
+        public void EveryRuleKeywordInTheCardTextIsDeclared()
         {
             var catalog = LoadKeywordCatalog();
             var failures = new List<string>();
 
             foreach (var row in LoadCardRows())
             {
-                var expected = ExpectedKeywordsByCard.TryGetValue(row.Id, out var keywords)
-                    ? keywords
-                    : System.Array.Empty<string>();
-                var decorated = CardKeywordDecorator.Decorate(row.Description, catalog);
-
+                var declared = CardBehaviorRegistry.TryGet(row.Id, out var behavior)
+                    ? behavior.Keywords
+                    : (IReadOnlyList<string>)System.Array.Empty<string>();
+                // 카탈로그 전체를 부분 문자열로 훑어 「문안이 말하는 키워드」를 얻는다 — 선언이 그것을 전부 덮어야 한다.
+                var mentioned = CardKeywordDecorator.Decorate(AllCardText(row), catalog);
                 foreach (var entry in catalog.Entries)
                 {
-                    if (decorated.Contains(LinkMarkup(entry.Keyword)) && !expected.Contains(entry.Keyword))
+                    if (mentioned.Contains(LinkMarkup(entry.Keyword)) && !declared.Contains(entry.Keyword))
                     {
-                        failures.Add($"{row.Id}: 예상 밖 키워드 '{entry.Keyword}' 매칭 — 오매칭이면 문안이나 키워드 어휘를 바꾸고 의도면 기대 목록에 추가: \"{row.Description}\"");
+                        failures.Add($"{row.Id}: 문안에 '{entry.Keyword}'가 있는데 클래스가 선언하지 않았다 — 의도면 Keywords에 추가, 우연 매칭이면 문안을 바꾼다: \"{AllCardText(row)}\"");
                     }
                 }
             }
 
             Assert.That(failures, Is.Empty, string.Join("\n", failures));
+        }
+
+        /// <summary>장식은 선언을 따른다 — 같은 단어가 있어도 선언하지 않은 카드는 걸리지 않고, 카탈로그 밖 카드는 문안이 그대로다.</summary>
+        [Test]
+        public void DecorationFollowsTheDeclarationNotTheSubstring()
+        {
+            var catalog = LoadKeywordCatalog();
+            const string text = "방어막 3을 얻고 소멸합니다.";
+
+            var basicBlock = CardKeywordDecorator.Decorate(text, catalog, CardBehaviorRegistry.Get(CardIds.BasicBlock).Keywords);
+            Assert.That(basicBlock, Does.Contain(LinkMarkup("방어막")), "D00은 방어막을 선언한다.");
+            Assert.That(basicBlock, Does.Not.Contain(LinkMarkup("소멸")), "D00은 소멸을 선언하지 않았으므로 단어가 있어도 걸리지 않는다.");
+
+            var basicStrike = CardKeywordDecorator.Decorate(text, catalog, CardBehaviorRegistry.Get(CardIds.BasicStrike).Keywords);
+            Assert.That(basicStrike, Is.EqualTo(text), "선언이 없는 카드의 문안은 그대로다.");
         }
 
         /// <summary>
@@ -149,15 +140,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var bakedKeywords = baked.Entries.Select(e => e.keyword).OrderBy(k => k, System.StringComparer.Ordinal).ToList();
             Assert.That(bakedKeywords, Is.EqualTo(csvKeywords),
                 "game_keywords.csv와 베이크 에셋이 갈라졌다 — Bake Game Keyword Catalog 메뉴로 재베이크할 것.");
-        }
-
-        /// <summary>갈림길 옵션 문안은 별도 CSV(2중 표면)라 카드 설명 검사에 안 걸린다 — 회수(U02)만 직접 잠근다.</summary>
-        [Test]
-        public void ChoiceOptionTextKeepsRecoverKeyword()
-        {
-            var text = File.ReadAllText(CombatCsvPaths.CardChoiceOptionsCsv);
-            Assert.That(text, Does.Contain("회수"),
-                "U02 recover 옵션 문안에서 '회수' 키워드 단어가 빠졌다.");
         }
     }
 }

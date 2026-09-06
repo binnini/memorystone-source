@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -90,12 +91,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     // Mirrors the cards.csv row: cost 2 / range 2 / blast-2 / damage 2 / hitCount 2 / duration 2.
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.FieldBounceBombId, "콩콩탄탄", CardCategory.Action, CardEffectType.FieldObject,
-                        2, 2, 2, CardEffectRefs.FieldDamage, "walkable_map_cell", areaRadius: 2,
+                        CardIds.BounceBomb, "콩콩탄탄", CardCategory.Action, CardEffectType.FieldObject,
+                        2, 2, 2, "walkable_map_cell", areaRadius: 2,
                         fieldObjectKind: CardFieldObjectKind.FieldDamage, durationTurns: 2, hitCount: 2,
                         status: CardCatalogStatus.Approved)
                 });
@@ -108,7 +109,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement();
 
-            Assert.That(state.TryPlayerFieldObject(new HexCoord(2, 0), ApprovedCardCatalogFactory.FieldBounceBombId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerFieldObject(new HexCoord(2, 0), CardIds.BounceBomb), Is.True, state.LastFailureReason);
 
             var placed = state.FieldObjects.Objects.Single();
             Assert.That(placed.Kind, Is.EqualTo(FieldObjectKind.FieldDamage));
@@ -138,7 +139,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             return new FieldObject(
                 new HexCoord(4, 0), radius: 0, remainingTurns: 1, FieldObjectKind.FieldDamage,
-                value: value, sourceUnitId: "player", visualRef: ApprovedCardCatalogFactory.FieldBounceBombId,
+                value: value, sourceUnitId: "player", visualRef: CardIds.BounceBomb,
                 hitsPerTick: hitsPerTick);
         }
 

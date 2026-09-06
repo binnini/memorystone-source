@@ -513,7 +513,7 @@ namespace SeoulPlayup.Combat.Unity
         private static bool IsSelfCenteredAreaAttack(CombatCardSnapshot card)
         {
             return card.TargetMode == CardTargetMode.SelfArea ||
-                   string.Equals(card.Id, ApprovedCardCatalogFactory.AttackSweepId, System.StringComparison.Ordinal);
+                   string.Equals(card.Id, SeoulPlayup.Combat.Runtime.Cards.CardIds.Sweep, System.StringComparison.Ordinal);
         }
 
         private static bool IsValidAreaCenter(

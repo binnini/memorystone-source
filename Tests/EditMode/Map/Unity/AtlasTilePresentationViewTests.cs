@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Map.Runtime;
 using SeoulPlayup.MapDesign.Editor;
@@ -348,6 +348,139 @@ namespace SeoulPlayup.Map.Unity.Tests.EditMode
                 Object.DestroyImmediate(prefab);
                 if (waterMaterial != null) Object.DestroyImmediate(waterMaterial);
             }
+        }
+
+        /// <summary>
+        /// 낮·인트로 설정(TutorialDayVisibility)은 물 잠금을 꺼서 물이 땅과 같은 시야 조도를 받는다.
+        /// 잠금을 무조건 걸었을 때(cs:1387) 낮의 강이 검게 죽었던 결함의 재발 방지.
+        /// </summary>
+        [Test]
+        public void LightingMaskLetsWaterFollowTileLightingWhenSettingsUnlockWater()
+        {
+            var root = new GameObject("AtlasWaterUnlockedLightingTest");
+            var catalog = ScriptableObject.CreateInstance<AtlasTileCatalog>();
+            var prefab = CreateChunkSafePrefab("AtlasWaterUnlockedLightingTopPrefab");
+            var settings = ScriptableObject.CreateInstance<VisibilityPresentationSettings>();
+            Material waterMaterial = null;
+            try
+            {
+                var visibilityShader = Shader.Find("SeoulPlayup/Map/Visibility Lit");
+                var waterShader = Shader.Find("Shader Graphs/WaterVolume-URP");
+                Assert.That(visibilityShader, Is.Not.Null);
+                Assert.That(waterShader, Is.Not.Null, "The project water Shader Graph must be imported before this test runs.");
+
+                waterMaterial = new Material(waterShader);
+                var surfaceColor = new Color(0.4f, 0.6f, 0.8f, 0.7f);
+                var depthColor = new Color(0.2f, 0.3f, 0.5f, 0.6f);
+                waterMaterial.SetColor("Color_F01C36BF", surfaceColor);
+                waterMaterial.SetColor("Color_7D9A58EC", depthColor);
+                prefab.GetComponent<Renderer>().sharedMaterial = waterMaterial;
+
+                SetPrivateBool(settings, "visibilityWaterLockedToUnknown", false);
+
+                var view = root.AddComponent<AtlasTilePresentationView>();
+                catalog.ConfigureForTests(new[] { new AtlasTileCatalog.Entry("tile-water", prefab) });
+                view.ConfigureForTests(catalog, renderSideVisuals: true, useTopChunkMeshes: true);
+                view.ConfigureVisibilityPresentationForTests(VisibilityPresentationMode.LightingMask, visibilityShader);
+                view.ApplyVisibilitySettings(settings);
+                var coord = new HexCoord(0, 0);
+                view.Render(new HexMapData(new[] { Cell(coord, "tile-water") }));
+
+                var revealed = new HexVisibilitySafeCellInfo(
+                    coord, HexCellVisibility.Revealed, true, true, true, "tile-water", "water", 1, false, false, string.Empty, string.Empty);
+                view.ApplyVisibility(_ => revealed);
+
+                var waterRenderer = root.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => renderer.sharedMaterial != null && renderer.sharedMaterial.shader == waterShader);
+                var propertyBlock = new MaterialPropertyBlock();
+                waterRenderer.GetPropertyBlock(propertyBlock);
+                // 잠금이 꺼지면 물도 Revealed 조도(설정 기본 1.0)를 받는다.
+                AssertColorScaled(surfaceColor, propertyBlock.GetColor("Color_F01C36BF"), 1f);
+                AssertColorScaled(depthColor, propertyBlock.GetColor("Color_7D9A58EC"), 1f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(prefab);
+                Object.DestroyImmediate(settings);
+                if (waterMaterial != null) Object.DestroyImmediate(waterMaterial);
+            }
+        }
+
+        /// <summary>
+        /// 인트로 크로스페이드는 맵이 이미 그려진 뒤에 시야 설정을 바꾼다(낮→밤). 시야가 안 바뀐 칸
+        /// (플레이어 주변)도 새 설정을 즉시 받아야 한다 — 안 그러면 물 잠금이 칸이 우연히 뒤집힐 때까지
+        /// 옛 값에 머문다.
+        /// </summary>
+        [Test]
+        public void ApplyVisibilitySettingsAfterRenderReappliesWaterLockWithoutVisibilityChange()
+        {
+            var root = new GameObject("AtlasWaterSettingsSwapTest");
+            var catalog = ScriptableObject.CreateInstance<AtlasTileCatalog>();
+            var prefab = CreateChunkSafePrefab("AtlasWaterSettingsSwapTopPrefab");
+            var daySettings = ScriptableObject.CreateInstance<VisibilityPresentationSettings>();
+            var nightSettings = ScriptableObject.CreateInstance<VisibilityPresentationSettings>();
+            Material waterMaterial = null;
+            try
+            {
+                var visibilityShader = Shader.Find("SeoulPlayup/Map/Visibility Lit");
+                var waterShader = Shader.Find("Shader Graphs/WaterVolume-URP");
+                Assert.That(visibilityShader, Is.Not.Null);
+                Assert.That(waterShader, Is.Not.Null, "The project water Shader Graph must be imported before this test runs.");
+
+                waterMaterial = new Material(waterShader);
+                var surfaceColor = new Color(0.4f, 0.6f, 0.8f, 0.7f);
+                waterMaterial.SetColor("Color_F01C36BF", surfaceColor);
+                waterMaterial.SetColor("Color_7D9A58EC", new Color(0.2f, 0.3f, 0.5f, 0.6f));
+                prefab.GetComponent<Renderer>().sharedMaterial = waterMaterial;
+
+                SetPrivateBool(daySettings, "visibilityWaterLockedToUnknown", false);
+                SetPrivateBool(nightSettings, "visibilityWaterLockedToUnknown", true);
+
+                var view = root.AddComponent<AtlasTilePresentationView>();
+                catalog.ConfigureForTests(new[] { new AtlasTileCatalog.Entry("tile-water", prefab) });
+                view.ConfigureForTests(catalog, renderSideVisuals: true, useTopChunkMeshes: true);
+                view.ConfigureVisibilityPresentationForTests(VisibilityPresentationMode.LightingMask, visibilityShader);
+                view.ApplyVisibilitySettings(nightSettings);
+                var coord = new HexCoord(0, 0);
+                view.Render(new HexMapData(new[] { Cell(coord, "tile-water") }));
+
+                var revealed = new HexVisibilitySafeCellInfo(
+                    coord, HexCellVisibility.Revealed, true, true, true, "tile-water", "water", 1, false, false, string.Empty, string.Empty);
+                view.ApplyVisibility(_ => revealed);
+
+                var waterRenderer = root.GetComponentsInChildren<Renderer>(true)
+                    .Single(renderer => renderer.sharedMaterial != null && renderer.sharedMaterial.shader == waterShader);
+                var propertyBlock = new MaterialPropertyBlock();
+                waterRenderer.GetPropertyBlock(propertyBlock);
+                AssertColorScaled(surfaceColor, propertyBlock.GetColor("Color_F01C36BF"), 0.1f);
+
+                // 시야 갱신 호출 없이 설정만 바꾼다(크로스페이더 Begin/Complete가 하는 일).
+                view.ApplyVisibilitySettings(daySettings);
+                waterRenderer.GetPropertyBlock(propertyBlock);
+                AssertColorScaled(surfaceColor, propertyBlock.GetColor("Color_F01C36BF"), 1f);
+
+                view.ApplyVisibilitySettings(nightSettings);
+                waterRenderer.GetPropertyBlock(propertyBlock);
+                AssertColorScaled(surfaceColor, propertyBlock.GetColor("Color_F01C36BF"), 0.1f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(catalog);
+                Object.DestroyImmediate(prefab);
+                Object.DestroyImmediate(daySettings);
+                Object.DestroyImmediate(nightSettings);
+                if (waterMaterial != null) Object.DestroyImmediate(waterMaterial);
+            }
+        }
+
+        private static void SetPrivateBool(Object target, string field, bool value)
+        {
+            var so = new SerializedObject(target);
+            so.FindProperty(field).boolValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         [Test]

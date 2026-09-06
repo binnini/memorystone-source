@@ -153,7 +153,7 @@ namespace SeoulPlayup.Map.Unity
                    ?? volumes[0];
         }
 
-        private static AtlasTilePresentationView ResolveView()
+        internal static AtlasTilePresentationView ResolveView()
         {
             return Object.FindFirstObjectByType<AtlasTilePresentationView>(FindObjectsInactive.Include);
         }

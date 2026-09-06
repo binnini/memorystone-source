@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using TMPro;
@@ -87,7 +88,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var cards = state.GetDeckListCards();
 
             Assert.That(cards, Has.Some.Matches<CombatCardSnapshot>(card =>
-                card.Id == ApprovedCardCatalogFactory.MoveBasicId &&
+                card.Id == CardIds.Move2Hex &&
                 card.InstanceId == "owned-move-upgraded" &&
                 card.UpgradeLevel == 2 &&
                 card.IsTemporary));
@@ -565,16 +566,16 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static CombatState CreateUpgradedInstanceState()
         {
             var config = CombatConfig.Default;
-            var catalog = ApprovedCardCatalogFactory.CreateApprovedCatalog(config);
+            var catalog = DemoCardCatalog.Create(config);
             var playerDeck = new PlayerDeckData(
                 new[]
                 {
-                    new PlayerCardInstanceData("owned-move-base", ApprovedCardCatalogFactory.MoveBasicId),
-                    new PlayerCardInstanceData("owned-move-upgraded", ApprovedCardCatalogFactory.MoveBasicId, upgradeLevel: 2, isTemporary: true)
+                    new PlayerCardInstanceData("owned-move-base", CardIds.Move2Hex),
+                    new PlayerCardInstanceData("owned-move-upgraded", CardIds.Move2Hex, upgradeLevel: 2, isTemporary: true)
                 },
                 new[]
                 {
-                    new PlayerCardInstanceData("owned-attack", ApprovedCardCatalogFactory.AttackSweepId)
+                    new PlayerCardInstanceData("owned-attack", CardIds.Sweep)
                 });
 
             return new CombatState(

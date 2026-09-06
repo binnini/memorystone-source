@@ -53,6 +53,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.SetPlacementRandomization(enabled: false, hasSeed: true, seed: 4242, stageId: "test");
 
                 Assert.That(controller.TryGetPlacementSeed(out _), Is.False, "랜덤화가 꺼졌으면 배치 시드는 없어야 한다(맵 뷰 게이트).");
@@ -118,6 +119,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.SetPlacementRandomization(enabled: false, hasSeed: true, seed: 555, stageId: "test");
                 controller.ConfigureMapForTests(TestMaps.Line(3));
                 controller.InitializeIntegration();

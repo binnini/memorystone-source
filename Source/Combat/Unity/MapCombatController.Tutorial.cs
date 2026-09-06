@@ -514,15 +514,23 @@ namespace SeoulPlayup.Combat.Unity
         //          fan tilt and hover/draw motion are cut out exactly, with no bounding-box slop or lag.
         //   Tile/FieldObject → no hole, lighter dim: the hex already carries the gold tutorial-tile overlay.
         //   Monster → elliptical hole from the model's rendered bounds (falls back to a hex-sized rect).
-        private TutorialFocus? ResolveTutorialFocusScreenRect(TutorialHighlight highlight)
+        // Card elevation is a side effect of the *Highlight* only (isPrimary). The CalloutTarget is resolved
+        // through the same table for its ring rect but must leave the elevation alone: 「방어의 기초」 step pairs
+        // a Card highlight with an energy_bar callout, and resolving the callout as if it were the highlight
+        // dropped the lifted card again every LateUpdate, so the card sat under the input-blocking dim.
+        private TutorialFocus? ResolveTutorialFocusScreenRect(TutorialHighlight highlight, bool isPrimary)
         {
             if (highlight == null)
             {
-                ElevateTutorialCard(null);
+                if (isPrimary)
+                {
+                    ElevateTutorialCard(null);
+                }
+
                 return null;
             }
 
-            if (highlight.TargetType != TutorialHighlightTargetType.Card)
+            if (isPrimary && highlight.TargetType != TutorialHighlightTargetType.Card)
             {
                 ElevateTutorialCard(null);
             }
@@ -536,7 +544,11 @@ namespace SeoulPlayup.Combat.Unity
                 case TutorialHighlightTargetType.Card:
                 {
                     var slot = ResolveTutorialCardLaneView()?.TutorialCueSlotRect;
-                    ElevateTutorialCard(slot);
+                    if (isPrimary)
+                    {
+                        ElevateTutorialCard(slot);
+                    }
+
                     var rect = ScreenRectOf(slot);
                     return rect.HasValue
                         ? new TutorialFocus(rect.Value, TutorialFocusShape.NoHole, 1f, "card:" + highlight.TargetId)
@@ -583,6 +595,21 @@ namespace SeoulPlayup.Combat.Unity
                     var rect = bounds ?? TileScreenRect(monsterCoord, heightScale: 1.7f, lift: 0.35f);
                     return rect.HasValue
                         ? new TutorialFocus(rect.Value, TutorialFocusShape.Ellipse, 1f, "monster:" + monsterId)
+                        : (TutorialFocus?)null;
+                }
+                case TutorialHighlightTargetType.MonsterNameplate:
+                {
+                    // Body + nameplate + badge row in one ellipse, for steps that talk about the intent badge.
+                    if (!TryGetTutorialMonster(highlight, out var monsterId, out var monsterCoord))
+                    {
+                        return null;
+                    }
+
+                    var body = MonsterVisualScreenRect(monsterId) ?? TileScreenRect(monsterCoord, heightScale: 1.7f, lift: 0.35f);
+                    var plate = MonsterNameplateScreenRect(monsterId);
+                    Rect? rect = body.HasValue && plate.HasValue ? Union(body.Value, plate.Value) : (body ?? plate);
+                    return rect.HasValue
+                        ? new TutorialFocus(rect.Value, TutorialFocusShape.Ellipse, 1f, "monster-nameplate:" + monsterId)
                         : (TutorialFocus?)null;
                 }
                 default:
@@ -678,6 +705,42 @@ namespace SeoulPlayup.Combat.Unity
             }
 
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private readonly List<Vector3> tutorialNameplateCorners = new List<Vector3>(8);
+
+        // The monster's nameplate and badge row projected to a screen rect (null when there is no nameplate
+        // or any corner is behind the camera). Same projection as MonsterVisualScreenRect so the two union cleanly.
+        private Rect? MonsterNameplateScreenRect(string monsterId)
+        {
+            tutorialNameplateCorners.Clear();
+            if (prototype3DCamera == null || !actorMarkerPresenter.TryGetMarkerNameplateWorldCorners(monsterId, tutorialNameplateCorners))
+            {
+                return null;
+            }
+
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            foreach (var corner in tutorialNameplateCorners)
+            {
+                var p = prototype3DCamera.WorldToScreenPoint(corner);
+                if (p.z <= 0f)
+                {
+                    return null;
+                }
+
+                min = Vector2.Min(min, p);
+                max = Vector2.Max(max, p);
+            }
+
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        private static Rect Union(Rect a, Rect b)
+        {
+            return Rect.MinMaxRect(
+                Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin),
+                Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax));
         }
 
         private GameplayCardLaneView ResolveTutorialCardLaneView()

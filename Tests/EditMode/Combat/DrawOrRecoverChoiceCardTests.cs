@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 
@@ -23,14 +24,28 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             var handBefore = state.ActionDeck.HandCount;
 
-            Assert.That(state.TryPlayerChoiceOption(ApprovedCardCatalogFactory.UtilityDrawOrRecoverId, "draw"), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerChoiceOption(CardIds.DrawOrRecover, "draw"), Is.True, state.LastFailureReason);
 
             // -1 for the card itself, +2 from drawCount:2.
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1 + 2));
             Assert.That(
-                state.ActionDeck.Hand.Any(card => card.Id == ApprovedCardCatalogFactory.UtilityDrawOrRecoverId),
+                state.ActionDeck.Hand.Any(card => card.Id == CardIds.DrawOrRecover),
                 Is.False,
                 "The played card must not be one of the cards it draws back.");
+        }
+
+        [Test]
+        public void RefinedDrawOptionDrawsOneMore()
+        {
+            // 부적 끌어오기+ (효과 연마 2차): 2장 → 3장. 리터럴 기대값(상수 되읽기 금지).
+            var state = CreateState();
+            Assert.That(state.TryRefineCard(CardIds.DrawOrRecover, out var reason), Is.True, reason);
+            AdvanceToPlayerAction(state);
+            var handBefore = state.ActionDeck.HandCount;
+
+            Assert.That(state.TryPlayerChoiceOption(CardIds.DrawOrRecover, "draw"), Is.True, state.LastFailureReason);
+
+            Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1 + 3));
         }
 
         [Test]
@@ -42,7 +57,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.ActionDeck.PermanentRemoveFromHand(exiled), Is.True);
             var handBefore = state.ActionDeck.HandCount;
 
-            Assert.That(state.TryPlayerChoiceOption(ApprovedCardCatalogFactory.UtilityDrawOrRecoverId, "recover"), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerChoiceOption(CardIds.DrawOrRecover, "recover"), Is.True, state.LastFailureReason);
 
             Assert.That(state.GetExilePileCards(), Is.Empty, "The recovered card leaves the 소멸 더미 for good.");
             Assert.That(state.ActionDeck.Hand, Does.Contain(exiled));
@@ -59,7 +74,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var handBefore = state.ActionDeck.HandCount;
 
             Assert.That(state.GetExilePileCards(), Is.Empty);
-            Assert.That(state.TryPlayerChoiceOption(ApprovedCardCatalogFactory.UtilityDrawOrRecoverId, "recover"), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerChoiceOption(CardIds.DrawOrRecover, "recover"), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1));
         }
@@ -72,7 +87,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var exiled = state.MovementDeck.Hand.First();
             Assert.That(state.MovementDeck.PermanentRemoveFromHand(exiled), Is.True);
 
-            Assert.That(state.TryPlayerChoiceOption(ApprovedCardCatalogFactory.UtilityDrawOrRecoverId, "recover"), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerChoiceOption(CardIds.DrawOrRecover, "recover"), Is.True, state.LastFailureReason);
 
             Assert.That(state.MovementDeck.Hand, Does.Contain(exiled), "A recovered movement card returns to the movement hand.");
             Assert.That(state.GetExilePileCards(), Is.Empty);
@@ -87,7 +102,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             var kiBefore = state.ActionCostRemaining;
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityDrawOrRecoverId), Is.False);
+            Assert.That(state.TryPlayerUtility(CardIds.DrawOrRecover), Is.False);
             Assert.That(state.ActionCostRemaining, Is.EqualTo(kiBefore), "A refused card spends nothing.");
         }
 
@@ -97,7 +112,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // The HUD dispatcher used to open the choice panel only for attack cards, which left a utility
             // 갈림길 card falling through to UseUtility — unplayable from the hand.
             var card = new CombatCardSnapshot(
-                ApprovedCardCatalogFactory.UtilityDrawOrRecoverId,
+                CardIds.DrawOrRecover,
                 CombatCardKind.Utility,
                 "부적 끌어오기",
                 "갈림길",
@@ -123,7 +138,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             // The choice branch is hoisted above the kind switch, so it must not swallow U01/U03.
             var card = new CombatCardSnapshot(
-                ApprovedCardCatalogFactory.UtilityRedrawId,
+                CardIds.Redraw,
                 CombatCardKind.Utility,
                 "다시 뽑기",
                 "손패를 다시 뽑습니다",
@@ -163,21 +178,19 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var fillers = Enumerable.Range(1, 6).Select(index => new CardCatalogEntry(
                 "FILLER" + index, "Filler " + index, CardCategory.Action, CardEffectType.Defend,
-                1, 0, 1, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved));
+                1, 0, 1, "self", status: CardCatalogStatus.Approved));
             return new CardCatalogDefinition(
                 "draw-or-recover-test",
                 "Draw or recover test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.UtilityDrawOrRecoverId, "부적 끌어오기", CardCategory.Action, CardEffectType.Utility,
-                        1, 0, 0, CardEffectRefs.UtilityDrawOrRecover, "self",
-                        playMode: CardPlayMode.Choice, targetMode: CardTargetMode.OptionThenTarget,
-                        choiceOptions: $"draw:{CardBehaviorMetadata.ChoiceEffectDrawActionCards}:self;recover:{CardBehaviorMetadata.ChoiceEffectRecoverExiledCard}:self",
-                        behaviorParams: "drawCount:2", status: CardCatalogStatus.Approved)
+                        CardIds.DrawOrRecover, "부적 끌어오기", CardCategory.Action, CardEffectType.Utility,
+                        1, 0, 0, "self",
+                        playMode: CardPlayMode.Choice, targetMode: CardTargetMode.OptionThenTarget, status: CardCatalogStatus.Approved)
                 }.Concat(fillers));
         }
 

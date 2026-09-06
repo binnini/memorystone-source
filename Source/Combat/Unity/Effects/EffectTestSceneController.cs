@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Unity;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
@@ -56,8 +57,8 @@ namespace SeoulPlayup.Combat.Unity
         private static readonly Sample[] Samples =
         {
             new Sample("Player Hit", EffectKind.Damage, "", 8, 8, 0, false, EffectTestTargetAnchor.Player, "player"),
-            new Sample("Monster Hit", EffectKind.Damage, ApprovedCardCatalogFactory.AttackSweepId, 8, 8, 0, false, EffectTestTargetAnchor.Monster, "monster-01"),
-            new Sample("Double Hit", EffectKind.Damage, ApprovedCardCatalogFactory.AttackDoubleHitId, 8, 8, 0, false, EffectTestTargetAnchor.Monster, "monster-01"),
+            new Sample("Monster Hit", EffectKind.Damage, CardIds.Sweep, 8, 8, 0, false, EffectTestTargetAnchor.Monster, "monster-01"),
+            new Sample("Double Hit", EffectKind.Damage, CardIds.DoubleHit, 8, 8, 0, false, EffectTestTargetAnchor.Monster, "monster-01"),
             new Sample("Block", EffectKind.Block, "", 5, 5, 0, false, EffectTestTargetAnchor.Player, "player"),
             new Sample("Heal", EffectKind.Heal, "", 6, 6, 0, false, EffectTestTargetAnchor.Player, "player"),
             new Sample("Heal Field", EffectKind.Heal, "field.heal", 6, 6, 1, true, EffectTestTargetAnchor.Field, "field"),

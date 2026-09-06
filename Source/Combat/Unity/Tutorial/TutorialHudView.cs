@@ -72,7 +72,11 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
         private TutorialKeyCueView keyCue;
         private Image stepImage;
         private RectTransform continueMarker;
-        private const float ContinueMarkerSize = 22f;
+        // The "click to continue" arrow sits outside the panel's right edge (it used to be a small 22px glyph
+        // tucked inside the bottom-right corner, where it read as overlapping the text).
+        private const float ContinueMarkerSize = 44f;
+        private const float ContinueMarkerGap = 14f;
+        private const float ContinueMarkerBob = 6f;
         private const string ArrowSpriteResourcePath = "UI/Icons/ui_arrow";
         private const float ImageMaxHeight = 260f;
         private const float ImageGap = 12f;
@@ -204,16 +208,16 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
             feedbackRect.sizeDelta = new Vector2(PanelWidth, 40f);
             feedbackText.alignment = TextAlignmentOptions.Center;
 
-            // "You can continue now" marker: a small down-arrow in the panel's bottom-right that appears once the
-            // post-transition input lock releases on narration steps, and bobs to invite the click.
+            // "You can continue now" marker: a right-pointing arrow just outside the panel's right edge, level
+            // with its bottom, that appears once the post-transition input lock releases on narration steps
+            // and bobs sideways to invite the click.
             var markerGo = new GameObject("TutorialContinueMarker", typeof(RectTransform), typeof(Image));
             markerGo.transform.SetParent(panelRect, false);
             continueMarker = (RectTransform)markerGo.transform;
             continueMarker.anchorMin = continueMarker.anchorMax = new Vector2(1f, 0f);
-            continueMarker.pivot = new Vector2(1f, 0f);
+            continueMarker.pivot = new Vector2(0f, 0f);
             continueMarker.sizeDelta = new Vector2(ContinueMarkerSize, ContinueMarkerSize);
-            continueMarker.anchoredPosition = new Vector2(-10f, 8f);
-            continueMarker.localRotation = Quaternion.Euler(0f, 0f, -90f);
+            continueMarker.anchoredPosition = new Vector2(ContinueMarkerGap, 0f);
             var markerImage = markerGo.GetComponent<Image>();
             markerImage.sprite = Resources.Load<Sprite>(ArrowSpriteResourcePath);
             markerImage.preserveAspect = true;
@@ -319,8 +323,8 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
 
             if (ready)
             {
-                var bob = (1f - Mathf.Cos(Time.unscaledTime * 2f * Mathf.PI * 1.4f)) * 0.5f * 4f;
-                continueMarker.anchoredPosition = new Vector2(-10f, 8f - bob);
+                var bob = (1f - Mathf.Cos(Time.unscaledTime * 2f * Mathf.PI * 1.4f)) * 0.5f * ContinueMarkerBob;
+                continueMarker.anchoredPosition = new Vector2(ContinueMarkerGap + bob, 0f);
             }
         }
 
@@ -484,8 +488,12 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
             var bounds = canvasRect.rect;
             var size = panelRect.sizeDelta;
             var half = size * 0.5f;
-            // A visible key cue hangs off the panel's right edge; keep it on screen too.
+            // A visible key cue or continue arrow hangs off the panel's right edge; keep it on screen too.
             var extraRight = keyCue != null && keyCue.IsShowing ? KeyCueGap + keyCue.RectTransform.sizeDelta.x : 0f;
+            if (continueMarker != null && continueMarker.gameObject.activeSelf)
+            {
+                extraRight = Mathf.Max(extraRight, ContinueMarkerGap + ContinueMarkerBob + ContinueMarkerSize);
+            }
             var minX = bounds.xMin + SidebarReserve + half.x;
             var maxX = bounds.xMax - ScreenMargin - half.x - extraRight;
             var minY = bounds.yMin + ScreenMargin + half.y;

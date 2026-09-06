@@ -335,6 +335,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 try
                 {
                     var controller = root.AddComponent<MapCombatController>();
+                    controller.UseDemoCardCatalogForTests();
                     controller.ConfigureForTests(view, null, null);
 
                     Assert.That(controller.ActiveOverlayRendererBackendForTests, Is.EqualTo(CombatOverlayRendererBackend.BatchedMesh));
@@ -359,6 +360,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 try
                 {
                     var controller = root.AddComponent<MapCombatController>();
+                    controller.UseDemoCardCatalogForTests();
                     controller.ConfigureOverlayRendererBackendForTests(CombatOverlayRendererBackend.Atlas);
                     controller.ConfigureForTests(view, null, null);
 
@@ -381,6 +383,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 try
                 {
                     var controller = root.AddComponent<MapCombatController>();
+                    controller.UseDemoCardCatalogForTests();
                     controller.ConfigureOverlayRendererBackendForTests(CombatOverlayRendererBackend.Auto);
                     controller.ConfigureForTests(view, null, null);
 
@@ -403,6 +406,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 try
                 {
                     var controller = root.AddComponent<MapCombatController>();
+                    controller.UseDemoCardCatalogForTests();
                     controller.ConfigureForTests(view, null, null);
                     Assert.That(controller.ActiveOverlayRendererBackendForTests, Is.EqualTo(CombatOverlayRendererBackend.BatchedMesh));
                     Assert.That(controller.OverlayRendererStatusText, Is.EqualTo("Renderer: BatchedMesh (Auto)"));
@@ -429,6 +433,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureOverlayRendererBackendForTests(CombatOverlayRendererBackend.BatchedMesh);
                 controller.ConfigureForTests(null, null, null);
 

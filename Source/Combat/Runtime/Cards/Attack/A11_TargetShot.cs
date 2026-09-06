@@ -7,8 +7,11 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "A11";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.AttackDamage;
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "속박" };
+
+        /// <summary>연마(옛 card_upgrades.csv): 원거리 2칸 유지·피해 2→4.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(amount: 4);
 
         /// <summary>맞은 적을 표식(다음 공격 우선 대상)하고 2턴 속박. 속박 턴수는 규칙이라 여기 상수다.</summary>
         public const int ImmobilizeTurns = 2;

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Map.Runtime;
@@ -9,8 +10,11 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "S06";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.ScoutEnemyVulnerable;
+        /// <summary>연마(DEC-2026-09-06-08, 효과 연마 2차): 허점 2→3턴. 문안은 리터럴이라 descriptionUpgraded.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(durationTurns: 3);
+
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "탐색", "허점" };
 
         public override void ApplyAfterScoutReveal(CombatState state, CardDefinition card, HexCoord target, int revealRadius)
         {
@@ -28,7 +32,7 @@ namespace SeoulPlayup.Combat.Runtime.Cards
             var hitIndex = 0;
             foreach (var monster in targets)
             {
-                state.AddDurationStatusEffect(StatusEffectKind.Vulnerable, monster.Id, turns, amount, CardEffectRefs.ScoutEnemyVulnerable);
+                state.AddDurationStatusEffect(StatusEffectKind.Vulnerable, monster.Id, turns, amount, card.Id);
                 // S01/S03과 같은 per-target stagger — 타임라인이 몬스터 한 명씩 읽히게.
                 state.RaiseEffect(
                     EffectKind.StatusEffectApplied,
@@ -36,7 +40,7 @@ namespace SeoulPlayup.Combat.Runtime.Cards
                     0,
                     amount,
                     monster.Id,
-                    CardEffectRefs.ScoutEnemyVulnerable,
+                    card.Id,
                     sourceUnitId: CombatState.PlayerUnitId,
                     sourceActorKind: "player",
                     targetActorKind: "monster",

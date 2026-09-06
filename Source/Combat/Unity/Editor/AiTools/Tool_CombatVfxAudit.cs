@@ -168,19 +168,19 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
                     case CardVfxCoverageStatus.SharedBehavior:
                         result.cardsSharedBehavior++;
                         result.cardsSharingBehaviorCue.Add(
-                            $"{label} → {string.Join(", ", report.MatchedCueIds)} (behaviorId={report.BehaviorId})");
+                            $"{label} → {string.Join(", ", report.MatchedCueIds)} (effectKey={report.SharedEffectKey})");
                         break;
                     case CardVfxCoverageStatus.FallbackOnly:
                         result.cardsFallbackOnly++;
                         result.cardsOnFallbackOnly.Add(
-                            $"{label} → generic {string.Join("/", report.FallbackKinds)} (behaviorId={report.BehaviorId})");
+                            $"{label} → generic {string.Join("/", report.FallbackKinds)} (effectKey={report.SharedEffectKey})");
                         break;
                     case CardVfxCoverageStatus.NoVfx:
                         result.cardsNoVfx++;
                         var reason = report.ProbedKinds.Count == 0
                             ? "no effect kind derived from its authored columns"
                             : $"no renderable entry for {string.Join("/", report.UncoveredKinds)}";
-                        result.cardsWithoutAnyVfx.Add($"{label} → {reason} (behaviorId={report.BehaviorId})");
+                        result.cardsWithoutAnyVfx.Add($"{label} → {reason} (effectKey={report.SharedEffectKey})");
                         break;
                 }
 
@@ -189,7 +189,7 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
                     cardId = report.CardId,
                     cardName = report.CardName,
                     cardType = report.CardType,
-                    behaviorId = report.BehaviorId,
+                    sharedEffectKey = report.SharedEffectKey,
                     status = report.Status.ToString(),
                     matchedCueIds = report.MatchedCueIds,
                     matchKeys = report.MatchKeys,

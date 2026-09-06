@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -41,7 +42,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.TryPlayerMove(new HexCoord(0, 0)), Is.True);
             // 이동 페이즈에서의 공격 시도는 실패해 LastFailureReason 피드백을 남긴다(몬스터가
             // 추격 이동한 뒤에는 광역 공격이 성공해 버리므로 실패 시도는 전환 전에 수행).
-            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackSweepId), Is.False);
+            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), CardIds.Sweep), Is.False);
             // DEC-2026-07-03-02: 액션 페이즈 진입은 EndAction → 몬스터 이동 해석을 거친다.
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement();

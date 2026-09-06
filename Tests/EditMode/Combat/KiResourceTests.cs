@@ -102,8 +102,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Test high Ki move",
                 new[]
                 {
-                    new CardCatalogEntry("high-ki-step", "High Ki Step", CardCategory.Movement, CardEffectType.Move, 2, 2, 2, "move.high_ki", "reachable_known_hex"),
-                    new CardCatalogEntry("test-guard", "Guard", CardCategory.Action, CardEffectType.Defend, 1, 0, 4, "defend.block", "self")
+                    new CardCatalogEntry("high-ki-step", "High Ki Step", CardCategory.Movement, CardEffectType.Move, 2, 2, 2, "reachable_known_hex"),
+                    new CardCatalogEntry("test-guard", "Guard", CardCategory.Action, CardEffectType.Defend, 1, 0, 4, "self")
                 });
         }
     }

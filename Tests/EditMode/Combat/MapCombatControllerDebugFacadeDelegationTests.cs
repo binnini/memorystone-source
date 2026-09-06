@@ -20,6 +20,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(TestMaps.Line(4));
                 controller.InitializeIntegration();
                 var before = controller.State.PlayerInventory.Wallet.Balance;
@@ -43,6 +44,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(TestMaps.Line(4));
                 controller.InitializeIntegration();
                 var hp = controller.State.Player.Hp;

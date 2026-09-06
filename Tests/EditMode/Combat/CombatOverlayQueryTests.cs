@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 
@@ -14,9 +15,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var query = new CombatOverlayQuery();
             var state = CreateActionState(out var map);
 
-            Assert.That(query.GetSelectedTargetHighlightCells(null, map, CombatCardKind.Attack, ApprovedCardCatalogFactory.AttackDoubleHitId), Is.Empty);
-            Assert.That(query.GetSelectedTargetHighlightCells(state, null, CombatCardKind.Attack, ApprovedCardCatalogFactory.AttackDoubleHitId), Is.Empty);
-            Assert.That(query.GetSelectedTargetHighlightCells(state, map, null, ApprovedCardCatalogFactory.AttackDoubleHitId), Is.Empty);
+            Assert.That(query.GetSelectedTargetHighlightCells(null, map, CombatCardKind.Attack, CardIds.DoubleHit), Is.Empty);
+            Assert.That(query.GetSelectedTargetHighlightCells(state, null, CombatCardKind.Attack, CardIds.DoubleHit), Is.Empty);
+            Assert.That(query.GetSelectedTargetHighlightCells(state, map, null, CardIds.DoubleHit), Is.Empty);
         }
 
         [Test]
@@ -24,7 +25,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var query = new CombatOverlayQuery();
             var state = CreateActionState(out var map);
-            var heavyStrike = state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.AttackDoubleHitId && !card.IsDiscarded);
+            var heavyStrike = state.GetCombatCards().Single(card => card.Id == CardIds.DoubleHit && !card.IsDiscarded);
 
             var cells = query.GetSelectedTargetHighlightCells(state, map, CombatCardKind.Attack, heavyStrike.Id).ToList();
             // Overlay highlights exclude unwalkable cells (same gate as movement/pathfinding).
@@ -59,7 +60,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // AttackSweep is now a self-centred area card (range 0), so use a ranged attack card
             // to exercise the unwalkable-exclusion contract of the target highlight.
             var cells = new CombatOverlayQuery()
-                .GetSelectedTargetHighlightCells(state, map, CombatCardKind.Attack, ApprovedCardCatalogFactory.AttackDoubleHitId)
+                .GetSelectedTargetHighlightCells(state, map, CombatCardKind.Attack, CardIds.DoubleHit)
                 .ToList();
 
             Assert.That(cells, Has.No.Member(new HexCoord(1, 0)));
@@ -73,7 +74,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateApprovedActionState(out var map);
             var selection = CombatSelectionState.Target(
                 CombatCardKind.Attack,
-                ApprovedCardCatalogFactory.AttackSweepId,
+                CardIds.Sweep,
                 "Sweep");
 
             var cells = query.GetSelectedEffectAreaHighlightCells(state, map, selection).ToList();
@@ -94,8 +95,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(0, 0),
                 new HexCoord(4, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config));
-            var card = state.GetCombatCards().Single(snapshot => snapshot.Id == ApprovedCardCatalogFactory.MoveRandomJourneyId && !snapshot.IsDiscarded);
+                cardCatalog: DemoCardCatalog.Create(config));
+            var card = state.GetCombatCards().Single(snapshot => snapshot.Id == CardIds.RandomJourney && !snapshot.IsDiscarded);
             var selection = CombatSelectionState.Move(card.Id, card.InstanceId, card.Name);
 
             var cells = query.GetSelectedEffectAreaHighlightCells(state, map, selection).ToList();
@@ -110,7 +111,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var query = new CombatOverlayQuery();
             var state = CreateApprovedActionState(out var map);
-            var fieldCard = state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.FieldFlashbangId && !card.IsDiscarded);
+            var fieldCard = state.GetCombatCards().Single(card => card.Id == CardIds.Flashbang && !card.IsDiscarded);
             var selection = CombatSelectionState.Target(CombatCardKind.FieldObject, fieldCard.Id, fieldCard.InstanceId, fieldCard.Name);
             var hover = new HexCoord(1, 0);
 
@@ -127,7 +128,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var query = new CombatOverlayQuery();
             var state = CreateActionState(out var map);
 
-            var cells = query.GetSelectedTargetHighlightCells(state, map, CombatCardKind.Scout, ApprovedCardCatalogFactory.ScoutMinefinderId).ToList();
+            var cells = query.GetSelectedTargetHighlightCells(state, map, CombatCardKind.Scout, CardIds.Minefinder).ToList();
             var expected = map.AllCells
                 .Where(cell => state.ValidateScoutTarget(cell.Coord).IsValid)
                 .Select(cell => cell.Coord)
@@ -142,7 +143,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var query = new CombatOverlayQuery();
             var state = CreateApprovedActionState(out var map);
-            var fieldCard = state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.FieldFlashbangId && !card.IsDiscarded);
+            var fieldCard = state.GetCombatCards().Single(card => card.Id == CardIds.Flashbang && !card.IsDiscarded);
 
             var cells = query.GetSelectedTargetHighlightCells(state, map, CombatCardKind.FieldObject, fieldCard.Id).ToList();
             var expected = map.AllCells
@@ -168,7 +169,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 state,
                 mismatchedMap,
                 CombatCardKind.Scout,
-                ApprovedCardCatalogFactory.ScoutMinefinderId);
+                CardIds.Minefinder);
 
             Assert.That(cells, Is.Empty);
         }
@@ -179,7 +180,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var query = new CombatOverlayQuery();
             var state = CreateActionState(out var map);
-            var heavyStrike = state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.AttackDoubleHitId && !card.IsDiscarded);
+            var heavyStrike = state.GetCombatCards().Single(card => card.Id == CardIds.DoubleHit && !card.IsDiscarded);
             var selection = CombatSelectionState.Target(CombatCardKind.Attack, heavyStrike.Id, heavyStrike.Name);
 
             var viaSelection = query.GetSelectedTargetHighlightCells(state, map, selection).ToList();
@@ -199,7 +200,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateActionState(out var map);
 
             Assert.That(query.GetSelectedTargetHighlightCells(state, map, CombatSelectionState.None), Is.Empty);
-            Assert.That(query.GetSelectedTargetHighlightCells(state, map, CombatSelectionState.Move(ApprovedCardCatalogFactory.Move1HexId, "Move 1")), Is.Empty);
+            Assert.That(query.GetSelectedTargetHighlightCells(state, map, CombatSelectionState.Move(CardIds.Move1Hex, "Move 1")), Is.Empty);
         }
 
         [Test]
@@ -243,7 +244,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(0, 0),
                 new HexCoord(4, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config));
+                cardCatalog: DemoCardCatalog.Create(config));
             Assert.That(state.TryPlayerMove(state.PlayerCoord), Is.True);
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement();

@@ -95,7 +95,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
             var monsterBundle = MonsterCatalogCsvConverter.ConvertDirectories(
                 CombatCsvPaths.MonsterDirectory, CombatCsvPaths.PresentationDirectory);
-            // ⚠️출하 cards.csv를 런타임과 같은 경로로 읽는다. ApprovedCardCatalogFactory는 CSV 이전의
+            // ⚠️출하 cards.csv를 런타임과 같은 경로로 읽는다. 옛 팩토리(P3-b에서 DemoCardCatalog로 은퇴)는 CSV 이전의
             // 하드코딩 폴백이라 상태 카드(X01~X03)가 아예 없다 — 그걸 보면 이 감사는 항상 거짓 실패한다.
             // 캐시하지 않는 이유는 ShippingCardCsvEffectTests.ShippingCatalog 주석 참고(도메인 리로드 함정).
             var cardCatalogAsset = ScriptableObject.CreateInstance<CardCatalogAsset>();
@@ -139,11 +139,10 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                     continue;
                 }
 
-                // TryInjectStatusCard와 같은 계약: id 또는 effectRef로 찾고, 덱에 안 섞이는 카드여야 한다
+                // TryInjectStatusCard와 같은 계약: 카드 id로 찾고, 덱에 안 섞이는 카드여야 한다
                 // (includeInDecks=TRUE인 카드를 넣으면 상태 카드가 아니라 진짜 카드를 공짜로 주는 함정이 된다).
                 var card = cardCatalog.Entries.FirstOrDefault(entry =>
-                    string.Equals(entry.Id, preset.StatusCardId, StringComparison.Ordinal)
-                    || string.Equals(entry.EffectRef, preset.StatusCardId, StringComparison.Ordinal));
+                    string.Equals(entry.Id, preset.StatusCardId, StringComparison.Ordinal));
                 if (card == null)
                 {
                     failures.Add($"preset '{preset.PresetId}': cards.csv에 없는 상태 카드 '{preset.StatusCardId}'를 넣는다.");

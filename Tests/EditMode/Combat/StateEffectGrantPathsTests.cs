@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -102,15 +103,15 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         "A14", "으름장", CardCategory.Action, CardEffectType.Attack,
-                        1, 2, 2, CardEffectRefs.AttackDamage, "living_monster_in_range",
+                        1, 2, 2, "living_monster_in_range",
                         status: CardCatalogStatus.Approved, durationTurns: 2, stateEffect: "Weaken:30"),
                     new CardCatalogEntry(
                         "S06", "약점 간파", CardCategory.Action, CardEffectType.Scout,
-                        1, 4, 0, CardEffectRefs.ScoutEnemyVulnerable, "walkable_map_cell",
+                        1, 4, 0, "walkable_map_cell",
                         areaRadius: 1, status: CardCatalogStatus.Approved, durationTurns: 2, stateEffect: "Vulnerable:2"),
                 });
         }

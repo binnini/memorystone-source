@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Text;
+using SeoulPlayup.Combat.Runtime.Cards;
 
 namespace SeoulPlayup.Combat.Runtime
 {
@@ -11,13 +13,46 @@ namespace SeoulPlayup.Combat.Runtime
     /// Matching is longest-first substring (no word boundaries, per design), tag-aware so existing markup is
     /// copied verbatim, and idempotent: re-running on already-decorated text leaves it unchanged because the
     /// scan never matches inside an existing keyword <c>&lt;link&gt;</c> region.
+    ///
+    /// P5(2026-09-06, 키워드 명시화): 카드 문안은 <see cref="DecorateForCard"/>로 장식한다 — 카드 클래스가
+    /// <see cref="CardBehavior.Keywords"/>로 선언한 키워드만 걸리고, 선언이 없는 카드(카탈로그 밖 픽스처 포함)는 문안이 그대로다.
+    /// 카탈로그 전체를 부분 문자열로 훑는 <see cref="Decorate(string, KeywordCatalogDefinition)"/>는 카드에 묶이지 않은 문안 전용이다.
     /// </summary>
     public static class CardKeywordDecorator
     {
         public const string LinkIdPrefix = "kw:";
 
-        /// <summary>Decorates using the process-wide active catalog. No-op when none is set (plain text in/out).</summary>
-        public static string Decorate(string text) => Decorate(text, CardKeywordCatalogProvider.Active);
+        /// <summary>
+        /// 카드 문안 장식: 카드 클래스가 선언한 <see cref="CardBehavior.Keywords"/>만 강조·링크한다(활성 카탈로그 기준).
+        /// 등록되지 않은 카드 id는 선언이 없으므로 문안이 그대로 돌아간다.
+        /// </summary>
+        public static string DecorateForCard(string text, string cardId)
+        {
+            return CardBehaviorRegistry.TryGet(cardId, out var behavior)
+                ? Decorate(text, CardKeywordCatalogProvider.Active, behavior.Keywords)
+                : text;
+        }
+
+        /// <summary>선언된 키워드(원형)만 걸리는 장식. <paramref name="keywords"/>가 비면 문안이 그대로다.</summary>
+        public static string Decorate(string text, KeywordCatalogDefinition catalog, IReadOnlyCollection<string> keywords)
+        {
+            if (string.IsNullOrEmpty(text) || catalog == null || keywords == null || keywords.Count == 0)
+            {
+                return text;
+            }
+
+            var declared = new HashSet<string>(keywords, System.StringComparer.Ordinal);
+            var terms = new List<KeywordMatchTerm>();
+            foreach (var term in catalog.MatchTermsLongestFirst)
+            {
+                if (declared.Contains(term.Definition.Keyword))
+                {
+                    terms.Add(term);
+                }
+            }
+
+            return Decorate(text, terms);
+        }
 
         /// <summary>
         /// Decorates <paramref name="text"/> against <paramref name="catalog"/>. Returns the input unchanged
@@ -30,8 +65,12 @@ namespace SeoulPlayup.Combat.Runtime
                 return text;
             }
 
-            var terms = catalog.MatchTermsLongestFirst;
-            if (terms.Count == 0)
+            return Decorate(text, catalog.MatchTermsLongestFirst);
+        }
+
+        private static string Decorate(string text, IReadOnlyList<KeywordMatchTerm> terms)
+        {
+            if (string.IsNullOrEmpty(text) || terms == null || terms.Count == 0)
             {
                 return text;
             }

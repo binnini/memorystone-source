@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using TMPro;
@@ -156,7 +157,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                     .Select(card => new ServiceCardCandidate(card.SelectionKey, card.Name))
                     .ToArray(),
                 (option, candidate) => state.TryPreviewRefinedCardSnapshots(candidate.Key, out var before, out var after, out var reason)
-                    ? new ServiceCardComparePair(before, after)
+                    && state.TryPreviewRefinedCard(candidate.Key, out var current, out var refined, out reason)
+                    ? new ServiceCardComparePair(before, after, current, refined)
                     : default,
                 (option, candidate) => state.TryRefineCard(candidate.Key, out var reason),
                 () => { });
@@ -164,21 +166,20 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
         private static CombatState CreateRefineState()
         {
-            var upgraded = new CardCatalogEntry(
-                "A01", "테스트 공격+", CardCategory.Action, CardEffectType.Attack,
-                1, 1, 5, CardEffectRefs.AttackDamage, "living_monster_in_range", status: CardCatalogStatus.Approved);
+            // 연마 값은 카드 클래스(A01_Sweep.Upgrade)가 준다.
             var catalog = new CardCatalogDefinition(
                 "service-view-test",
                 "Service view test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        // 클래스 없는 필러 이동 카드 — A01이 유일한 연마 후보여야 하는 픽스처. 출하 이동 카드 8장은 효과 연마 2차(DEC-2026-09-06-08)부터 전부 연마 가능이다.
+                        "MOVE-FILLER", "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        "A01", "테스트 공격", CardCategory.Action, CardEffectType.Attack,
-                        1, 1, 3, CardEffectRefs.AttackDamage, "living_monster_in_range",
-                        status: CardCatalogStatus.Approved, upgradedEntry: upgraded),
+                        CardIds.Sweep, "테스트 공격", CardCategory.Action, CardEffectType.Attack,
+                        1, 1, 3, "living_monster_in_range",
+                        status: CardCatalogStatus.Approved),
                 });
             return new CombatState(
                 CombatState.CreateDemoMap(2),

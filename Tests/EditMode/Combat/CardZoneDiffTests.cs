@@ -173,8 +173,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Zone Diff Catalog",
                 new[]
                 {
-                    new CardCatalogEntry("move-test", "Move Test", CardCategory.Movement, CardEffectType.Move, 0, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry("defend-test", "Defend Test", CardCategory.Action, CardEffectType.Defend, 0, 0, 2, CardEffectRefs.DefendBlock, "self", playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved)
+                    new CardCatalogEntry("move-test", "Move Test", CardCategory.Movement, CardEffectType.Move, 0, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry("defend-test", "Defend Test", CardCategory.Action, CardEffectType.Defend, 0, 0, 2, "self", playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved)
                 });
             var playerDeck = new PlayerDeckData(
                 new[] { new PlayerCardInstanceData("move-instance-a", "move-test") },

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using SeoulPlayup.CardCore;
 
 namespace SeoulPlayup.Combat.Runtime.Cards
@@ -7,8 +8,11 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "D03";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.DefendHalfReflect;
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "반사" };
+
+        /// <summary>연마(옛 card_upgrades.csv): 반사 50%→75%.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(buffDebuff: "Reflect:75");
 
         public override bool TryApplyDefend(CombatState state, CardDefinition card, out int blockGranted)
         {

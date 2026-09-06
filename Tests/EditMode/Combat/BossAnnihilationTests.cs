@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using SeoulPlayup.Map.Unity;
@@ -416,11 +417,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "이동", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move2Hex, "이동", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         WideScoutCardId, "광역 정찰", CardCategory.Action, CardEffectType.Scout,
-                        1, 4, 0, CardEffectRefs.ScoutReveal, "walkable_map_cell", areaRadius: 2,
+                        1, 4, 0, "walkable_map_cell", areaRadius: 2,
                         status: CardCatalogStatus.Approved)
                 });
         }

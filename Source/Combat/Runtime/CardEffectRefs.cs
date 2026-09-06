@@ -1,58 +1,51 @@
 namespace SeoulPlayup.Combat.Runtime
 {
     /// <summary>
-    /// Central effectRef ids shared by card catalog data and the runtime effect dispatcher.
-    /// These strings are intentionally stable because scene/catalog migration evidence stores them.
+    /// <b>효과 종류 키</b>(effect-kind keys) — 카드가 <b>아닌</b> 발신자가 올리는 효과의 sourceRef 어휘.
+    /// 카드가 자기 효과를 직접 올릴 때의 sourceRef는 언제나 <b>카드 id</b>다(트랙 ② 2026-09-06, DEC-2026-09-06-07 —
+    /// 옛 behaviorId 문자열 <c>attack.damage</c>·<c>defend.block</c> 등은 은퇴). 여기 남은 키는 발신자가
+    /// 카드가 떠난 뒤의 장판(<c>field.*</c>)·지연 부여(<c>*.apply</c>)·저주 턴말(<c>status.*</c>)·규칙 상태(피해 면역)처럼
+    /// 「무엇이 일어났나」를 말해야 하는 것들이다. 소비자는 VFX 큐·오디오·타일 플래시·분류기·문안뿐이고 규칙 판정에는 쓰지 않는다
+    /// (예외: 장판 속박의 제자리 갱신 <c>ActiveEffectRegistry.TryReplaceInPlaceFromSameSource</c>).
+    /// 문자열은 세이브(<c>ActiveEffect.SourceRef</c>)와 큐 CSV에 실리므로 바꾸지 않는다.
     /// </summary>
     public static class CardEffectRefs
     {
-        public const string MoveBasic = "move.basic";
-        public const string MoveDeferredMomentum = "move.deferred_momentum";
+        // ---- 지연 부여: 카드를 낸 턴이 아니라 다음 턴 시작에 규칙층이 스스로 건다 ----
+        /// <summary>M05 추진력이 예약한 민첩이 다음 턴 시작에 실제로 붙는 순간.</summary>
         public const string MoveDeferredMomentumApply = "move.deferred_momentum.apply";
-        public const string MoveRandomRadius2 = "move.random_radius_2";
-        public const string MoveFastTurtle = "move.fast_turtle";
+        // Source tag for the 속박 that D04/D06 booked and that lands at the start of the next turn.
+        // Distinct from the card's own id so presentation can tell "you took this on yourself
+        // last turn" apart from the moment the card was played (cf. MoveDeferredMomentumApply).
+        public const string SelfDelayedImmobilizeApply = "self.delayed_immobilize.apply";
+        /// <summary>D02 보호구역 안에서 도발이 예약한 「모든 적 강화」가 다음 턴 시작에 붙는 순간(옛 이름 defend.zero_then_double).</summary>
+        public const string DefendProvokeStrength = "defend.provoke_strength";
 
-        public const string AttackDamage = "attack.damage";
-        public const string AttackAreaDamage = "attack.area_damage";
-        public const string AttackMoveLinked = "attack.move_linked";
-        public const string AttackHolyLight = "attack.holy_light";
-        public const string AttackFinishingTouch = "attack.finishing_touch";
-        public const string AttackFinalBlow = "attack.final_blow";
-        public const string AttackDoubleHit = "attack.double_hit";
-        public const string AttackOneStrikeEnough = "attack.one_strike_enough";
-        public const string AttackMultiplyingStrike = "attack.multiplying_strike";
-        public const string AttackSacrifice = "attack.sacrifice";
-        public const string AttackTargetShot = "attack.target_shot";
-        // A12 전염병 — extra damage against an already-afflicted target, then the affliction spreads.
-        public const string AttackPlague = "attack.plague";
-
+        // ---- 규칙 상태에서 파생되는 알림 ----
         /// <summary>
-        /// 횃불(C-14 / D-15): 시야 +Amount를 주고 매 턴 1씩 타 들어간다. 획득 표면 둘(카드·오브젝트)이
-        /// 같은 부여 지점(<c>GrantTorchLight</c>)을 쓴다 — 표면이 갈라져도 규칙은 한 곳이다.
+        /// 방어 카드가 방어도 대신 <b>피해 면역</b>을 준 것을 알리는 Block(0) 발신. D02·D05가 공유하며 발신자는
+        /// <c>CombatState.TryPlayerDefend</c>(규칙 상태 <c>IncomingDamageNullifiedThisMonsterAction</c>을 읽음).
+        /// 분류기 <c>IsDamageImmunitySource</c>·EPC 「피해 면역」 문안·CVD02/CVD05 큐가 이것을 본다.
         /// </summary>
-        public const string UtilityTorch = "utility.torch";
-
+        public const string DefendDamageImmunity = "defend.damage_immunity";
+        /// <summary>반사가 되돌린 피해(ReflectDamage). 몬스터 행동 중에 규칙층이 올린다 — D03의 Reflect 부여 자체는 카드 id다.</summary>
+        public const string DefendHalfReflect = "defend.half_reflect";
         /// <summary>
-        /// 함정 해제(C-13 / D-14): 인접 1칸의 <b>발견된</b> 함정을 소진 처리한다. 정찰 타입이지만
-        /// 안개를 걷지 않는다 — 정찰의 셀 선택 문법만 빌린다.
+        /// A12 전염병이 맞은 뒤 이웃에게 <b>옮긴</b> 상태이상 부여. 카드의 직접 발신이 아니라 파생 효과라 키를 따로 둔다 —
+        /// 표현층은 이 키로 「전염! 」 접두를 단다(옛 이름 attack.plague).
         /// </summary>
-        public const string ScoutTrapDisarm = "scout.trap_disarm";
+        public const string PlagueContagion = "status.plague_contagion";
 
-        // 상태 카드(C-17 / D-17). 전부 사용 불가(CardEffectType.Status)이고, 차이는 부가 효과뿐이다.
-        // 손패 한 칸을 먹는 것 자체가 공통 비용이라 "효과 없음"(미세먼지)도 성립한다.
+        // ---- 저주 카드(C-17 / D-17 → T2 2026-08-06): 사용 불가 카드라 「냈다」가 없고, 손에 있는 동안·턴말에 규칙층이 올린다 ----
         /// <summary>미세먼지: 부가 효과 없음. 턴 종료 시 손패에서 소멸(isTemporary).</summary>
         public const string StatusFineDust = "status.fine_dust";
-
         /// <summary>깨진 유리: 턴 종료 시 손패에 남아 있으면 피해. 버리면 아프지 않다 — 그게 선택지다.</summary>
         public const string StatusBrokenGlass = "status.broken_glass";
-
         /// <summary>
         /// 정전: <b>손패에 있는 동안</b> 다른 카드 1장이 봉인된다(사용자 확정 — 턴 종료 트리거가 아니다).
         /// 그래서 턴 훅이 없고, <c>GetSealedCardCount</c>가 손패를 세는 것이 곧 이 규칙이다.
         /// </summary>
         public const string StatusBlackout = "status.blackout";
-
-        // ---- 저주 카드(T2, 2026-08-06): 상태 카드가 '저주'로 개편되며 추가된 9종 ----
         /// <summary>X04 빚 문서 — 낼 수 있는 유일한 저주(기 1로 사용 시 소멸).</summary>
         public const string StatusDebtNote = "status.debt_note";
         /// <summary>X05 악몽 — 손에 있는 동안 시야 −1.</summary>
@@ -72,50 +65,35 @@ namespace SeoulPlayup.Combat.Runtime
         /// <summary>X12 원귀 — 손에 있는 동안 받는 피해 +1.</summary>
         public const string StatusVengefulGhost = "status.vengeful_ghost";
 
-        public const string DefendBlock = "defend.block";
-        public const string DefendZeroThenDouble = "defend.zero_then_double";
-        public const string DefendHalfReflect = "defend.half_reflect";
-        public const string DefendCleanseBlock = "defend.cleanse_block";
-        public const string DefendBlockDelayedImmobilize = "defend.block_delayed_immobilize";
-        // D05 부적 방패 — exiles one random card from the hand and nullifies this turn's incoming damage.
-        public const string DefendExileRandomNegate = "defend.exile_random_negate";
-        // Source tag for the 속박 that D04/D06 booked and that lands at the start of the next turn.
-        // Distinct from the card's own effectRef so presentation can tell "you took this on yourself
-        // last turn" apart from the moment the card was played (cf. MoveDeferredMomentumApply).
-        public const string SelfDelayedImmobilizeApply = "self.delayed_immobilize.apply";
-
-        public const string ScoutReveal = "scout.reveal";
-        public const string ScoutEnemyCountDamage = "scout.enemy_count_damage";
-        public const string ScoutTreasureCountHeal = "scout.treasure_count_heal";
-        public const string ScoutEnemyStun = "scout.enemy_stun";
-        public const string ScoutEnemyCountHealThreshold = "scout.enemy_count_heal_threshold";
-
-        /// <summary>S06 약점 간파(T1, 2026-08-06): 탐색 + 드러난 적 전원에게 허점. 기절초광(S03)의 비-CC 변형이라 인텐트 취소 경로가 없다.</summary>
-        public const string ScoutEnemyVulnerable = "scout.enemy_vulnerable";
-
-        public const string FieldFogRevealCampfire = "field.fog_reveal.campfire";
-        public const string FieldDamageFirebomb = "field.damage.firebomb";
-        public const string FieldHealSacredCampfire = "field.heal.sacred_campfire";
-        public const string FieldImmobilizeFlashbang = "field.immobilize.flashbang";
+        // ---- 장판: 카드가 떠난 뒤에도 살아 매 턴 스스로 올린다(CombatState.FieldObjectCardEffects) ----
+        /// <summary>설치 순간의 발자국 알림(연출 전용, 수치 없음). 오디오·카메라는 침묵한다(분류기 <c>IsFieldPlacementAnnounce</c>).</summary>
         public const string FieldPlacement = "field.placement";
-        public const string FieldFogReveal = "field.fog-reveal";
         public const string FieldDamage = "field.damage";
         public const string FieldHeal = "field.heal";
+        public const string FieldImmobilizeFlashbang = "field.immobilize.flashbang";
         // F04 흡수진 — a damage field whose damage is returned to the caster as healing. Top-level ref
         // (not a `field.damage.*` flavour alias) because it maps to its own FieldObjectKind.
         public const string FieldLifesteal = "field.lifesteal";
+        public const string FieldFogReveal = "field.fog-reveal";
+        public const string FieldFogRevealCampfire = "field.fog_reveal.campfire";
+        /// <summary>개발용 카드 연출 시나리오(<c>CardPresentationScenarioPlayer</c>)만 올린다 — 타임라인의 장판 영역 큐 판정이 같이 본다.</summary>
+        public const string FieldDamageFirebomb = "field.damage.firebomb";
 
-        public const string UtilityRedraw = "utility.redraw";
-        public const string UtilityCleanseDraw = "utility.cleanse_draw";
-        // U02 부적 끌어오기. Deliberately has no utility handler: the card is playable only through the
-        // choice panel, and TryPlayerUtility rejects any utility effectRef it does not know.
-        public const string UtilityDrawOrRecover = "utility.draw_or_recover";
-
-        public const string ObjectiveInvestigate = "objective.investigate";
-
-        public const string DebugApplyBind = "debug.bind";
-        public const string DebugApplySlow = "debug.slow";
-        public const string DebugApplyRupture = "debug.rupture";
-        public const string DebugKnockback = "debug.knockback";
+        /// <summary>
+        /// 장판 종류 → 틱 발신 키. 장판은 카드가 떠난 뒤에도 살아 매 턴 스스로 올리므로 카드 id가 아니라 이 키를 sourceRef로 쓴다
+        /// (<c>CombatState.FieldObjectCardEffects</c>가 발신자, VFX 큐·오디오·타일 플래시가 소비자). 큐 커버리지 도구가 같은 표를 읽는다.
+        /// </summary>
+        public static string FieldTickKey(SeoulPlayup.CardCore.CardFieldObjectKind kind)
+        {
+            switch (kind)
+            {
+                case SeoulPlayup.CardCore.CardFieldObjectKind.FieldDamage: return FieldDamage;
+                case SeoulPlayup.CardCore.CardFieldObjectKind.LifestealDamage: return FieldLifesteal;
+                case SeoulPlayup.CardCore.CardFieldObjectKind.ConditionalHeal: return FieldHeal;
+                case SeoulPlayup.CardCore.CardFieldObjectKind.MassImmobilize: return FieldImmobilizeFlashbang;
+                case SeoulPlayup.CardCore.CardFieldObjectKind.FogReveal: return FieldFogReveal;
+                default: return string.Empty;
+            }
+        }
     }
 }

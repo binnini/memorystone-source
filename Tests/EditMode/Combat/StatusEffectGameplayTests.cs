@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -84,7 +85,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // through TryPlayerMovementSelf, not TryPlayerMove.
             var state = CreateSelfMoveState();
 
-            Assert.That(state.TryPlayerMovementSelf(ApprovedCardCatalogFactory.MoveMomentumId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerMovementSelf(CardIds.Momentum), Is.True, state.LastFailureReason);
         }
 
         [Test]
@@ -95,7 +96,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateSelfMoveState();
             Inject(state, StatusEffectKind.Stun, state.Player.Id, remainingTurns: 1, amount: 0);
 
-            Assert.That(state.TryPlayerMovementSelf(ApprovedCardCatalogFactory.MoveMomentumId), Is.False,
+            Assert.That(state.TryPlayerMovementSelf(CardIds.Momentum), Is.False,
                 "Stunned (기절) player must not play a self-mode movement card either.");
             Assert.That(state.LastFailureReason, Does.Contain("기절"));
         }
@@ -106,7 +107,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateSelfMoveState();
             Inject(state, StatusEffectKind.Immobilize, state.Player.Id, remainingTurns: 1, amount: 0);
 
-            Assert.That(state.TryPlayerMovementSelf(ApprovedCardCatalogFactory.MoveMomentumId), Is.False,
+            Assert.That(state.TryPlayerMovementSelf(CardIds.Momentum), Is.False,
                 "속박 blocks self-mode movement cards too, matching the UI usable flag (IsCardUsable).");
             Assert.That(state.LastFailureReason, Does.Contain("속박"));
         }
@@ -158,9 +159,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void RandomJourneyUsesSlowAdjustedAreaMoveRange()
         {
             var config = CombatConfig.Default;
-            var catalog = ApprovedCardCatalogFactory.CreateApprovedCatalog(config);
+            var catalog = DemoCardCatalog.Create(config);
             var randomJourney = catalog.Entries
-                .Single(entry => entry.Id == ApprovedCardCatalogFactory.MoveRandomJourneyId)
+                .Single(entry => entry.Id == CardIds.RandomJourney)
                 .ToCardDefinition(catalog.SourceId);
             var state = CombatStateFixture.Arena(8)
                 .WithConfig(config)
@@ -169,9 +170,37 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 .Build();
             ApplyDurationStatus(state, StatusEffectKind.Slow, state.Player.Id, remainingTurns: 1, amount: 1);
 
-            Assert.That(state.TryPlayerMove(state.PlayerCoord, ApprovedCardCatalogFactory.MoveRandomJourneyId), Is.True);
+            Assert.That(state.TryPlayerMove(state.PlayerCoord, CardIds.RandomJourney), Is.True);
             Assert.That(new HexCoord(0, 0).DistanceTo(state.PlayerCoord), Is.LessThanOrEqualTo(1),
                 "M06's blast-2 random move should be reduced to radius 1 by Slow 1.");
+        }
+
+        [Test]
+        public void RefinedRandomJourneyNeverLandsNextToAnEnemyWhenASafeTileExists()
+        {
+            // 도착지를 모르는 여행+ (효과 연마 2차): 후보에서 적 인접 칸을 뺀다. 동·서 거리 2에 적 — 인접 후보와 안전 후보가 섞여 있다.
+            var config = CombatConfig.Default;
+            var catalog = DemoCardCatalog.Create(config);
+            var randomJourney = catalog.Entries
+                .Single(entry => entry.Id == CardIds.RandomJourney)
+                .ToCardDefinition(catalog.SourceId);
+            var enemies = new[] { new HexCoord(2, 0), new HexCoord(-2, 0) };
+            for (var seed = 1; seed <= 12; seed++)
+            {
+                var state = CombatStateFixture.Arena(8)
+                    .WithConfig(config)
+                    .WithMonsters(new MonsterConfig("east", enemies[0], 10), new MonsterConfig("west", enemies[1], 10))
+                    .WithMovementHand(randomJourney)
+                    .WithRunSeed(seed)
+                    .Build();
+                Assert.That(state.TryRefineCard(CardIds.RandomJourney, out var reason), Is.True, reason);
+
+                Assert.That(state.TryPlayerMove(state.PlayerCoord, CardIds.RandomJourney), Is.True, state.LastFailureReason);
+
+                Assert.That(
+                    enemies.Min(enemy => enemy.DistanceTo(state.PlayerCoord)), Is.GreaterThan(1),
+                    $"seed {seed}: 연마된 여행은 적과 인접한 칸({state.PlayerCoord})에 내리지 않는다.");
+            }
         }
 
         // --- Monster-side consumption ------------------------------------------------------------
@@ -358,13 +387,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveMomentumId, "Momentum", CardCategory.Movement, CardEffectType.Move,
-                        1, 0, 2, CardEffectRefs.MoveDeferredMomentum, "self", durationTurns: 1,
+                        CardIds.Momentum, "Momentum", CardCategory.Movement, CardEffectType.Move,
+                        1, 0, 2, "self", durationTurns: 1,
                         gameplayType: CardGameplayType.Buff, playMode: CardPlayMode.Self, targetMode: CardTargetMode.Self,
                         buffDebuff: "Agility:2", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         "D00", "Defend", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 5, CardEffectRefs.DefendBlock, "self", playMode: CardPlayMode.Self,
+                        1, 0, 5, "self", playMode: CardPlayMode.Self,
                         targetMode: CardTargetMode.Self, gameplayType: CardGameplayType.Defend,
                         status: CardCatalogStatus.Approved)
                 });

@@ -12,7 +12,6 @@ namespace SeoulPlayup.CardCore
             int cost,
             int range,
             int amount,
-            string effectRef,
             string targeting,
             string sourceTrace = "",
             int areaRadius = 0,
@@ -30,20 +29,13 @@ namespace SeoulPlayup.CardCore
             bool visibleInCatalog = true,
             string shapeId = null,
             int hitCount = 1,
-            string additionalCost = "",
-            string postActions = "",
-            string choiceOptions = "",
             string choiceOptionTexts = "",
             string description = "",
             CardRarity rarity = CardRarity.Basic,
-            bool usableWhileStunned = false,
-            string behaviorParams = "",
             string stateEffect = "",
             string buffDebuff = "",
-            bool exhaustOnPlay = false,
-            bool retainOnTurnEnd = false,
-            CardCatalogEntry upgradedEntry = null,
-            int healAmount = 0)
+            int healAmount = 0,
+            string descriptionUpgraded = "")
         {
             HealAmount = Math.Max(0, healAmount);
             Id = string.IsNullOrWhiteSpace(id) ? throw new ArgumentException("Catalog card id is required.", nameof(id)) : id;
@@ -54,7 +46,6 @@ namespace SeoulPlayup.CardCore
             Cost = Math.Max(0, cost);
             Range = Math.Max(0, range);
             Amount = Math.Max(0, amount);
-            EffectRef = string.IsNullOrWhiteSpace(effectRef) ? ActionType.ToString() : effectRef;
             Targeting = targeting ?? string.Empty;
             SourceTrace = sourceTrace ?? string.Empty;
             AreaRadius = Math.Max(0, areaRadius);
@@ -76,18 +67,11 @@ namespace SeoulPlayup.CardCore
             VisibleInCatalog = visibleInCatalog && status != CardCatalogStatus.Draft;
             ShapeId = shapeId;
             HitCount = Math.Max(1, hitCount);
-            AdditionalCost = additionalCost ?? string.Empty;
-            PostActions = postActions ?? string.Empty;
-            ChoiceOptions = choiceOptions ?? string.Empty;
             ChoiceOptionTexts = choiceOptionTexts ?? string.Empty;
             Rarity = rarity;
-            UsableWhileStunned = usableWhileStunned;
-            BehaviorParams = behaviorParams ?? string.Empty;
             StateEffect = stateEffect ?? string.Empty;
             BuffDebuff = buffDebuff ?? string.Empty;
-            ExhaustOnPlay = exhaustOnPlay;
-            RetainOnTurnEnd = retainOnTurnEnd;
-            UpgradedEntry = upgradedEntry;
+            DescriptionUpgraded = descriptionUpgraded ?? string.Empty;
         }
 
         public string Id { get; }
@@ -98,7 +82,6 @@ namespace SeoulPlayup.CardCore
         public int Cost { get; }
         public int Range { get; }
         public int Amount { get; }
-        public string EffectRef { get; }
         public string Targeting { get; }
         public string SourceTrace { get; }
 
@@ -119,22 +102,13 @@ namespace SeoulPlayup.CardCore
         // When set, hit detection uses AttackShapeLibrary instead of the AreaRadius circle.
         public string ShapeId { get; }
         public int HitCount { get; }
-        public string AdditionalCost { get; }
-        public string PostActions { get; }
-        public string ChoiceOptions { get; }
+
+        /// <summary>갈림길 선택지 문안(cards.csv `choiceTexts`). 선택지 규칙은 카드 클래스 <c>Choices</c>가 정본.</summary>
         public string ChoiceOptionTexts { get; }
 
         /// <summary>Reward rarity grade. Default <see cref="CardRarity.Basic"/> (never offered as a reward).</summary>
         public CardRarity Rarity { get; }
 
-        /// <summary>
-        /// Exempts the card from the 기절(stun) action lockout. Authored per card so the exception stays data,
-        /// not a behaviorId special case — 정화 cards need it, since a stun the player cannot clear is a dead end.
-        /// </summary>
-        public bool UsableWhileStunned { get; }
-
-        /// <summary>Behavior-scoped <c>키:정수</c> scalars — see <see cref="CardBehaviorMetadata.GetBehaviorParam"/>.</summary>
-        public string BehaviorParams { get; }
 
         /// <summary>Authored 상태이상 grants as `kind:amount` (`;`-separated). Duration comes from <see cref="DurationTurns"/>.</summary>
         public string StateEffect { get; }
@@ -142,19 +116,7 @@ namespace SeoulPlayup.CardCore
         /// <summary>Authored 버프/디버프 grants as `kind:amount` (`;`-separated). Duration comes from <see cref="DurationTurns"/>.</summary>
         public string BuffDebuff { get; }
 
-        /// <summary>사용 시 소멸(T5-1 통일 컬럼) — <see cref="CardDefinition.ExhaustOnPlay"/> 참조.</summary>
-        public bool ExhaustOnPlay { get; }
 
-        /// <summary>턴 종료 시 손 유지(T5-2) — <see cref="CardDefinition.RetainOnTurnEnd"/> 참조.</summary>
-        public bool RetainOnTurnEnd { get; }
-
-        /// <summary>
-        /// 연마(카드 강화) 후 값을 통째로 담은 엔트리. null = 이 카드는 연마 불가(card_upgrades.csv에
-        /// 행이 없음). 인스턴스의 <c>UpgradeLevel >= 1</c>이면 <see cref="ToCardDefinition(string,string,int,bool)"/>이
-        /// 이 엔트리의 값으로 정의를 만든다 — 실행 시점 배율 보정이 아니라 정의 시점 치환이라야
-        /// 필드 카드(배치 시점 저작값 사용)에도 연마가 먹는다.
-        /// </summary>
-        public CardCatalogEntry UpgradedEntry { get; }
 
         /// <summary>
         /// heal 컬럼의 저작값(WS-I I-08). 0 = 미저작. <see cref="Amount"/>는 damage→shield→heal
@@ -163,18 +125,20 @@ namespace SeoulPlayup.CardCore
         /// </summary>
         public int HealAmount { get; }
 
+        /// <summary>강화(연마) 뒤 설명 문안(cards.csv `descriptionUpgraded`, D-3). 비면 원본 토큰 문안이 새 수치로 갱신된다. 소비는 <c>CardUpgrades.Resolve</c>.</summary>
+        public string DescriptionUpgraded { get; }
+
         public CardDefinition ToCardDefinition(string catalogSourceId)
         {
             return ToCardDefinition(catalogSourceId, null, 0, false);
         }
 
+        /// <summary>
+        /// 저작 정의. <paramref name="upgradeLevel"/>은 인스턴스의 연마 단계를 <b>실어 나를 뿐</b> 값을 바꾸지 않는다 —
+        /// 연마 치환은 카드 클래스(<c>CardBehavior.Upgrade</c>)가 하고, Combat.Runtime의 <c>CardUpgrades.Resolve</c>가 적용한다(P4).
+        /// </summary>
         public CardDefinition ToCardDefinition(string catalogSourceId, string instanceId, int upgradeLevel = 0, bool isTemporary = false)
         {
-            if (upgradeLevel >= 1 && UpgradedEntry != null)
-            {
-                return UpgradedEntry.ToCardDefinition(catalogSourceId, instanceId, upgradeLevel, isTemporary);
-            }
-
             return new CardDefinition(
                 Id,
                 DisplayName,
@@ -184,7 +148,6 @@ namespace SeoulPlayup.CardCore
                 Range,
                 Amount,
                 catalogSourceId,
-                EffectRef,
                 Targeting,
                 AreaRadius,
                 PhaseAvailability,
@@ -204,18 +167,12 @@ namespace SeoulPlayup.CardCore
                 upgradeLevel,
                 isTemporary,
                 HitCount,
-                AdditionalCost,
-                PostActions,
-                ChoiceOptions,
                 ChoiceOptionTexts,
                 Description,
-                UsableWhileStunned,
-                BehaviorParams,
                 StateEffect,
                 BuffDebuff,
-                ExhaustOnPlay,
-                RetainOnTurnEnd,
-                healAmount: HealAmount);
+                healAmount: HealAmount,
+                descriptionUpgraded: DescriptionUpgraded);
         }
 
         private static CardUsePhase ResolveDefaultPhase(CardCategory deckType, CardEffectType actionType)

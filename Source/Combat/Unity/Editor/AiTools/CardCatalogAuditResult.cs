@@ -7,11 +7,9 @@ namespace AIGD
     public sealed class CardCatalogAuditResult
     {
         public string cardsCsvPath = string.Empty;
-        public string choiceOptionsCsvPath = string.Empty;
         // ParseCsvText succeeded (header/format ok).
         public bool parsedOk;
         public int rowCount;
-        public int choiceOptionRowCount;
         // Full CardCatalogAsset.ValidateRows pass (rows + choice options + CardCatalogDefinition.Validate).
         public bool valid;
         // First failure reason from ValidateRows; empty when valid.

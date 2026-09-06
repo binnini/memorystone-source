@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Map.Runtime;
@@ -37,9 +38,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // Vision (2) is intentionally smaller than the movement points/range (3). After a long
             // move the revealed radius must follow the fixed vision range, not the move distance.
             var config = new CombatConfig(20, 10, 3, 1, 4, 4, 5, 1, 3, 3, 1, 4, playerVisionRange: 2);
-            var catalog = ApprovedCardCatalogFactory.CreateApprovedCatalog(config);
+            var catalog = DemoCardCatalog.Create(config);
             var deck = new PlayerDeckData(
-                new[] { new PlayerCardInstanceData("vision-test.M03", ApprovedCardCatalogFactory.Move3HexId) },
+                new[] { new PlayerCardInstanceData("vision-test.M03", CardIds.Move3Hex) },
                 null);
             var state = new CombatState(CombatState.CreateDemoMap(5), new HexCoord(0, 0), new HexCoord(5, 0), config, cardCatalog: catalog, playerDeck: deck);
 
@@ -80,6 +81,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(CreateMap());
                 controller.InitializeIntegration();
 
@@ -101,6 +103,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(CreateMap());
                 controller.InitializeIntegration();
 
@@ -123,6 +126,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(CreateSensitiveMap());
                 controller.ConfigurePlayerVisionRangeForTests(2);
                 controller.InitializeIntegration();
@@ -230,13 +234,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(0, 0),
                 new HexCoord(8, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config));
+                cardCatalog: DemoCardCatalog.Create(config));
 
             // Discover the trap so its marker/tooltip source (TrapRevealed) is active.
             Assert.That(state.TryPlayerMove(state.PlayerCoord), Is.True);
             Assert.That(state.EndAction(), Is.True); // PlayerMovement -> MonsterMovement
             state.ResolveMonsterMovement(); // -> PlayerAction
-            Assert.That(state.TryPlayerScout(trapCoord, ApprovedCardCatalogFactory.ScoutMinefinderId), Is.True);
+            Assert.That(state.TryPlayerScout(trapCoord, CardIds.Minefinder), Is.True);
             Assert.That(state.GetVisibilitySafeCellInfo(trapCoord).TrapRevealed, Is.True);
 
             // Walking onto the OneShot trap fires (and consumes) it; its reveal must clear so the marker disappears.
@@ -260,7 +264,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(0, 0),
                 new HexCoord(8, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config));
+                cardCatalog: DemoCardCatalog.Create(config));
 
             // nearTrap sits inside player vision (Revealed) yet its trap stays hidden under sight alone.
             Assert.That(state.GetVisibility(nearTrap), Is.EqualTo(HexCellVisibility.Revealed));
@@ -269,7 +273,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.TryPlayerMove(state.PlayerCoord), Is.True);
             Assert.That(state.EndAction(), Is.True); // PlayerMovement -> MonsterMovement
             state.ResolveMonsterMovement(); // -> PlayerAction
-            Assert.That(state.TryPlayerScout(nearTrap, ApprovedCardCatalogFactory.ScoutMinefinderId), Is.True);
+            Assert.That(state.TryPlayerScout(nearTrap, CardIds.Minefinder), Is.True);
 
             Assert.That(state.GetVisibilitySafeCellInfo(nearTrap).TrapRevealed, Is.True);
             // A trap outside the scouted area remains hidden.
@@ -281,12 +285,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var config = TestCombatConfigs.Standard(actionBudget: 4, movementHandSize: 1, actionHandSize: 15, playerVisionRange: 2);
             var catalog = new CardCatalogDefinition(
-                ApprovedCardCatalogFactory.SourceId + ".field-reveal-test",
+                DemoCardCatalog.SourceId + ".field-reveal-test",
                 "Field reveal duration test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move, 1, 2, 2, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry("F-REVEAL", "Sacred Lamp", CardCategory.Action, CardEffectType.FieldObject, 1, 5, 0, CardEffectRefs.FieldFogReveal, "walkable_map_cell", areaRadius: 1, fieldObjectKind: CardFieldObjectKind.FogReveal, durationTurns: 2, status: CardCatalogStatus.Approved)
+                    new CardCatalogEntry(CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move, 1, 2, 2, "reachable_hex", status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry("F-REVEAL", "Sacred Lamp", CardCategory.Action, CardEffectType.FieldObject, 1, 5, 0, "walkable_map_cell", areaRadius: 1, fieldObjectKind: CardFieldObjectKind.FogReveal, durationTurns: 2, status: CardCatalogStatus.Approved)
                 });
             var state = new CombatState(CreateTrapLineMap(), new HexCoord(0, 0), new HexCoord(8, 0), config, cardCatalog: catalog);
 

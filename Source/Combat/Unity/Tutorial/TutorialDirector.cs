@@ -36,7 +36,11 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
         // Resolves a step's Highlight / CalloutTarget to a screen-pixel rect (null = nothing to point at).
         // Injected by the host, which owns the HUD views, card lane, map camera and monster positions this
         // needs; the tutorial assembly only consumes the rect (spotlight hole, panel placement, callout ring).
-        public System.Func<TutorialHighlight, TutorialFocus?> FocusRectProvider { get; set; }
+        // The bool says which role is being resolved: true = the step's Highlight (the action target — the
+        // host may apply side effects such as lifting a hand card above the dim), false = the CalloutTarget
+        // (a thin ring only — must never touch the Highlight's side effects, or a Card highlight paired with
+        // a UI callout gets lifted and dropped again every frame and can no longer be clicked).
+        public System.Func<TutorialHighlight, bool, TutorialFocus?> FocusRectProvider { get; set; }
 
         private float spotlightSuppressedUntil = -1f;
         private float stepPresentedAt = float.NegativeInfinity;
@@ -116,20 +120,20 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
             }
 
             var step = CurrentStep;
-            var focus = ResolveRect(step.Highlight);
-            var callout = ResolveRect(step.CalloutTarget);
+            var focus = ResolveRect(step.Highlight, isPrimary: true);
+            var callout = ResolveRect(step.CalloutTarget, isPrimary: false);
             hudView.UpdateLayout(focus, callout, Time.unscaledTime < spotlightSuppressedUntil);
             hudView.SetContinueReady(step.AdvanceMode == TutorialAdvanceMode.Click && !IsInputLocked);
         }
 
-        private TutorialFocus? ResolveRect(TutorialHighlight highlight)
+        private TutorialFocus? ResolveRect(TutorialHighlight highlight, bool isPrimary)
         {
             if (highlight == null || !highlight.IsSet || FocusRectProvider == null)
             {
                 return null;
             }
 
-            return FocusRectProvider(highlight);
+            return FocusRectProvider(highlight, isPrimary);
         }
 
         private void Update()

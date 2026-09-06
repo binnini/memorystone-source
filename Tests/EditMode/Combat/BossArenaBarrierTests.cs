@@ -503,7 +503,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 0,
                 moveRange,
                 0,
-                effectRef: CardEffectRefs.MoveBasic,
                 targeting: "walkable_in_range",
                 status: CardCatalogStatus.Approved,
                 instanceId: "arena-move-instance");
@@ -516,7 +515,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 1,
                 1,
                 200,
-                effectRef: CardEffectRefs.AttackDamage,
                 targeting: "living_monster_in_range",
                 status: CardCatalogStatus.Approved,
                 instanceId: "arena-strike-instance");
@@ -525,8 +523,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Boss arena test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.EffectRef, move.Targeting, status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.EffectRef, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
+                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.Targeting, status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
                 });
 
             var monsters = new System.Collections.Generic.List<MonsterConfig>

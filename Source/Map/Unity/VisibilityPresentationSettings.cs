@@ -46,6 +46,8 @@ namespace SeoulPlayup.Map.Unity
         [SerializeField] [Range(0f, 1f)] private float visibilityLightingEdgeGradation;
         [Tooltip("마스크를 육각 셀 중심에서 샘플해 경계가 타일 변을 따라가게 한다(#1 모양 수리). 끄면 옛 평면 샘플.")]
         [SerializeField] private bool visibilityLightingHexSnap = true;
+        [Tooltip("물 타일의 밝기를 미지 조도 하나로 잠근다(2026-09-05 실플레이 #6 — 밤에는 물이 시야에 들어와도 밝아지지 않는다). 끄면 물도 땅 타일처럼 칸의 시야 조도(Unknown/Hinted/Revealed)를 따른다. 밤 설정은 켜고, 낮·인트로 설정은 끈다.")]
+        [SerializeField] private bool visibilityWaterLockedToUnknown = true;
 
         [Header("Revealed edge fade")]
         [SerializeField] [Min(0)] private int visibilityRevealedFadeMaxSteps;
@@ -70,6 +72,7 @@ namespace SeoulPlayup.Map.Unity
         public bool VisibilityLightingHardEdge => visibilityLightingHardEdge;
         public float VisibilityLightingEdgeGradation => visibilityLightingEdgeGradation;
         public bool VisibilityLightingHexSnap => visibilityLightingHexSnap;
+        public bool VisibilityWaterLockedToUnknown => visibilityWaterLockedToUnknown;
         public int VisibilityRevealedFadeMaxSteps => visibilityRevealedFadeMaxSteps;
         public float VisibilityRevealedFadeFloorAlpha => visibilityRevealedFadeFloorAlpha;
         public Color VisibilityRevealedFadeColor => visibilityRevealedFadeColor;

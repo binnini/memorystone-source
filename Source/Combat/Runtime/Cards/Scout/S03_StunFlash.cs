@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Map.Runtime;
@@ -9,8 +10,11 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "S03";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.ScoutEnemyStun;
+        /// <summary>연마(DEC-2026-09-06-08, 효과 연마 2차): 기절 1→2턴. 문안에 턴 수가 없어 descriptionUpgraded.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(durationTurns: 2);
+
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "탐색", "기절" };
 
         public override void ApplyAfterScoutReveal(CombatState state, CardDefinition card, HexCoord target, int revealRadius)
         {
@@ -31,7 +35,7 @@ namespace SeoulPlayup.Combat.Runtime.Cards
             foreach (var monster in targets)
             {
                 var intent = CombatState.CaptureMonsterIntentForCancel(monster);
-                state.AddDurationStatusEffect(StatusEffectKind.Stun, monster.Id, turns, 0, CardEffectRefs.ScoutEnemyStun);
+                state.AddDurationStatusEffect(StatusEffectKind.Stun, monster.Id, turns, 0, card.Id);
                 state.ApplyControlStatusConstraintToPlan(monster);
                 // Staggered like S01's per-target damage burst so the timeline reads as one monster at a
                 // time rather than a single cue at the scout center.
@@ -41,7 +45,7 @@ namespace SeoulPlayup.Combat.Runtime.Cards
                     0,
                     turns,
                     monster.Id,
-                    CardEffectRefs.ScoutEnemyStun,
+                    card.Id,
                     sourceUnitId: CombatState.PlayerUnitId,
                     sourceActorKind: "player",
                     targetActorKind: "monster",

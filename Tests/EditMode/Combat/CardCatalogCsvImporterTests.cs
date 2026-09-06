@@ -2,6 +2,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using SeoulPlayup.Combat.Runtime.Cards;
+using System.Collections.Generic;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
 using SeoulPlayup.Combat.Unity;
@@ -14,7 +16,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
     public sealed class CardCatalogCsvImporterTests
     {
         private const string CsvPath = CombatCsvPaths.CardsCsv;
-        private const string ChoiceOptionsCsvPath = CombatCsvPaths.CardChoiceOptionsCsv;
 
         private CardCatalogAsset asset;
         private KeywordCatalogDefinition savedKeywordCatalog;
@@ -55,26 +56,31 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void MovementCardsWithARangeAxisAreRefinableAndGainCells()
         {
             asset = LoadCsvAsset();
-            // 연마 행은 별도 CSV라 기본 로더가 싣지 않는다 — 이 시험의 대상이 바로 그 표라 직접 싣는다.
-            Assert.That(File.Exists(CombatCsvPaths.CardUpgradesCsv), Is.True,
-                "card_upgrades.csv가 없다 — 연마 저작 정본이 사라졌다.");
-            asset.SetUpgradeRows(CardCatalogAsset.ParseUpgradesCsvText(
-                File.ReadAllText(CombatCsvPaths.CardUpgradesCsv)));
+            // 연마 값은 카드 클래스(CardBehavior.Upgrade)가 준다(P4) — 출하 저작 정의에 클래스 연마를 적용해 본다.
             var catalog = asset.ToCardCatalogDefinition(CombatConfig.Default);
 
             var refinableMovement = catalog.Entries
-                .Where(entry => entry.DeckType == CardCategory.Movement && entry.UpgradedEntry != null)
+                .Where(entry => entry.DeckType == CardCategory.Movement)
+                .Select(entry => (entry, upgraded: CardBehaviorRegistry.Get(entry.Id).Upgrade(entry.ToCardDefinition("test", entry.Id + "#inst", 1), 1)))
+                .Where(pair => pair.upgraded != null)
                 .ToList();
 
             Assert.That(refinableMovement, Is.Not.Empty,
-                "이동 카드에 연마 값이 하나도 저작되지 않았다 — 연마 후보 화면에서 이동 카드가 통째로 빠진다.");
+                "이동 카드에 연마가 하나도 선언되지 않았다 — 연마 후보 화면에서 이동 카드가 통째로 빠진다.");
 
-            foreach (var entry in refinableMovement)
+            foreach (var (entry, upgraded) in refinableMovement)
             {
-                Assert.That(entry.Range, Is.GreaterThan(0),
-                    $"{entry.Id}: 칸수 축(range)이 없는 이동 카드에 연마를 저작했다 — 무엇이 좋아지는지 말할 수 없다.");
-                Assert.That(entry.UpgradedEntry.Range, Is.GreaterThan(entry.Range),
-                    $"{entry.Id}: 연마해도 이동 칸수가 늘지 않는다({entry.Range} → {entry.UpgradedEntry.Range}).");
+                if (entry.Range <= 0)
+                {
+                    // 칸수 축이 없는 이동 카드(M05 추진력 같은 자기 버프)는 다른 축으로 연마한다 — 「무엇이 좋아지는가」는
+                    // CardRefineTests.EveryUpgradeChangesWhatTheCardSays가 문안으로 잰다(효과 연마 2차).
+                    continue;
+                }
+
+                Assert.That(upgraded.Range, Is.GreaterThan(entry.Range),
+                    $"{entry.Id}: 연마해도 이동 칸수가 늘지 않는다({entry.Range} → {upgraded.Range}).");
+                Assert.That(upgraded.Amount, Is.EqualTo(upgraded.Range),
+                    $"{entry.Id}: 이동 카드의 amount는 range 파생이다 — 연마가 둘을 같이 올려야 한다.");
             }
         }
 
@@ -125,11 +131,10 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             asset = LoadCsvAsset();
             var entry = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries
-                .Single(card => card.Id == ApprovedCardCatalogFactory.ScoutBasicId);
+                .Single(card => card.Id == CardIds.BasicScout);
 
             // S00 exercises the whole CSV → whitelist → import path with no new behavior: scout.reveal has no
             // handler, so ApplyAfterScoutReveal no-ops and the card reveals its blast area and nothing else.
-            Assert.That(entry.EffectRef, Is.EqualTo(CardEffectRefs.ScoutReveal));
             Assert.That(entry.ActionType, Is.EqualTo(CardEffectType.Scout));
             Assert.That(entry.DeckType, Is.EqualTo(CardCategory.Action));
             Assert.That(entry.TargetMode, Is.EqualTo(CardTargetMode.Tile));
@@ -149,31 +154,29 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var entries = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.ToDictionary(entry => entry.Id);
 
             // The 기절 exemption is the reason U03/D06 exist: a cleanse you cannot play while stunned is
-            // useless. D04 is a plain block card and stays gated.
-            Assert.That(entries[ApprovedCardCatalogFactory.UtilityCleanseDrawId].UsableWhileStunned, Is.True);
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHospitalizationId].UsableWhileStunned, Is.True);
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHeavyArmorId].UsableWhileStunned, Is.False);
+            // useless. D04 is a plain block card and stays gated. Since P3 the exemption is the card class
+            // declaration (CardBehavior.UsableWhileStunned), not a CSV column.
+            Assert.That(CardBehaviorRegistry.Get(CardIds.CleanseDraw).UsableWhileStunned, Is.True);
+            Assert.That(CardBehaviorRegistry.Get(CardIds.Hospitalization).UsableWhileStunned, Is.True);
+            Assert.That(CardBehaviorRegistry.Get(CardIds.HeavyArmor).UsableWhileStunned, Is.False);
 
             // Design rule (2026-07-25): the stun exemption is exclusive to the two cleanse cards. Any other
-            // card gaining usableWhileStunned in the CSV is an authoring error, not a new feature.
+            // card declaring it is a rule change, not a new feature.
             Assert.That(
-                entries.Values.Where(entry => entry.UsableWhileStunned).Select(entry => entry.Id),
+                entries.Keys.Where(id => CardBehaviorRegistry.Get(id).UsableWhileStunned),
                 Is.EquivalentTo(new[]
                 {
-                    ApprovedCardCatalogFactory.UtilityCleanseDrawId,
-                    ApprovedCardCatalogFactory.DefendHospitalizationId
+                    CardIds.CleanseDraw,
+                    CardIds.Hospitalization
                 }));
 
-            Assert.That(entries[ApprovedCardCatalogFactory.UtilityCleanseDrawId].EffectRef, Is.EqualTo(CardEffectRefs.UtilityCleanseDraw));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHospitalizationId].EffectRef, Is.EqualTo(CardEffectRefs.DefendCleanseBlock));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHeavyArmorId].EffectRef, Is.EqualTo(CardEffectRefs.DefendBlockDelayedImmobilize));
 
             // shield → Amount, duration → the booked 속박 length. Both are card data, not handler constants.
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHospitalizationId].Amount, Is.EqualTo(5));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHeavyArmorId].Amount, Is.EqualTo(8));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHeavyArmorId].Cost, Is.EqualTo(0));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHospitalizationId].DurationTurns, Is.EqualTo(1));
-            Assert.That(entries[ApprovedCardCatalogFactory.DefendHeavyArmorId].DurationTurns, Is.EqualTo(1));
+            Assert.That(entries[CardIds.Hospitalization].Amount, Is.EqualTo(5));
+            Assert.That(entries[CardIds.HeavyArmor].Amount, Is.EqualTo(8));
+            Assert.That(entries[CardIds.HeavyArmor].Cost, Is.EqualTo(0));
+            Assert.That(entries[CardIds.Hospitalization].DurationTurns, Is.EqualTo(1));
+            Assert.That(entries[CardIds.HeavyArmor].DurationTurns, Is.EqualTo(1));
         }
 
         [Test]
@@ -182,8 +185,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             asset = LoadCsvAsset();
             var entries = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.ToDictionary(entry => entry.Id);
 
-            var stunFlash = entries[ApprovedCardCatalogFactory.ScoutStunFlashId];
-            Assert.That(stunFlash.EffectRef, Is.EqualTo(CardEffectRefs.ScoutEnemyStun));
+            var stunFlash = entries[CardIds.StunFlash];
             Assert.That(stunFlash.ActionType, Is.EqualTo(CardEffectType.Scout));
             // The reveal radius IS the stun radius (the handler stuns whatever the scout just revealed), so
             // this single number governs both. Narrowed from 2 to 1.
@@ -191,23 +193,20 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // duration is the 기절 length the handler reads — the only place it exists.
             Assert.That(stunFlash.DurationTurns, Is.EqualTo(1));
 
-            var bingo = entries[ApprovedCardCatalogFactory.ScoutBingoId];
-            Assert.That(bingo.EffectRef, Is.EqualTo(CardEffectRefs.ScoutEnemyCountHealThreshold));
+            var bingo = entries[CardIds.Bingo];
             Assert.That(bingo.Amount, Is.EqualTo(5), "heal → Amount.");
-            // D11: the 3-enemy threshold lives in behaviorParams, not in the handler. The description text
-            // says "3명 이상", so the token and the sentence have to agree.
-            Assert.That(bingo.BehaviorParams, Is.EqualTo("threshold:3"));
-            Assert.That(bingo.Description, Does.Contain("3"));
+            // The 3-enemy threshold is the card class's rule constant (DEC-2026-09-06-01 superseded D11); the
+            // description text says "3명 이상", so the constant and the sentence have to agree.
+            Assert.That(bingo.Description, Does.Contain(S04_Bingo.Threshold.ToString()));
         }
 
         [Test]
-        public void FieldExtensionCardsResolveTheirKindFromTheBehaviorId()
+        public void FieldExtensionCardsResolveTheirKindFromTheirCardClass()
         {
             asset = LoadCsvAsset();
             var entries = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.ToDictionary(entry => entry.Id);
 
-            var lifesteal = entries[ApprovedCardCatalogFactory.FieldLifestealId];
-            Assert.That(lifesteal.EffectRef, Is.EqualTo(CardEffectRefs.FieldLifesteal));
+            var lifesteal = entries[CardIds.LifestealZone];
             Assert.That(lifesteal.FieldObjectKind, Is.EqualTo(CardFieldObjectKind.LifestealDamage));
             Assert.That(lifesteal.DurationTurns, Is.EqualTo(2), "A field row with a non-positive duration fails the import outright.");
             Assert.That(lifesteal.Amount, Is.EqualTo(2));
@@ -215,8 +214,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // F05 콩콩탄탄 is plain field.damage, but it authors hitCount=2: one tick lands 2 damage twice.
             // DEC-2026-07-24-01 reinstates the split P4 had folded away — the pass-through damage is
             // deliberately unchanged (block is a pool), so this is a 타격감 change, not a balance one.
-            var bounceBomb = entries[ApprovedCardCatalogFactory.FieldBounceBombId];
-            Assert.That(bounceBomb.EffectRef, Is.EqualTo(CardEffectRefs.FieldDamage));
+            var bounceBomb = entries[CardIds.BounceBomb];
             Assert.That(bounceBomb.FieldObjectKind, Is.EqualTo(CardFieldObjectKind.FieldDamage));
             Assert.That(bounceBomb.Amount, Is.EqualTo(2), "2 damage per hit.");
             Assert.That(bounceBomb.HitCount, Is.EqualTo(2), "Two hits per tick — the field reads this as HitsPerTick.");
@@ -232,10 +230,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             asset = LoadCsvAsset();
             var entry = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries
-                .Single(card => card.Id == ApprovedCardCatalogFactory.AttackRemnantId);
+                .Single(card => card.Id == CardIds.Remnant);
 
             // A13 needs no handler: attack.damage plus a scaling mode is the whole card.
-            Assert.That(entry.EffectRef, Is.EqualTo(CardEffectRefs.AttackDamage));
             Assert.That(entry.ScalingMode, Is.EqualTo(CardScalingMode.ExiledCards));
             Assert.That(entry.Amount, Is.EqualTo(3));
             Assert.That(entry.Description, Does.Contain("{HitCount}"), "The repeat count must be printed, not implied.");
@@ -246,18 +243,16 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             asset = LoadCsvAsset();
             var entry = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries
-                .Single(card => card.Id == ApprovedCardCatalogFactory.UtilityDrawOrRecoverId);
+                .Single(card => card.Id == CardIds.DrawOrRecover);
 
-            // choiceOptions alone flips a row to PlayMode.Choice, which is what makes a utility card
-            // reachable through the choice panel instead of the utility path.
+            // The card class declaring choices is what flips the row to PlayMode.Choice, which is what makes a
+            // utility card reachable through the choice panel instead of the utility path.
             Assert.That(entry.PlayMode, Is.EqualTo(CardPlayMode.Choice));
-            Assert.That(entry.EffectRef, Is.EqualTo(CardEffectRefs.UtilityDrawOrRecover));
             Assert.That(
-                entry.ChoiceOptions,
-                Is.EqualTo($"draw:{CardBehaviorMetadata.ChoiceEffectDrawActionCards}:self;recover:{CardBehaviorMetadata.ChoiceEffectRecoverExiledCard}:self"));
-            Assert.That(entry.BehaviorParams, Is.EqualTo("drawCount:2"));
-            Assert.That(entry.Description, Does.Contain("2"), "The authored drawCount and the sentence must agree.");
-            // Declaration and prose must line up or ValidateChoiceOptionRows rejects the import.
+                CardBehaviorRegistry.Get(entry.Id).Choices.Select(option => option.OptionId),
+                Is.EqualTo(new[] { "draw", "recover" }));
+            Assert.That(entry.Description, Does.Contain(U02_DrawOrRecover.DrawCount.ToString()), "The rule constant and the sentence must agree.");
+            // Declaration and prose must line up or ValidateRows rejects the import.
             Assert.That(entry.ChoiceOptionTexts, Does.Contain("draw"));
             Assert.That(entry.ChoiceOptionTexts, Does.Contain("recover"));
         }
@@ -268,16 +263,16 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             asset = LoadCsvAsset();
             var entries = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.ToDictionary(entry => entry.Id);
 
-            var plague = entries[ApprovedCardCatalogFactory.AttackPlagueId];
-            Assert.That(plague.EffectRef, Is.EqualTo(CardEffectRefs.AttackPlague));
+            var plague = entries[CardIds.Plague];
             Assert.That(plague.ActionType, Is.EqualTo(CardEffectType.Attack));
-            // The contagion radius is authored, not baked into the handler.
-            // 반경 2 = 2026-08-20 #18(인접 → 2칸 내 최근접). 저작면은 cards.csv의 postActions 한 곳이다.
-            Assert.That(plague.PostActions, Is.EqualTo($"{CardBehaviorMetadata.PostActionSpreadStatus}:2"));
+            // 반경 2 = 2026-08-20 #18(인접 → 2칸 내 최근접). 저작면은 카드 클래스 A12_Plague.SpreadRadius 한 곳이다.
+            Assert.That(
+                CardBehaviorRegistry.Get(plague.Id).PostActions.Select(action => action.ActionId),
+                Does.Contain(CardBehaviorMetadata.PostActionSpreadStatus));
+            Assert.That(A12_Plague.SpreadRadius, Is.EqualTo(2));
             Assert.That(plague.Amount, Is.EqualTo(3));
 
-            var shield = entries[ApprovedCardCatalogFactory.DefendTalismanShieldId];
-            Assert.That(shield.EffectRef, Is.EqualTo(CardEffectRefs.DefendExileRandomNegate));
+            var shield = entries[CardIds.TalismanShield];
             Assert.That(shield.ActionType, Is.EqualTo(CardEffectType.Defend));
             Assert.That(shield.PlayMode, Is.EqualTo(CardPlayMode.Self));
             Assert.That(shield.Amount, Is.EqualTo(0), "It grants immunity, not block — a shield value would be a lie.");
@@ -317,12 +312,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         }
 
         [Test]
-        public void CardChoiceOptionsCsvFeedsChoiceOptionUiTexts()
+        public void ChoiceTextsColumnFeedsChoiceOptionUiTexts()
         {
             asset = LoadCsvAsset();
             var entry = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.Single(card => card.Id == "A03");
 
-            Assert.That(entry.ChoiceOptions, Is.EqualTo("heal:heal.player:self;attack:attack.damage:enemy"));
             Assert.That(entry.ChoiceOptionTexts, Does.Contain("heal|\uC131\uC2A4\uB7EC\uC6B4 \uBE5B|\uC790\uC2E0\uC744 {Heal} \uD68C\uBCF5\uD569\uB2C8\uB2E4."));
             Assert.That(entry.ChoiceOptionTexts, Does.Contain("attack|\uC131\uC2A4\uB7EC\uC6B4 \uBE5B|\uC0AC\uAC70\uB9AC {Range} \uB0B4 \uC801\uC5D0\uAC8C \uD53C\uD574 {Damage}\uB97C \uC90D\uB2C8\uB2E4."));
             Assert.That(entry.ChoiceOptionTexts, Does.Not.Contain("Ki {Cost}"));
@@ -442,47 +436,75 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         }
 
         [Test]
-        public void CardsCsvRejectsUnknownBehaviorMetadataTokens()
+        public void CardsCsvRejectsACardIdWithoutARegisteredClass()
         {
-            var csvText = File.ReadAllText(CsvPath)
-                .Replace("ApplyImmobilize", "UnknownPostAction");
+            // A card row is only as real as its CardBehavior class: an id nobody registered has no rules, so the
+            // import refuses it instead of shipping a card that silently runs the generic path.
+            var csvText = File.ReadAllText(CsvPath).Replace("\nA00,", "\nA99,");
+            Assume.That(csvText, Does.Contain("\nA99,"));
             asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
             asset.SetRows(CardCatalogAsset.ParseCsvText(csvText));
 
             Assert.That(asset.ValidateRows(out var reason), Is.False);
-            Assert.That(reason, Does.Contain("invalid behavior metadata token"));
+            Assert.That(reason, Does.Contain("A99").And.Contain("CardBehavior"));
         }
 
         [Test]
-        public void ThirtyColumnSchemaCarriesTheNewColumnsToEntries()
+        public void CardsCsvRejectsChoiceTextsThatDoNotMatchTheCardClassChoices()
         {
-            // The two columns added for the 정화 track (docs/new-cards-plan.md §5-5) sit mid-row, so every
-            // index behind them shifted. A mis-shifted index still compiles and still imports — it just reads
-            // the wrong column — hence asserting the trailing columns, not only the new ones.
+            // A03's class declares heal + attack; describing a different option id is an authoring error.
+            var csvText = File.ReadAllText(CsvPath).Replace("heal|성스러운 빛|", "mend|성스러운 빛|");
+            Assume.That(csvText, Does.Contain("mend|"));
+            asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
+            asset.SetRows(CardCatalogAsset.ParseCsvText(csvText));
+
+            Assert.That(asset.ValidateRows(out var reason), Is.False);
+            Assert.That(reason, Does.Contain("choiceTexts").And.Contain("A03_HolyLight"));
+        }
+
+        [Test]
+        public void ColumnsAreReadByHeaderNameNotByPosition()
+        {
+            // Header-name mapping: the same row parses identically when two columns swap places.
+            var values = SampleRowValues(illustrationId: "card_illust_swap");
+            var header = ExpectedHeader.ToArray();
+            var shieldIndex = System.Array.IndexOf(header, "shield");
+            var rarityIndex = System.Array.IndexOf(header, "rarity");
+            (header[shieldIndex], header[rarityIndex]) = (header[rarityIndex], header[shieldIndex]);
+            var row = CardCatalogAsset.ParseCsvText(
+                string.Join(",", header) + "\n" + string.Join(",", header.Select(name => values[name]))).Single();
+
+            Assert.That(row.Shield, Is.EqualTo("4"));
+            Assert.That(row.Rarity, Is.EqualTo("Basic"));
+            Assert.That(row.IllustrationId, Is.EqualTo("card_illust_swap"));
+        }
+
+        [Test]
+        public void MissingOrUnknownColumnsFailTheParse()
+        {
+            var values = SampleRowValues();
+            var withoutRarity = ExpectedHeader.Where(name => name != "rarity").ToArray();
+            Assert.That(
+                () => CardCatalogAsset.ParseCsvText(string.Join(",", withoutRarity) + "\n" + string.Join(",", withoutRarity.Select(name => values[name]))),
+                Throws.TypeOf<System.FormatException>().With.Message.Contains("rarity"));
+
+            var withStray = ExpectedHeader.Concat(new[] { "behaviorId" }).ToArray();
+            Assert.That(
+                () => CardCatalogAsset.ParseCsvText(string.Join(",", withStray) + "\n" + string.Join(",", ExpectedHeader.Select(name => values[name])) + ",attack.damage"),
+                Throws.TypeOf<System.FormatException>().With.Message.Contains("behaviorId"));
+        }
+
+        [Test]
+        public void TrailingColumnsReachTheEntries()
+        {
             asset = LoadCsvAsset();
             var entries = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.ToDictionary(entry => entry.Id);
 
             Assert.That(entries["M01"].PresentationRef.IllustrationId, Is.EqualTo("card_illust_M01"));
             Assert.That(entries["A10"].Rarity, Is.EqualTo(CardRarity.Rare));
-            Assert.That(entries["A10"].AdditionalCost, Is.EqualTo(CardBehaviorMetadata.AdditionalCostExileSelectedHandCards));
-            Assert.That(entries["A03"].ChoiceOptions, Is.EqualTo("heal:heal.player:self;attack:attack.damage:enemy"));
-
-            // usableWhileStunned belongs to the two 정화 cards P2 shipped and to nothing else; behaviorParams
-            // is claimed by S04 (threshold) and U02 (drawCount).
-            Assert.That(
-                entries.Values.Where(entry => entry.UsableWhileStunned).Select(entry => entry.Id),
-                Is.EquivalentTo(new[]
-                {
-                    ApprovedCardCatalogFactory.UtilityCleanseDrawId,
-                    ApprovedCardCatalogFactory.DefendHospitalizationId
-                }));
-            Assert.That(
-                entries.Values.Where(entry => !string.IsNullOrEmpty(entry.BehaviorParams)).Select(entry => entry.Id),
-                Is.EquivalentTo(new[]
-                {
-                    ApprovedCardCatalogFactory.ScoutBingoId,
-                    ApprovedCardCatalogFactory.UtilityDrawOrRecoverId
-                }));
+            // M05 is the one card whose display category (gameplayType) is authored rather than derived from type.
+            Assert.That(entries["M05"].GameplayType, Is.EqualTo(CardGameplayType.Buff));
+            Assert.That(entries["M06"].TargetMode, Is.EqualTo(CardTargetMode.RandomReachable), "target=random_tile");
         }
 
         [Test]
@@ -525,58 +547,63 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         }
 
         [Test]
-        public void NewColumnsReachTheRuntimeCardDefinition()
+        public void ShieldColumnReachesTheRuntimeCardDefinition()
         {
-            var row = ParseSingleRow(
-                "D06,입원,테스트,방어,self,1,0,,,5,,,,,,defend.block,,,,self,,,,,Approved,TRUE,TRUE,TRUE,card_illust_D06,Rare,TRUE,TRUE");
+            var row = ParseSingleRow(RowWith(id: "D06", shield: "5"));
 
             asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
             asset.SetRows(new[] { row });
             var card = asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.Single().ToCardDefinition("test");
 
-            Assert.That(card.UsableWhileStunned, Is.True, "usableWhileStunned must survive all the way to CardDefinition.");
-            Assert.That(card.Amount, Is.EqualTo(5), "shield must still be read from its (shifted) column.");
-            Assert.That(card.ExhaustOnPlay, Is.True, "exhaustOnPlay must survive all the way to CardDefinition.");
-            Assert.That(card.RetainOnTurnEnd, Is.True, "retainOnTurnEnd must survive all the way to CardDefinition.");
+            Assert.That(card.Amount, Is.EqualTo(5), "shield must be read by its header name.");
         }
 
         [Test]
-        public void MalformedNewColumnsFailTheImport()
+        public void MalformedGameplayTypeFailsTheImport()
         {
             asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
 
-            asset.SetRows(new[] { ParseSingleRow(RowWith(behaviorParams: string.Empty, usableWhileStunned: "yes")) });
-            Assert.That(asset.ValidateRows(out var reason), Is.False, "A non-boolean usableWhileStunned must not default silently.");
-            Assert.That(reason, Does.Contain("usableWhileStunned"));
-
-            asset.SetRows(new[] { ParseSingleRow(RowWith(behaviorParams: "threshold", usableWhileStunned: string.Empty)) });
-            Assert.That(asset.ValidateRows(out reason), Is.False, "behaviorParams must be 키:정수 pairs.");
-            Assert.That(reason, Does.Contain("behaviorParams"));
-
-            // Well-formed but unknown to the behaviorId: this is the typo the allow-list exists to catch.
-            asset.SetRows(new[] { ParseSingleRow(RowWith(behaviorParams: "treshold:3", usableWhileStunned: string.Empty)) });
-            Assert.That(asset.ValidateRows(out reason), Is.False);
-            Assert.That(reason, Does.Contain("treshold"));
-
-            asset.SetRows(new[] { ParseSingleRow(RowWith(behaviorParams: string.Empty, usableWhileStunned: string.Empty, exhaustOnPlay: "maybe")) });
-            Assert.That(asset.ValidateRows(out reason), Is.False, "A non-boolean exhaustOnPlay must not default silently.");
-            Assert.That(reason, Does.Contain("exhaustOnPlay"));
-
-            asset.SetRows(new[] { ParseSingleRow(RowWith(behaviorParams: string.Empty, usableWhileStunned: string.Empty, retainOnTurnEnd: "maybe")) });
-            Assert.That(asset.ValidateRows(out reason), Is.False, "A non-boolean retainOnTurnEnd must not default silently.");
-            Assert.That(reason, Does.Contain("retainOnTurnEnd"));
+            asset.SetRows(new[] { ParseSingleRow(RowWith(gameplayType: "Sparkle")) });
+            Assert.That(asset.ValidateRows(out var reason), Is.False, "gameplayType must be a CardGameplayType name or empty.");
+            Assert.That(reason, Does.Contain("gameplayType"));
         }
 
-        private static string RowWith(string behaviorParams, string usableWhileStunned, string exhaustOnPlay = "", string retainOnTurnEnd = "") =>
-            "D00,방어,테스트,방어,self,1,0,,,4,,,,,,defend.block,,,,self,,," +
-            $",{behaviorParams},Approved,TRUE,TRUE,{usableWhileStunned},card_illust_D00,Basic,{exhaustOnPlay},{retainOnTurnEnd}";
+        private static string[] ExpectedHeader => (string[])typeof(CardCatalogAsset)
+            .GetField("ExpectedHeader", BindingFlags.Static | BindingFlags.NonPublic)
+            .GetValue(null);
+
+        // A minimal 방어 row, keyed by column name so the tests never depend on column positions.
+        private static Dictionary<string, string> SampleRowValues(
+            string id = "D00", string shield = "4", string gameplayType = "", string illustrationId = null)
+        {
+            var values = ExpectedHeader.ToDictionary(name => name, _ => string.Empty, System.StringComparer.Ordinal);
+            values["id"] = id;
+            values["name"] = "방어";
+            values["description"] = "테스트";
+            values["type"] = "방어";
+            values["target"] = "self";
+            values["cost"] = "1";
+            values["range"] = "0";
+            values["shield"] = shield;
+            values["targeting"] = "self";
+            values["gameplayType"] = gameplayType;
+            values["status"] = "Approved";
+            values["includeInDecks"] = "TRUE";
+            values["visibleInCatalog"] = "TRUE";
+            values["illustrationId"] = illustrationId ?? "card_illust_" + id;
+            values["rarity"] = "Basic";
+            return values;
+        }
+
+        private static string RowWith(string id = "D00", string shield = "4", string gameplayType = "")
+        {
+            var values = SampleRowValues(id, shield, gameplayType);
+            return string.Join(",", ExpectedHeader.Select(name => values[name]));
+        }
 
         private static CardCatalogCsvRow ParseSingleRow(string row)
         {
-            var header = string.Join(",", (string[])typeof(CardCatalogAsset)
-                .GetField("ExpectedHeader", BindingFlags.Static | BindingFlags.NonPublic)
-                .GetValue(null));
-            return CardCatalogAsset.ParseCsvText(header + "\n" + row).Single();
+            return CardCatalogAsset.ParseCsvText(string.Join(",", ExpectedHeader) + "\n" + row).Single();
         }
 
         private static CardCatalogAsset LoadCsvAsset()
@@ -585,10 +612,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var parsedRows = CardCatalogAsset.ParseCsvText(csvText);
             var asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
             asset.SetRows(parsedRows);
-            if (File.Exists(ChoiceOptionsCsvPath))
-            {
-                asset.SetChoiceOptionRows(CardCatalogAsset.ParseChoiceOptionsCsvText(File.ReadAllText(ChoiceOptionsCsvPath)));
-            }
             return asset;
         }
     }

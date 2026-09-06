@@ -119,6 +119,37 @@ namespace SeoulPlayup.Combat.Unity
             return any;
         }
 
+        // World-space corners of the marker's nameplate (name/health bar) and the badge row above it, appended
+        // to <paramref name="corners"/>. False when the marker has no visible nameplate. The tutorial spotlight
+        // unions these with the body bounds when a step points at the intent badge rather than the monster.
+        public bool TryGetMarkerNameplateWorldCorners(string markerId, List<Vector3> corners)
+        {
+            if (corners == null || !TryGetEntry(markerId, out var entry) || entry.NameplateRoot == null
+                || !entry.NameplateRoot.activeInHierarchy)
+            {
+                return false;
+            }
+
+            var any = false;
+            if (entry.NameplateRoot.transform is RectTransform rootRect)
+            {
+                rootRect.GetWorldCorners(NameplateCornerBuffer);
+                corners.AddRange(NameplateCornerBuffer);
+                any = true;
+            }
+
+            if (entry.StatusRow != null && entry.StatusRow.gameObject.activeInHierarchy)
+            {
+                entry.StatusRow.GetWorldCorners(NameplateCornerBuffer);
+                corners.AddRange(NameplateCornerBuffer);
+                any = true;
+            }
+
+            return any;
+        }
+
+        private static readonly Vector3[] NameplateCornerBuffer = new Vector3[4];
+
         public bool TryGetMarkerWorldPosition(string markerId, out Vector3 worldPosition)
         {
             if (TryGetEntry(markerId, out var entry) && entry.Marker != null)

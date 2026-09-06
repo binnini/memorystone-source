@@ -8,7 +8,13 @@ namespace SeoulPlayup.Combat.Runtime
         public const string ThreeEyeDogMonsterId = "M001";
         public const string DefaultPlayerCombatProfileCsv = CombatCsvPaths.PlayerCombatProfilesCsv;
         public const string DefaultMonsterCsvDirectory = CombatCsvPaths.MonsterDirectory;
-        public const string CampfireCardId = ApprovedCardCatalogFactory.FieldSacredCampfireId;
+        /// <summary>
+        /// 출하 카드 카탈로그(cards.csv → <c>CardCatalogAsset</c>)의 소스 id. 세이브(<c>PlayerRunSaveData.CardCatalogSourceId</c>)와
+        /// 카드 instanceId 접두가 이 문자열을 품으므로 값을 바꾸지 않는다(옛 <c>DemoCardCatalog.SourceId</c>).
+        /// </summary>
+        public const string CardCatalogSourceId = "approved-card-system-catalog-2026-06-02";
+
+        public const string CampfireCardId = SeoulPlayup.Combat.Runtime.Cards.CardIds.SacredLamp;
 
         public static PlayerCombatProfileCatalog CreatePlayerCombatProfileCatalog()
         {
@@ -44,11 +50,6 @@ namespace SeoulPlayup.Combat.Runtime
                 DefaultMonsterCsvDirectory,
                 "designer-boss-csv",
                 "Designer Boss CSV Catalog");
-        }
-
-        public static CardCatalogDefinition CreateCardCatalog(CombatConfig config)
-        {
-            return ApprovedCardCatalogFactory.CreateApprovedCatalog(config);
         }
     }
 }

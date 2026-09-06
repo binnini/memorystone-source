@@ -30,7 +30,6 @@ namespace SeoulPlayup.Combat.Runtime
                 OverallTurn = OverallTurnNumber,
                 Phase = Phase,
                 ActionCostRemaining = ActionCostRemaining,
-                RevealedFastTurtleDistance = revealedFastTurtleDistance,
                 LastMovedDistance = lastMovedDistance,
                 ActionCardsUsedThisTurn = actionCardsUsedThisTurn,
                 TotalActionCardsUsed = totalActionCardsUsed,
@@ -167,7 +166,6 @@ namespace SeoulPlayup.Combat.Runtime
             OverallTurnNumber = System.Math.Max(1, data.OverallTurn);
             Phase = data.Phase;
             ActionCostRemaining = data.ActionCostRemaining;
-            revealedFastTurtleDistance = data.RevealedFastTurtleDistance;
             pending.ReadFrom(data);
             lastMovedDistance = data.LastMovedDistance;
             actionCardsUsedThisTurn = data.ActionCardsUsedThisTurn;

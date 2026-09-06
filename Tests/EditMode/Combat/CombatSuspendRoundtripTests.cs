@@ -106,7 +106,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             snapshot.OverallTurn = 7;
             snapshot.Phase = CombatPhase.PlayerAction;
             snapshot.ActionCostRemaining = 2;
-            snapshot.RevealedFastTurtleDistance = 3;
             snapshot.PendingMovementRangeBonus = 1;
             snapshot.ActiveMovementRangeModifier = 2;
             snapshot.LastMovedDistance = 4;
@@ -164,7 +163,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(restored.OverallTurnNumber, Is.EqualTo(7));
             Assert.That(restored.Phase, Is.EqualTo(CombatPhase.PlayerAction));
             Assert.That(restored.CurrentKi, Is.EqualTo(2));
-            Assert.That(restored.RevealedFastTurtleDistance, Is.EqualTo(3));
             Assert.That(restored.ObjectiveCompleted, Is.True);
             Assert.That(after.PendingMovementRangeBonus, Is.EqualTo(1));
             Assert.That(after.ActiveMovementRangeModifier, Is.EqualTo(2));

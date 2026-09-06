@@ -2,6 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -349,12 +350,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerActionAfterMonsterMovement(state);
 
             var startingHp = state.Monsters[0].Hp;
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackSweepId), Is.True);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Sweep), Is.True);
             Assert.That(state.Monsters[0].Hp, Is.LessThan(startingHp));
             Assert.That(state.CurrentKi, Is.EqualTo(state.MaxKi - 2));
             Assert.That(state.TryPlayerDefend(), Is.True);
             Assert.That(state.CurrentKi, Is.EqualTo(state.MaxKi - 3));
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackSweepId), Is.False);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Sweep), Is.False);
             Assert.That(state.LastFailureReason, Does.Contain("No matching action card").Or.Contain("Not enough Ki"));
             Assert.That(state.Phase, Is.EqualTo(CombatPhase.PlayerAction));
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -330,19 +331,19 @@ namespace SeoulPlayup.Combat.Unity
 
         private static readonly SampleCard[] TestMoveDeck =
         {
-            new SampleCard(ApprovedCardCatalogFactory.MoveBasicId, "2칸 이동", "Move", "최대 2칸 이동합니다", 1, "Ready", MoveCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.MoveMomentumId, "추진력", "Move", "이번 턴 이동 -1 / 다음 턴 이동 +2", 1, "Playable", MoveCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.MoveRandomJourneyId, "도착지를 모르는 여행", "Move", "범위 2칸 중 무작위 이동", 1, "Need target", MoveCardBackgroundPath, true)
+            new SampleCard(CardIds.Move2Hex, "2칸 이동", "Move", "최대 2칸 이동합니다", 1, "Ready", MoveCardBackgroundPath, true),
+            new SampleCard(CardIds.Momentum, "추진력", "Move", "이번 턴 이동 -1 / 다음 턴 이동 +2", 1, "Playable", MoveCardBackgroundPath, true),
+            new SampleCard(CardIds.RandomJourney, "도착지를 모르는 여행", "Move", "범위 2칸 중 무작위 이동", 1, "Need target", MoveCardBackgroundPath, true)
         };
 
         private static readonly SampleCard[] TestActionDeck =
         {
-            new SampleCard(ApprovedCardCatalogFactory.AttackSweepId, "휩쓸기", "Attack", "주위 1칸 광역 피해", 1, CombatCardStatusText.AttackOutOfRange, HeavyAttackCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.AttackMoveLinkedId, "파발꾼도 공격하고 싶어", "Attack", "이번 턴 이동 칸 수만큼 피해", 1, "Ready", AttackCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.DefendOldSuitId, "낡은 방호복", "Defend", "다음 받을 피해 -5", 1, "Playable", DefendCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.ScoutMinefinderId, "지뢰탐지기", "Scout", "반경 범위 정찰 후 N 피해", 1, "Playable", ScoutInvestigateCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.FieldSacredCampfireId, "신성한 모닥불", "Field", "방해 + 위치 조건 회복", 1, "Playable", ScoutInvestigateCardBackgroundPath, true),
-            new SampleCard(ApprovedCardCatalogFactory.FieldFlashbangId, "섬광탄", "Field", "방해 + 공격 감소 + 이동불능", 1, "Playable", ScoutInvestigateCardBackgroundPath, true)
+            new SampleCard(CardIds.Sweep, "휩쓸기", "Attack", "주위 1칸 광역 피해", 1, CombatCardStatusText.AttackOutOfRange, HeavyAttackCardBackgroundPath, true),
+            new SampleCard(CardIds.MoveLinkedStrike, "파발꾼도 공격하고 싶어", "Attack", "이번 턴 이동 칸 수만큼 피해", 1, "Ready", AttackCardBackgroundPath, true),
+            new SampleCard(CardIds.OldArmor, "낡은 방호복", "Defend", "다음 받을 피해 -5", 1, "Playable", DefendCardBackgroundPath, true),
+            new SampleCard(CardIds.Minefinder, "지뢰탐지기", "Scout", "반경 범위 정찰 후 N 피해", 1, "Playable", ScoutInvestigateCardBackgroundPath, true),
+            new SampleCard(CardIds.SacredLamp, "신성한 모닥불", "Field", "방해 + 위치 조건 회복", 1, "Playable", ScoutInvestigateCardBackgroundPath, true),
+            new SampleCard(CardIds.Flashbang, "섬광탄", "Field", "방해 + 공격 감소 + 이동불능", 1, "Playable", ScoutInvestigateCardBackgroundPath, true)
         };
 
         public static GameplaySceneContract Build(Transform parent = null)

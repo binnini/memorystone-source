@@ -7,8 +7,8 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "A09";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.AttackMultiplyingStrike;
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "아지랑이" };
 
         /// <summary>원본과 같은 후속 규칙을 선언하지만 임시 카드(아지랑이)라 실제 복사는 일어나지 않는다 — 규칙 문면을 원본과 같게 둔다.</summary>
         public override IReadOnlyList<CardBehaviorMetadata.PostAction> PostActions { get; } = new[]

@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using TMPro;
@@ -19,7 +20,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var reward = CombatEventObjectDefinition.CardRewardMachine(
                 "card-gacha",
-                new[] { RewardEventObjectOffer.Card(ApprovedCardCatalogFactory.FieldFlashbangId) });
+                new[] { RewardEventObjectOffer.Card(CardIds.Flashbang) });
             var debuff = CombatEventObjectDefinition.Debuff("poison-machine", DebuffEventObjectKind.Poison, 2, 3);
             var knockback = CombatEventObjectDefinition.BoxingGloveMachine("boxing-glove", 2, 1);
 
@@ -36,18 +37,18 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var state = CreateApprovedCatalogState();
             var offer = RewardEventObjectOffer.Card(
-                ApprovedCardCatalogFactory.FieldFlashbangId,
+                CardIds.Flashbang,
                 "섬광",
                 "주변을 밝히고 범위 내 적의 이동을 막습니다.",
                 CardEffectType.FieldObject);
             var reward = CombatEventObjectDefinition.CardRewardMachine("card-gacha", new[] { offer });
-            var before = CountCards(state, ApprovedCardCatalogFactory.FieldFlashbangId);
-            var beforeHand = CountHandCards(state, ApprovedCardCatalogFactory.FieldFlashbangId);
+            var before = CountCards(state, CardIds.Flashbang);
+            var beforeHand = CountHandCards(state, CardIds.Flashbang);
 
             Assert.That(state.TryClaimRewardEventObject(reward, offer, out var reason), Is.True, reason);
 
-            Assert.That(CountCards(state, ApprovedCardCatalogFactory.FieldFlashbangId), Is.EqualTo(before + 1));
-            Assert.That(CountHandCards(state, ApprovedCardCatalogFactory.FieldFlashbangId), Is.EqualTo(beforeHand + 1));
+            Assert.That(CountCards(state, CardIds.Flashbang), Is.EqualTo(before + 1));
+            Assert.That(CountHandCards(state, CardIds.Flashbang), Is.EqualTo(beforeHand + 1));
             Assert.That(state.ClaimedEventObjectIds, Does.Contain("card-gacha"));
         }
 
@@ -86,7 +87,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void CardRewardEventOffersCanBeAdaptedForExistingRewardPopupUi()
         {
             var offer = RewardEventObjectOffer.Card(
-                ApprovedCardCatalogFactory.FieldFlashbangId,
+                CardIds.Flashbang,
                 "섬광",
                 "주변을 밝히고 범위 내 적의 이동을 막습니다.",
                 CardEffectType.FieldObject);
@@ -95,7 +96,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var uiOffers = RewardEventObjectUiAdapter.ToCardRewardOffers(reward);
 
             Assert.That(uiOffers, Has.Count.EqualTo(1));
-            Assert.That(uiOffers[0].CardId, Is.EqualTo(ApprovedCardCatalogFactory.FieldFlashbangId));
+            Assert.That(uiOffers[0].CardId, Is.EqualTo(CardIds.Flashbang));
             Assert.That(uiOffers[0].DisplayName, Is.EqualTo("섬광"));
             Assert.That(uiOffers[0].EffectType, Is.EqualTo(CardEffectType.FieldObject));
         }
@@ -110,6 +111,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateAuthoredRewardPopup();
 
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 // 상자는 이제 인형뽑기라 카드팩/돈/유물 중 하나가 나온다. 카드 3택 UI를 검사하는
                 // 이 테스트는 카드팩 구간(누적 [0,50))으로 결과를 고정해야 확률적으로 깨지지 않는다.
@@ -170,6 +172,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateAuthoredRewardPopup();
 
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 // 누적 구간 [50,90)이 돈이다. 55는 금액 오프셋으로도 쓰여 범위 안의 액수가 된다.
                 controller.ConfigureRewardRandomForTests(new FixedRewardRandom(55));
@@ -207,6 +210,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateAuthoredRewardPopup();
 
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 // 누적 구간 [85,95)가 유물이다(T4-3 재배분 50/35/10/5).
                 controller.ConfigureRewardRandomForTests(new FixedRewardRandom(85));
@@ -260,8 +264,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 var skipped = false;
                 view.Show(new[]
                 {
-                    new CardRewardOffer(ApprovedCardCatalogFactory.AttackSweepId, "Attack", "Attack", "Deal damage.", 1, CardEffectType.Attack),
-                    new CardRewardOffer(ApprovedCardCatalogFactory.MoveBasicId, "Move", "Move", "Move farther.", 0, CardEffectType.Move)
+                    new CardRewardOffer(CardIds.Sweep, "Attack", "Attack", "Deal damage.", 1, CardEffectType.Attack),
+                    new CardRewardOffer(CardIds.Move2Hex, "Move", "Move", "Move farther.", 0, CardEffectType.Move)
                 }, cardId => selectedCardId = cardId, () => skipped = true);
 
                 Assert.That(instance.activeSelf, Is.True);
@@ -314,7 +318,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 var hoverCount = 0;
                 view.Show(new[]
                 {
-                    new CardRewardOffer(ApprovedCardCatalogFactory.AttackSweepId, "Attack", "Attack", "Deal damage.", 1, CardEffectType.Attack)
+                    new CardRewardOffer(CardIds.Sweep, "Attack", "Attack", "Deal damage.", 1, CardEffectType.Attack)
                 }, _ => { }, () => { }, () => hoverCount++);
 
                 var overlay = view.GetComponentsInChildren<CardRewardGlowOverlay>(includeInactive: true).FirstOrDefault();
@@ -343,7 +347,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             {
                 view.Show(new[]
                 {
-                    new CardRewardOffer(ApprovedCardCatalogFactory.AttackSweepId, "Attack", "\uACF5\uACA9", "\uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4.", 1, CardEffectType.Attack)
+                    new CardRewardOffer(CardIds.Sweep, "Attack", "\uACF5\uACA9", "\uD53C\uD574\uB97C \uC785\uD799\uB2C8\uB2E4.", 1, CardEffectType.Attack)
                 }, _ => { }, () => { });
 
                 var allText = string.Join("\n", view.GetComponentsInChildren<TMP_Text>(includeInactive: true).Select(text => text.text));
@@ -367,6 +371,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateAuthoredRewardPopup();
 
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 // The reward pool only drops Rare+ cards, so the runtime fallback catalog
                 // (Basic-only) yields zero offers and the card buttons stay unbound —
                 // assign the CSV catalog like real scenes do.
@@ -419,6 +424,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateAuthoredRewardPopup();
 
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 controller.ConfigureMapForTests(CreateTreasureChestMap());
                 controller.InitializeIntegration();
@@ -571,7 +577,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new SeoulPlayup.Map.Runtime.HexCoord(-1, 0),
                 new SeoulPlayup.Map.Runtime.HexCoord(2, 0),
                 CombatConfig.Default,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(CombatConfig.Default));
+                cardCatalog: DemoCardCatalog.Create(CombatConfig.Default));
         }
     }
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using UnityEngine;
@@ -55,7 +56,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 sourceRef: CardEffectRefs.FieldDamage));
             Assert.That(fieldTickAnnounce, Is.Empty);
 
-            var defend = CombatAudioPresenter.MapEffectToCueIds(new EffectResultEvent(EffectKind.Block, center: new HexCoord(0, 0), sourceRef: ApprovedCardCatalogFactory.DefendOldSuitId));
+            var defend = CombatAudioPresenter.MapEffectToCueIds(new EffectResultEvent(EffectKind.Block, center: new HexCoord(0, 0), sourceRef: CardIds.OldArmor));
             Assert.That(defend.Single(), Is.EqualTo(AudioCueIds.CardDefendResolve));
 
             var scout = CombatAudioPresenter.MapEffectToCueIds(

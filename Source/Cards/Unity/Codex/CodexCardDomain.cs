@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using SeoulPlayup.CardCore;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using UnityEngine;
 
@@ -113,14 +114,18 @@ namespace SeoulPlayup.Codex
         {
             var chips = new List<string>(2);
 
-            if (entry.ExhaustOnPlay)
+            // 소멸·유지는 카드 클래스의 선언(P3) — 도감은 데이터가 아니라 규칙을 묻는다.
+            if (CardBehaviorRegistry.TryGet(entry.Id, out var behavior))
             {
-                chips.Add("소멸");
-            }
+                if (behavior.Disposal == CardDisposal.Exile)
+                {
+                    chips.Add("소멸");
+                }
 
-            if (entry.RetainOnTurnEnd)
-            {
-                chips.Add("유지");
+                if (behavior.RetainOnTurnEnd)
+                {
+                    chips.Add("유지");
+                }
             }
 
             return chips;
@@ -158,7 +163,7 @@ namespace SeoulPlayup.Codex
                 rows.Add(new CodexDetailRow("상태 부여", entry.StateEffect));
             }
 
-            if (entry.UsableWhileStunned)
+            if (CardBehaviorRegistry.TryGet(entry.Id, out var behavior) && behavior.UsableWhileStunned)
             {
                 rows.Add(new CodexDetailRow("기절 중 사용", "가능"));
             }
@@ -170,14 +175,11 @@ namespace SeoulPlayup.Codex
         {
             return new[]
             {
-                new CodexDetailRow("effectRef", entry.EffectRef),
                 new CodexDetailRow("targeting", entry.Targeting),
                 new CodexDetailRow("targetMode", entry.TargetMode.ToString()),
                 new CodexDetailRow("playMode", entry.PlayMode.ToString()),
                 new CodexDetailRow("shapeId", entry.ShapeId),
                 new CodexDetailRow("illustrationId", entry.PresentationRef.IllustrationId),
-                new CodexDetailRow("behaviorParams", entry.BehaviorParams),
-                new CodexDetailRow("choiceOptions", entry.ChoiceOptions),
                 new CodexDetailRow("status", entry.Status.ToString()),
                 new CodexDetailRow("includeInDecks", entry.IncludeInGameplayDecks ? "TRUE" : "FALSE"),
             };

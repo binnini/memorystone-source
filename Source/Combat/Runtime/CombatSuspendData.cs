@@ -18,6 +18,8 @@ namespace SeoulPlayup.Combat.Runtime
         public int OverallTurn;
         public CombatPhase Phase;
         public int ActionCostRemaining;
+        // 은퇴(P3-b, 2026-09-06): 빠른 거북(옛 팩토리 전용 Draft 카드)이 사라져 더는 읽거나 쓰지 않는다.
+        // 세이브 와이어 포맷을 바꾸지 않으려고 필드만 남긴다 — 항상 0.
         public int RevealedFastTurtleDistance;
         public int PendingMovementRangeBonus;
         // Duration of the carried Agility grant. Envelopes written before this field existed deserialize to

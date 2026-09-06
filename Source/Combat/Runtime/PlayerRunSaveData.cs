@@ -240,7 +240,9 @@ namespace SeoulPlayup.Combat.Runtime
         {
             foreach (var saved in savedCards ?? new List<PlayerCardInstanceSaveData>())
             {
-                var resolved = PlayerDeckData.ResolveCard(catalog, category, saved?.ToState(), requireGameplayDeckEntry: false);
+                // 연마(P4): 복원된 인스턴스의 UpgradeLevel은 카드 클래스 Upgrade로 정의에 반영된다.
+                var resolved = SeoulPlayup.Combat.Runtime.Cards.CardUpgrades.Resolve(
+                    PlayerDeckData.ResolveCard(catalog, category, saved?.ToState(), requireGameplayDeckEntry: false));
                 if (resolved != null)
                 {
                     yield return resolved;

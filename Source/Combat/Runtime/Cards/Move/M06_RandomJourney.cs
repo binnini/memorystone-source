@@ -8,8 +8,8 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "M06";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.MoveRandomRadius2;
+        /// <summary>연마 가능 선언(효과 연마 2차, DEC-2026-09-06-08): 무작위 후보에서 적 인접 칸을 뺀다. 문안은 cards.csv `descriptionUpgraded`.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With();
 
         public override bool TryResolveMoveDestination(CombatState state, CardDefinition card, int effectiveRange, HexCoord requested, out HexCoord destination, out string failureReason)
         {
@@ -17,7 +17,7 @@ namespace SeoulPlayup.Combat.Runtime.Cards
             // not by Range — Range stays 0 because there is no tile-targeting step. Fall back to the
             // effective move range only if no area is authored.
             var radius = System.Math.Max(0, effectiveRange);
-            var randomDestination = state.ChooseRandomMovementDestination(radius);
+            var randomDestination = state.ChooseRandomMovementDestination(radius, avoidEnemyAdjacent: card.UpgradeLevel >= 1);
             if (!randomDestination.HasValue)
             {
                 destination = requested;

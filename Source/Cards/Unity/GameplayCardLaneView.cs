@@ -1663,7 +1663,7 @@ namespace SeoulPlayup.Combat.Unity
 
             if (state.Phase == CombatPhase.PlayerMovement && card.Kind != CombatCardKind.Move)
             {
-                return "행동 페이즈에 사용할 수 있습니다";
+                return "액션 페이즈에 사용할 수 있습니다";
             }
 
             if (state.Phase == CombatPhase.PlayerAction && card.Kind == CombatCardKind.Move)

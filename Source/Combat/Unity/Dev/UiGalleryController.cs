@@ -305,7 +305,8 @@ namespace SeoulPlayup.Combat.Unity.Dev
                     .ToArray(),
                 comparePairs: (option, candidate) =>
                     state.TryPreviewRefinedCardSnapshots(candidate.Key, out var before, out var after, out var reason)
-                        ? new ServiceCardComparePair(before, after)
+                    && state.TryPreviewRefinedCard(candidate.Key, out var current, out var refined, out reason)
+                        ? new ServiceCardComparePair(before, after, current, refined)
                         : default,
                 cardConfirmed: (option, candidate) =>
                 {

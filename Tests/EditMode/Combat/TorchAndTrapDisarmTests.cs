@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -29,7 +30,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var edge = new HexCoord(BaseVisionRange + 2, 0);
             Assert.That(state.GetVisibility(edge), Is.Not.EqualTo(HexCellVisibility.Revealed), "전제: 아직 안 보인다.");
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.Torch), Is.True, state.LastFailureReason);
 
             Assert.That(state.GetVisibility(edge), Is.EqualTo(HexCellVisibility.Revealed),
                 "부여 즉시 안개가 걷혀야 한다 — 갱신 배선(RefreshPlayerVisionIfVisionStatus)이 빠지면 다음 이동까지 안 보인다.");
@@ -43,9 +44,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void TorchBurnsDownOneRadiusPerTurnAndThenGoesOut()
         {
             var state = CreateState();
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.Torch), Is.True, state.LastFailureReason);
             var granted = TorchAmount(state);
             Assert.That(granted, Is.EqualTo(3), "전제: 저작된 초기 반경은 3이다.");
+            Assert.That(
+                state.ActiveEffects.First(effect => effect.Kind == StatusEffectKind.TorchLight).SourceRef,
+                Is.EqualTo(CardIds.Torch),
+                "카드가 직접 건 상태의 출처는 카드 id다(트랙 ②) — 오브젝트 횃불은 자기 ref를 따로 쓴다.");
 
             var seen = new List<int>();
             for (var i = 0; i < 4; i++)
@@ -69,11 +74,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var baseline = VisionReach(CreateState());
 
             var lit = CreateState();
-            Assert.That(lit.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId), Is.True, lit.LastFailureReason);
+            Assert.That(lit.TryPlayerUtility(CardIds.Torch), Is.True, lit.LastFailureReason);
             Assert.That(VisionReach(lit), Is.EqualTo(baseline + 3));
 
             var both = CreateState();
-            Assert.That(both.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId), Is.True, both.LastFailureReason);
+            Assert.That(both.TryPlayerUtility(CardIds.Torch), Is.True, both.LastFailureReason);
             Inject(both, StatusEffectKind.Blind, both.Player.Id, remainingTurns: 3, amount: 3);
 
             Assert.That(VisionReach(both), Is.EqualTo(baseline),
@@ -84,7 +89,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void TorchIsABuffAndSurvivesCleanse()
         {
             var state = CreateState();
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.Torch), Is.True, state.LastFailureReason);
 
             Assert.That(StatusEffectInfo.IsCleansable(StatusEffectKind.TorchLight), Is.False,
                 "정화로 자기 횃불을 꺼뜨리면 안 된다 — 버프다.");
@@ -102,7 +107,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState(withTrap: true);
             RevealTrap(state);
 
-            Assert.That(state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId), Is.True,
+            Assert.That(state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap), Is.True,
                 state.LastFailureReason);
 
             Assert.That(state.ConsumedTrapIds, Does.Contain("disarm-target"),
@@ -129,7 +134,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState(withTrap: true);
             Assert.That(state.ConsumedTrapIds, Is.Empty, "전제: 아직 발견도 소모도 없다.");
 
-            Assert.That(state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId), Is.True,
+            Assert.That(state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap), Is.True,
                 state.LastFailureReason);
 
             Assert.That(state.ConsumedTrapIds, Does.Contain("disarm-target"),
@@ -142,7 +147,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState(withTrap: true, trapCoord: new HexCoord(4, 0));
             RevealTrapAt(state, new HexCoord(4, 0));
 
-            Assert.That(state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId), Is.True,
+            Assert.That(state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap), Is.True,
                 state.LastFailureReason);
 
             Assert.That(state.ConsumedTrapIds, Is.Empty, "사거리 1 + 범위 1 카드는 4칸 밖을 못 건드린다.");
@@ -157,7 +162,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var events = new List<EffectResultEvent>();
             state.EffectResolved += events.Add;
 
-            Assert.That(state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId), Is.True,
+            Assert.That(state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap), Is.True,
                 state.LastFailureReason);
 
             var disarmed = events.Where(candidate => candidate.Kind == EffectKind.TrapDisarmed).ToList();
@@ -176,7 +181,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             RevealTrap(state);
             Inject(state, StatusEffectKind.Stun, state.Player.Id, remainingTurns: 2, amount: 0);
 
-            Assert.That(state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId), Is.False);
+            Assert.That(state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap), Is.False);
             Assert.That(state.LastFailureReason, Does.Contain("기절"));
             Assert.That(state.ConsumedTrapIds, Is.Empty);
         }
@@ -250,8 +255,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 cardCatalog: TorchAndDisarmCatalog());
 
             // 유틸리티·정찰 카드는 행동 페이즈 카드다. 손에 확실히 쥐여 준 뒤 그 페이즈로 넘긴다.
-            state.ActionDeck.InjectIntoHand(CardInstance(state, ApprovedCardCatalogFactory.UtilityTorchId));
-            state.ActionDeck.InjectIntoHand(CardInstance(state, ApprovedCardCatalogFactory.ScoutTrapDisarmId));
+            state.ActionDeck.InjectIntoHand(CardInstance(state, CardIds.Torch));
+            state.ActionDeck.InjectIntoHand(CardInstance(state, CardIds.StoneBridgeTap));
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement();
             Assert.That(state.Phase, Is.EqualTo(CombatPhase.PlayerAction));
@@ -273,15 +278,15 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.UtilityTorchId, "호롱불", CardCategory.Action, CardEffectType.Utility,
-                        1, 0, 3, CardEffectRefs.UtilityTorch, "self",
+                        CardIds.Torch, "호롱불", CardCategory.Action, CardEffectType.Utility,
+                        1, 0, 3, "self",
                         status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Self, playMode: CardPlayMode.Self),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.ScoutTrapDisarmId, "돌 다리 두드리기", CardCategory.Action, CardEffectType.Scout,
-                        1, 1, 0, CardEffectRefs.ScoutTrapDisarm, string.Empty,
+                        CardIds.StoneBridgeTap, "돌 다리 두드리기", CardCategory.Action, CardEffectType.Scout,
+                        1, 1, 0, string.Empty,
                         areaRadius: 1, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Tile)
                 });
         }

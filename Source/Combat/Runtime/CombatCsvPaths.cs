@@ -1,4 +1,4 @@
-namespace SeoulPlayup.Combat.Runtime
+﻿namespace SeoulPlayup.Combat.Runtime
 {
     public static class CombatCsvPaths
     {
@@ -14,8 +14,6 @@ namespace SeoulPlayup.Combat.Runtime
         public const string MapObjectSourceDirectory = "Assets/Data/Object/Source";
 
         public const string CardsCsv = CardDirectory + "/cards.csv";
-        public const string CardChoiceOptionsCsv = CardDirectory + "/card_choice_options.csv";
-        public const string CardUpgradesCsv = CardDirectory + "/card_upgrades.csv";
         public const string CardVfxCuesCsv = CardDirectory + "/combat_card_vfx_cues.csv";
         public const string GameKeywordsCsv = CardDirectory + "/game_keywords.csv";
         public const string AttackShapesCsv = MonsterDirectory + "/attack_shapes.csv";

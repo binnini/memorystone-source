@@ -111,20 +111,18 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static CombatState CreateState()
         {
             var move = new CardDefinition(
-                "lab-move", "Lab Move", CardCategory.Movement, CardEffectType.Move, 0, 3, 0,
-                effectRef: CardEffectRefs.MoveBasic, targeting: "walkable_in_range",
+                "lab-move", "Lab Move", CardCategory.Movement, CardEffectType.Move, 0, 3, 0, targeting: "walkable_in_range",
                 status: CardCatalogStatus.Approved, instanceId: "lab-move-instance");
             // 행동 덱 카드가 최소 하나 있어야 CombatState가 생성된다(카탈로그 가드).
             var strike = new CardDefinition(
-                "lab-strike", "Lab Strike", CardCategory.Action, CardEffectType.Attack, 1, 1, 0,
-                effectRef: CardEffectRefs.AttackDamage, targeting: "living_monster_in_range",
+                "lab-strike", "Lab Strike", CardCategory.Action, CardEffectType.Attack, 1, 1, 0, targeting: "living_monster_in_range",
                 status: CardCatalogStatus.Approved, instanceId: "lab-strike-instance");
             var catalog = new CardCatalogDefinition(
                 "test.pattern-lab", "Pattern lab test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.EffectRef, move.Targeting, status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.EffectRef, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
+                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.Targeting, status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy)
                 });
 
             var cells = HexArea.CellsWithin(new HexCoord(0, 0), 6)

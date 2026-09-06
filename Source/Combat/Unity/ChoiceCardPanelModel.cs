@@ -59,8 +59,8 @@ namespace SeoulPlayup.Combat.Unity
             {
                 return new ChoiceCardPanelModel(card, card.Id, card.SelectionKey, new[]
                 {
-                    new ChoiceCardOptionModel("heal", "회복", CardKeywordDecorator.Decorate($"기력 {card.KiCost}: 자신을 {card.HealValue} 회복합니다."), CardTargetMode.Self),
-                    new ChoiceCardOptionModel("attack", "공격", CardKeywordDecorator.Decorate($"기력 {card.KiCost}: 적에게 {card.Value} 피해를 줍니다."), CardTargetMode.Enemy)
+                    new ChoiceCardOptionModel("heal", "회복", CardKeywordDecorator.DecorateForCard($"기력 {card.KiCost}: 자신을 {card.HealValue} 회복합니다.", card.Id), CardTargetMode.Self),
+                    new ChoiceCardOptionModel("attack", "공격", CardKeywordDecorator.DecorateForCard($"기력 {card.KiCost}: 적에게 {card.Value} 피해를 줍니다.", card.Id), CardTargetMode.Enemy)
                 });
             }
 
@@ -72,7 +72,7 @@ namespace SeoulPlayup.Combat.Unity
             // 선택지 규칙은 카드 클래스(CardBehavior.Choices)가, 문안은 데이터(choiceOptionTexts)가 든다.
             var options = SeoulPlayup.Combat.Runtime.Cards.CardBehaviorRegistry.TryGet(card.Id, out var behavior)
                 ? behavior.Choices
-                : CardBehaviorMetadata.ParseChoiceOptions(card.ChoiceOptions);
+                : System.Array.Empty<CardBehaviorMetadata.ChoiceOption>();
             if (options.Count == 0)
             {
                 yield break;
@@ -125,7 +125,7 @@ namespace SeoulPlayup.Combat.Unity
                         return null;
                 }
             });
-            return CardKeywordDecorator.Decorate(resolved);
+            return CardKeywordDecorator.DecorateForCard(resolved, card.Id);
         }
 
         private static CardTargetMode ResolveTargetMode(string targetToken)
@@ -160,13 +160,13 @@ namespace SeoulPlayup.Combat.Unity
             switch ((optionId ?? string.Empty).Trim().ToLowerInvariant())
             {
                 case "heal":
-                    return CardKeywordDecorator.Decorate($"기력 {card.KiCost}: 자신을 {card.HealValue} 회복합니다.");
+                    return CardKeywordDecorator.DecorateForCard($"기력 {card.KiCost}: 자신을 {card.HealValue} 회복합니다.", card.Id);
                 case "attack":
-                    return CardKeywordDecorator.Decorate($"기력 {card.KiCost}: 적에게 {card.Value} 피해를 줍니다.");
+                    return CardKeywordDecorator.DecorateForCard($"기력 {card.KiCost}: 적에게 {card.Value} 피해를 줍니다.", card.Id);
                 default:
-                    return CardKeywordDecorator.Decorate(targetMode == CardTargetMode.Self
+                    return CardKeywordDecorator.DecorateForCard(targetMode == CardTargetMode.Self
                         ? $"기력 {card.KiCost}: 자신에게 효과를 적용합니다."
-                        : $"기력 {card.KiCost}: 대상을 선택해 효과를 적용합니다.");
+                        : $"기력 {card.KiCost}: 대상을 선택해 효과를 적용합니다.", card.Id);
             }
         }
     }

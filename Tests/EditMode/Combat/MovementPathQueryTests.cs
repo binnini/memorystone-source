@@ -64,6 +64,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 var method = typeof(MapCombatController).GetMethod("ResolveStartingCoords", BindingFlags.Instance | BindingFlags.NonPublic);
 
                 var result = ((HexCoord player, HexCoord enemy))method.Invoke(controller, new object[] { map });

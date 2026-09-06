@@ -4,13 +4,15 @@ using System.Text;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
 {
     /// <summary>
-    /// T5-2 「유지」(retainOnTurnEnd) 감사. 우리 턴 구조는 턴말 손패 전량 버림 + 매턴 재드로우라
+    /// T5-2 「유지」 감사 — P3부터 유지는 카드 클래스의 <see cref="CardBehavior.RetainOnTurnEnd"/> 선언(D07·M07)이고
+    /// cards.csv `retainOnTurnEnd` 컬럼은 은퇴했다. 픽스처는 출하 id로 만들어 레지스트리가 규칙을 준다. 우리 턴 구조는 턴말 손패 전량 버림 + 매턴 재드로우라
     /// 유지는 곧 "다음 턴 손패 1장 확정 예약"이다.
     ///
     /// <para>🔴🔴 <b>확정 규칙이 바뀌었다</b>(2026-09-02 #6 · 사용자 확정). 예전 규칙(2026-08-07,
@@ -33,9 +35,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             RunFullTurnWithoutPlaying(state);
 
-            Assert.That(state.ActionDeck.Hand.Any(card => card.Id == "D-KEEP"), Is.True,
+            Assert.That(state.ActionDeck.Hand.Any(card => card.Id == CardIds.FullyPrepared), Is.True,
                 "유지 카드는 턴이 끝나도 손에 남아야 한다.");
-            Assert.That(state.ActionDeck.DiscardPile.Any(card => card.Id == "D-KEEP"), Is.False);
+            Assert.That(state.ActionDeck.DiscardPile.Any(card => card.Id == CardIds.FullyPrepared), Is.False);
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(ActionHandSize + 1),
                 "유지 카드는 정원 밖이다(2026-09-02 #6) — 정원만큼 새로 뽑고 그 위에 유지분이 얹힌다.");
         }
@@ -46,7 +48,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             RunFullTurnWithoutPlaying(state);
 
-            Assert.That(state.MovementDeck.Hand.Any(card => card.Id == "M-KEEP"), Is.True,
+            Assert.That(state.MovementDeck.Hand.Any(card => card.Id == CardIds.Shortcut), Is.True,
                 "이동 덱 유지(봐 둔 길 문법)도 같은 게이트를 지나야 한다.");
             Assert.That(state.MovementDeck.HandCount, Is.EqualTo(MovementHandSize + 1),
                 "이동 덱도 같은 규칙이다 — 「지름길을 남겼더니 이동 카드가 한 장 줄었다」가 #6의 증상이었다.");
@@ -56,7 +58,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void PlainCardsAreStillDiscardedAtTurnEnd()
         {
             var state = CreateState();
-            var plainActionCardsInHand = state.ActionDeck.Hand.Where(card => !card.RetainOnTurnEnd).Select(card => card.InstanceId).ToList();
+            var plainActionCardsInHand = state.ActionDeck.Hand.Where(card => !CardBehaviorRegistry.Resolve(card).RetainOnTurnEnd).Select(card => card.InstanceId).ToList();
             Assert.That(plainActionCardsInHand, Is.Not.Empty, "픽스처: 일반 카드가 손에 있어야 회귀를 검증한다.");
 
             RunFullTurnWithoutPlaying(state);
@@ -71,15 +73,27 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // 유지는 "안 썼을 때"의 규칙이다 — 쓰면 다른 카드처럼 버림 더미로 간다.
             var state = CreateState();
             AdvanceToPlayerAction(state);
-            Assert.That(state.TryPlayerDefend("D-KEEP"), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.FullyPrepared), Is.True, state.LastFailureReason);
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterAction();
 
-            Assert.That(state.ActionDeck.Hand.Any(card => card.Id == "D-KEEP"), Is.False,
+            Assert.That(state.ActionDeck.Hand.Any(card => card.Id == CardIds.FullyPrepared), Is.False,
                 "사용한 유지 카드가 손에 남으면 무한 방어가 된다.");
         }
 
-        /// <summary>유지를 저작한 출하 카드의 설명에는 「유지」 문안이 있어야 키워드 툴팁이 걸린다.</summary>
+        /// <summary>유지 카드 집합은 클래스 선언이 정본이다 — T5-2의 두 장(D07 만반의 준비·M07 지름길) 그대로.</summary>
+        [Test]
+        public void OnlyTheTwoAuthoredCardsDeclareRetain()
+        {
+            var retaining = CardBehaviorRegistry.RegisteredIds
+                .Where(id => CardBehaviorRegistry.Get(id).RetainOnTurnEnd)
+                .ToList();
+
+            Assert.That(retaining, Is.EquivalentTo(new[] { CardIds.FullyPrepared, CardIds.Shortcut }),
+                "유지 선언 카드 집합이 바뀌면 규칙 변경이다.");
+        }
+
+        /// <summary>유지를 선언한 출하 카드의 설명에는 「유지」 문안이 있어야 키워드 툴팁이 걸린다.</summary>
         [Test]
         [Category("ShippingData")]
         public void ShippingRetainAuthoredCardsMustSayKeyword()
@@ -88,15 +102,15 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 File.ReadAllText(CombatCsvPaths.CardsCsv, new UTF8Encoding(false, true)));
 
             var retainRows = rows
-                .Where(row => bool.TryParse((row.RetainOnTurnEnd ?? string.Empty).Trim(), out var retain) && retain)
+                .Where(row => CardBehaviorRegistry.TryGet(row.Id, out var behavior) && behavior.RetainOnTurnEnd)
                 .ToList();
-            Assert.That(retainRows.Select(row => row.Id), Is.SupersetOf(new[] { "D07", "M07" }),
-                "T5-2 신규 유지 카드 2장(만반의 준비·봐 둔 길)이 출하 CSV에 있어야 한다.");
+            Assert.That(retainRows.Select(row => row.Id), Is.EquivalentTo(new[] { CardIds.FullyPrepared, CardIds.Shortcut }),
+                "T5-2 유지 카드 2장(만반의 준비·지름길)이 출하 CSV에 있어야 한다.");
 
             foreach (var row in retainRows)
             {
                 Assert.That(row.Description, Does.Contain("유지"),
-                    $"{row.Id}: retainOnTurnEnd 저작 카드의 설명에는 「유지」가 있어야 키워드 툴팁이 걸린다.");
+                    $"{row.Id}: 유지를 선언한 카드의 설명에는 「유지」가 있어야 키워드 툴팁이 걸린다.");
             }
         }
 
@@ -116,16 +130,17 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
         private static CardCatalogDefinition CreateCatalog()
         {
-            CardCatalogEntry Move(string id, bool retain = false)
+            // 유지는 카드 클래스 선언이라 유지 카드는 출하 id(D07·M07)로, 일반 카드는 카탈로그 밖 id로 만든다.
+            CardCatalogEntry Move(string id)
                 => new CardCatalogEntry(
                     id, id, CardCategory.Movement, CardEffectType.Move,
-                    1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex",
-                    status: CardCatalogStatus.Approved, retainOnTurnEnd: retain);
-            CardCatalogEntry Defend(string id, bool retain = false)
+                    1, 1, 1, "reachable_hex",
+                    status: CardCatalogStatus.Approved);
+            CardCatalogEntry Defend(string id)
                 => new CardCatalogEntry(
                     id, id, CardCategory.Action, CardEffectType.Defend,
-                    1, 0, 3, CardEffectRefs.DefendBlock, "self",
-                    status: CardCatalogStatus.Approved, retainOnTurnEnd: retain);
+                    1, 0, 3, "self",
+                    status: CardCatalogStatus.Approved);
 
             // 덱을 손패 상한보다 넉넉히 채워 "상한까지만 채움"이 실제로 관측되게 한다.
             return new CardCatalogDefinition(
@@ -133,11 +148,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Retain-on-turn-end test catalog",
                 new[]
                 {
-                    Move("M-KEEP", retain: true),
+                    Move(CardIds.Shortcut),
                     Move("M-A"),
                     Move("M-B"),
                     Move("M-C"),
-                    Defend("D-KEEP", retain: true),
+                    Defend(CardIds.FullyPrepared),
                     Defend("D-A"),
                     Defend("D-B"),
                     Defend("D-C"),

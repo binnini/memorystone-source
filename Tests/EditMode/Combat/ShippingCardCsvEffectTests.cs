@@ -7,6 +7,7 @@ using System.Text;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using UnityEngine;
@@ -33,6 +34,35 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private const int BaseVisionRange = 3;
         private static readonly HexCoord TrapCoord = new HexCoord(1, 0);
 
+        // ------------------------------------------------------------------ S01 지뢰찾기
+
+        /// <summary>
+        /// 출하 저작의 지뢰찾기가 드러낸 적에게 실제로 피해를 줘야 한다. P2-a 돌연변이에서 S01 피해 배선은
+        /// 옛 팩토리 테스트만 잡았다(인계문 §10.9) — 팩토리가 은퇴(P3-b)하면서 출하 CSV 쪽으로 옮긴 잠금이다.
+        /// 수치는 핀하지 않는다(damage 저작값이 바뀌어도 「피해가 난다」만 잰다).
+        /// </summary>
+        [Test]
+        public void ShippingMinefinderDamagesTheMonsterItReveals()
+        {
+            var config = TestCombatConfigs.Standard(actionBudget: 4, movementHandSize: 1, actionHandSize: 1);
+            var state = new CombatState(
+                CombatState.CreateDemoMap(3),
+                new HexCoord(0, 0),
+                new HexCoord(1, 0),
+                config,
+                cardCatalog: ShippingCatalog());
+            state.ActionDeck.InjectIntoHand(CardInstance(state, CardIds.Minefinder));
+            Assert.That(state.EndAction(), Is.True);
+            state.ResolveMonsterMovement();
+            Assert.That(state.Phase, Is.EqualTo(CombatPhase.PlayerAction));
+            var before = state.Monsters.Single().Hp;
+
+            Assert.That(state.TryPlayerScout(new HexCoord(1, 0), CardIds.Minefinder), Is.True, state.LastFailureReason);
+
+            Assert.That(state.Monsters.Single().Hp, Is.LessThan(before),
+                "출하 CSV의 지뢰찾기가 드러난 적에게 피해를 주지 않았다 — S01 클래스의 ApplyAfterScoutReveal 배선이 끊겼거나 damage 칸이 비었다.");
+        }
+
         // ------------------------------------------------------------------ U04 호롱불
 
         /// <summary>
@@ -47,7 +77,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.GetVisibility(edge), Is.Not.EqualTo(HexCellVisibility.Revealed), "전제: 아직 안 보인다.");
 
             Assert.That(
-                state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityTorchId),
+                state.TryPlayerUtility(CardIds.Torch),
                 Is.True,
                 state.LastFailureReason);
 
@@ -64,7 +94,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void ShippingTorchTiesItsLifetimeToItsRadius()
         {
-            var torch = ShippingEntry(ApprovedCardCatalogFactory.UtilityTorchId);
+            var torch = ShippingEntry(CardIds.Torch);
 
             Assert.That(torch.Amount, Is.GreaterThan(0), "저작된 초기 반경이 0이다.");
             Assert.That(torch.DurationTurns, Is.EqualTo(torch.Amount),
@@ -77,7 +107,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void ShippingBrokenGlassCardCarriesItsDamage()
         {
-            var glass = ShippingEntry(ApprovedCardCatalogFactory.StatusBrokenGlassId);
+            var glass = ShippingEntry(CardIds.BrokenGlass);
 
             Assert.That(glass.Amount, Is.GreaterThan(0),
                 "깨진 유리의 피해가 0이다 — 손에 쥐고 있어도 아프지 않다.");
@@ -91,14 +121,14 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void ShippingTrapDisarmCardActuallyRemovesTheTrap()
         {
-            Assert.That(ShippingEntry(ApprovedCardCatalogFactory.ScoutTrapDisarmId).AreaRadius, Is.EqualTo(1),
+            Assert.That(ShippingEntry(CardIds.StoneBridgeTap).AreaRadius, Is.EqualTo(1),
                 "S05의 scout 칸이 비면 탐색 반경이 조용히 기본 2로 벌어진다 — 저작은 1이다.");
 
             var state = CreateShippingState(withTrap: true);
             Assert.That(state.ConsumedTrapIds, Is.Empty, "전제: 아직 아무 함정도 소모되지 않았다.");
 
             Assert.That(
-                state.TryPlayerScout(TrapCoord, ApprovedCardCatalogFactory.ScoutTrapDisarmId),
+                state.TryPlayerScout(TrapCoord, CardIds.StoneBridgeTap),
                 Is.True,
                 state.LastFailureReason);
 
@@ -115,9 +145,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             foreach (var id in new[]
                      {
-                         ApprovedCardCatalogFactory.StatusFineDustId,
-                         ApprovedCardCatalogFactory.StatusBrokenGlassId,
-                         ApprovedCardCatalogFactory.StatusBlackoutId,
+                         CardIds.FineDust,
+                         CardIds.BrokenGlass,
+                         CardIds.Blackout,
                      })
             {
                 var entry = ShippingEntry(id);
@@ -133,15 +163,15 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void NoShippingCardNeedsAnAmountItDoesNotAuthor()
         {
-            // amount가 0이면 효과가 통째로 사라지는(또는 무의미해지는) 저작들.
+            // amount가 0이면 효과가 통째로 사라지는(또는 무의미해지는) 카드들.
             var amountBearing = new HashSet<string>(StringComparer.Ordinal)
             {
-                CardEffectRefs.UtilityTorch,
+                CardIds.Torch,
             };
 
             var offenders = ShippingEntries()
-                .Where(entry => amountBearing.Contains(entry.EffectRef) && entry.Amount <= 0)
-                .Select(entry => $"{entry.Id}({entry.EffectRef})")
+                .Where(entry => amountBearing.Contains(entry.Id) && entry.Amount <= 0)
+                .Select(entry => entry.Id)
                 .ToArray();
 
             Assert.That(offenders, Is.Empty,
@@ -215,8 +245,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 cardCatalog: ShippingCatalog());
 
             // 유틸리티·정찰은 행동 페이즈 카드다. 손에 쥐여 준 뒤 그 페이즈로 넘긴다.
-            state.ActionDeck.InjectIntoHand(CardInstance(state, ApprovedCardCatalogFactory.UtilityTorchId));
-            state.ActionDeck.InjectIntoHand(CardInstance(state, ApprovedCardCatalogFactory.ScoutTrapDisarmId));
+            state.ActionDeck.InjectIntoHand(CardInstance(state, CardIds.Torch));
+            state.ActionDeck.InjectIntoHand(CardInstance(state, CardIds.StoneBridgeTap));
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement();
             Assert.That(state.Phase, Is.EqualTo(CombatPhase.PlayerAction));

@@ -143,9 +143,7 @@ namespace SeoulPlayup.Combat.Unity
         {
             return card.TargetMode == CardTargetMode.Self
                 || card.PlayMode == CardPlayMode.Self
-                || (SeoulPlayup.Combat.Runtime.Cards.CardBehaviorRegistry.TryGet(card.Id, out var behavior)
-                    ? behavior.HasSelfTargetedChoice
-                    : CardBehaviorMetadata.HasSelfTargetedChoiceOption(card.ChoiceOptions));
+                || (SeoulPlayup.Combat.Runtime.Cards.CardBehaviorRegistry.TryGet(card.Id, out var behavior) && behavior.HasSelfTargetedChoice);
         }
 
         private static TMP_Text FindText(Transform root, string objectName)

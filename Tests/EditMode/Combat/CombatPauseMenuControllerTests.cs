@@ -16,6 +16,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.SetPauseMenuInputBlocked(true);
 
                 Assert.That(controller.IsPauseMenuInputBlocked, Is.True);
@@ -40,6 +41,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureSparseSourceForTests(sparseSource);
                 controller.ConfigureExpectedBoardPurposeForTests(HexMapPurpose.PlayableMap);
                 controller.InitializeIntegration();
@@ -84,6 +86,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 CreateChild(scenePanelHost.transform, "ReturnToLobbyConfirmDialog");
 
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureSparseSourceForTests(sparseSource);
                 controller.ConfigureExpectedBoardPurposeForTests(HexMapPurpose.PlayableMap);
                 controller.InitializeIntegration();

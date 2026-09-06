@@ -95,6 +95,11 @@ namespace SeoulPlayup.Map.Unity
             fromSkyboxInstance = CreateSkyboxInstance(from.Skybox, out fromSkyboxBaseExposure);
             toSkyboxInstance = CreateSkyboxInstance(to.Skybox, out toSkyboxBaseExposure);
 
+            // The map view starts on the stage's (to = night) visibility settings; the from side (day) must
+            // reach it too, or the day shots film night-only presentation such as the water lock. Not
+            // blended — the coefficients are per-preset switches; Complete's Apply(to) restores the to side.
+            LookPresetApplier.ApplyVisibility(from, LookPresetApplier.ResolveView());
+
             active = true;
             Evaluate(0f);
         }

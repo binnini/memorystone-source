@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Map.Runtime;
@@ -9,8 +10,11 @@ namespace SeoulPlayup.Combat.Runtime.Cards
     {
         public override string Id => "S01";
 
-        /// <summary>효과 발신 키(옛 behaviorId). VFX 큐·오디오·상태이상 sourceRef가 이 문자열에 매칭된다 — 카드 식별에는 쓰지 않는다.</summary>
-        public override string EffectSourceRef => CardEffectRefs.ScoutEnemyCountDamage;
+        /// <summary>연마(DEC-2026-09-06-08, 효과 연마 2차): 드러난 적 1명당 피해 2→3.</summary>
+        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(amount: 3);
+
+        /// <summary>문안에 걸리는 게임 키워드(P5 명시화). 문안과의 정합은 CardKeywordTextBindingTests가 감사한다.</summary>
+        public override IReadOnlyList<string> Keywords { get; } = new[] { "탐색" };
 
         public override void ApplyAfterScoutReveal(CombatState state, CardDefinition card, HexCoord target, int revealRadius)
         {

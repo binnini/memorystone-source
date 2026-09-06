@@ -114,7 +114,6 @@ namespace SeoulPlayup.Combat.Runtime
         /// <summary>방범대 호루라기(T2 페이즈 C) 처치 보상 래치 — 같은 몬스터로 두 번 보상받지 않는다.</summary>
         private readonly HashSet<string> relicKillRewardedMonsterIds = new HashSet<string>(StringComparer.Ordinal);
         private MonsterRuntime markedMonster;
-        private int revealedFastTurtleDistance;
 
         public CombatState(HexMapData map, HexCoord playerCoord, HexCoord enemyCoord, CombatConfig config, HexTerrainTable terrainTable = null, CardCatalogDefinition cardCatalog = null, MonsterCatalogDefinition monsterCatalog = null, HexTerrainTraits terrainTraits = null, PlayerInventoryState playerInventory = null, PlayerDeckData playerDeck = null, CardDeckState movementDeck = null, CardDeckState actionDeck = null, bool drawOpeningHands = true, bool shuffleDecks = false, BossCatalogDefinition bossCatalog = null, int? runSeed = null)
             : this(map, playerCoord, new[] { new MonsterConfig(EnemyUnitId, enemyCoord, config.EnemyMaxHp) }, config, terrainTable, cardCatalog, monsterCatalog, terrainTraits, playerInventory, playerDeck, movementDeck, actionDeck, drawOpeningHands, shuffleDecks, bossCatalog, runSeed)
@@ -160,7 +159,9 @@ namespace SeoulPlayup.Combat.Runtime
             InitializeMonsters(resolvedMonsterConfigs, config);
             EnsureBossPhaseTracks();
             monsterCatalogEvidence = CreateMonsterCatalogEvidence(this.monsterCatalog);
-            CardCatalog = cardCatalog ?? CreateCardCatalog(config);
+            // 카탈로그를 넘기지 않으면 개발·테스트용 데모 시드를 받는다. 게임 본편은 CSV 에셋을 항상 넘기며
+            // 없으면 MapCombatController가 예외를 낸다 — 여기의 기본값은 픽스처·도구 편의이지 폴백이 아니다.
+            CardCatalog = cardCatalog ?? DemoCardCatalog.Create(config);
             CardCatalogEvidence = CardCatalog.CreateBindingEvidence();
             if (!CardCatalogEvidence.IsValid)
             {
@@ -477,7 +478,6 @@ namespace SeoulPlayup.Combat.Runtime
         // 반드시 이 프로퍼티를 읽어야 한다. Config.MaxKi는 카탈로그 빌드 시점의 저작 표시값이라
         // 유물을 모른다.
         public int MaxKi => Math.Max(0, Config.ActionBudget + GetPermanentItemEffectTotal(PlayerPermanentItemEffectKind.MaxKiBonus));
-        public int RevealedFastTurtleDistance => revealedFastTurtleDistance;
         public HexCoord? MarkedMonsterCoord => markedMonster != null && !markedMonster.Combatant.IsDead ? markedMonster.Coord : (HexCoord?)null;
         public IReadOnlyDictionary<HexCoord, HexCellRuntimeState> RuntimeStates => runtimeStates;
         public IReadOnlyList<MonsterRuntimeState> Monsters => monsters.Select(CreateMonsterSnapshot).ToList();
@@ -637,12 +637,7 @@ namespace SeoulPlayup.Combat.Runtime
                 ? MovementDeck.Hand.FirstOrDefault(card => card.EffectType == CardEffectType.Move)
                 : MovementDeck.Hand.FirstOrDefault(card => card.EffectType == CardEffectType.Move && MatchesCardKey(card, cardId));
             var range = GetEffectiveMoveRange(moveCard);
-            if (moveCard != null && moveCard.EffectRef == CardEffectRefs.MoveFastTurtle)
-            {
-                var revealed = RevealFastTurtleDistanceForSelection(moveCard.Id);
-                range = ResolveMoveRange(revealed);
-            }
-            else if (moveCard != null && moveCard.AreaRadius > 0)
+            if (moveCard != null && moveCard.AreaRadius > 0)
             {
                 range = Math.Max(range, GetEffectiveAreaMoveRange(moveCard));
             }
@@ -1231,11 +1226,6 @@ namespace SeoulPlayup.Combat.Runtime
             }
 
             var effectiveRange = GetEffectiveMoveRange(moveCard);
-            if (moveCard.EffectRef == CardEffectRefs.MoveFastTurtle)
-            {
-                RevealFastTurtleDistanceForSelection(moveCard.Id);
-                effectiveRange = ResolveMoveRange(revealedFastTurtleDistance);
-            }
             // Random-radius travel cards (e.g. M06) declare their base reach via AreaRadius while Range stays 0
             // (no tile-targeting step). Apply the same movement modifiers as normal movement so Slow/Agility
             // affect the random destination radius instead of being bypassed by the authored AreaRadius.
@@ -1345,25 +1335,6 @@ namespace SeoulPlayup.Combat.Runtime
             CommitMonsterAttackIntentsAfterPlayerMovementEnd();
 
             return true;
-        }
-
-
-        public int RevealFastTurtleDistanceForSelection(string cardId = "")
-        {
-            var card = string.IsNullOrEmpty(cardId)
-                ? MovementDeck.Hand.FirstOrDefault(candidate => candidate.EffectRef == CardEffectRefs.MoveFastTurtle)
-                : MovementDeck.Hand.FirstOrDefault(candidate => MatchesCardKey(candidate, cardId) && candidate.EffectRef == CardEffectRefs.MoveFastTurtle);
-            if (card == null)
-            {
-                return 0;
-            }
-
-            if (revealedFastTurtleDistance == 0)
-            {
-                revealedFastTurtleDistance = pushRng.Next(2) == 0 ? 1 : 6;
-            }
-
-            return revealedFastTurtleDistance;
         }
 
 
@@ -1743,56 +1714,6 @@ namespace SeoulPlayup.Combat.Runtime
                 presentationGroupId: presentationGroupId);
         }
 
-        private static bool IsDebugEffectRef(string effectRef)
-        {
-            return effectRef == CardEffectRefs.DebugApplyBind
-                || effectRef == CardEffectRefs.DebugApplySlow
-                || effectRef == CardEffectRefs.DebugApplyRupture
-                || effectRef == CardEffectRefs.DebugKnockback;
-        }
-
-        private void ApplyDebugCardEffect(CardDefinition card, HexCoord target)
-        {
-            var turns = Math.Max(1, card.DurationTurns);
-            var amount = Math.Max(1, card.Amount);
-            switch (card.EffectRef)
-            {
-                case CardEffectRefs.DebugApplyBind:
-                {
-                    var monster = FindLivingMonsterAt(target);
-                    if (monster == null) return;
-                    var intent = CaptureMonsterIntentForCancel(monster);
-                    AddDurationStatusEffect(StatusEffectKind.Immobilize, monster.Id, turns, 0, card.EffectRef);
-                    ApplyControlStatusConstraintToPlan(monster);
-                    RaiseStatusEffect(StatusEffectKind.Immobilize, target, 0, turns, monster.Id, card.EffectRef);
-                    EmitMonsterIntentCancelText(monster, intent.WasMoving, intent.WasAttacking, StatusEffectKind.Immobilize);
-                    break;
-                }
-                case CardEffectRefs.DebugApplySlow:
-                {
-                    var monster = FindLivingMonsterAt(target);
-                    if (monster == null) return;
-                    AddDurationStatusEffect(StatusEffectKind.Slow, monster.Id, turns, amount, card.EffectRef);
-                    RaiseStatusEffect(StatusEffectKind.Slow, target, 0, amount, monster.Id, card.EffectRef);
-                    break;
-                }
-                case CardEffectRefs.DebugApplyRupture:
-                {
-                    AddDurationStatusEffect(StatusEffectKind.Rupture, PlayerUnitId, turns, amount, card.EffectRef);
-                    RaiseStatusEffect(StatusEffectKind.Rupture, PlayerCoord, 0, turns, PlayerUnitId, card.EffectRef);
-                    break;
-                }
-                case CardEffectRefs.DebugKnockback:
-                {
-                    var monster = FindLivingMonsterAt(target);
-                    if (monster == null) return;
-                    var knockbackDist = card.Amount > 0 ? card.Amount : 1;
-                    ApplyDirectionalKnockback(PlayerCoord, monster.Id, knockbackDist, knockbackDist);
-                    break;
-                }
-            }
-        }
-
         public bool TryPlayerAttack()
         {
             var target = monsters
@@ -1852,7 +1773,6 @@ namespace SeoulPlayup.Combat.Runtime
             var spentKi = SpendCardKi(card);
             var attackBonus = GetPlayerTerrainAttackBonus();
             var damage = GetAttackDamage(card, attackBonus, spentKi, target);
-            if (IsDebugEffectRef(card.EffectRef)) damage = 0;
             var hitCount = GetAttackHitCount(card);
             var anyKilled = false;
             // 이 공격이 보드에서 덮는 칸(취약 부위 판정의 입력 · §20-A-5). 타격 루프 밖에서 한 번만
@@ -1943,7 +1863,6 @@ namespace SeoulPlayup.Combat.Runtime
                 }
             }
 
-            ApplyDebugCardEffect(card, target);
             ConsumePlayedCard(ActionDeck, card);
             ApplyPostActions(card, target);
             LastDiscardedCard = CombatCardKind.Attack;
@@ -2173,9 +2092,9 @@ namespace SeoulPlayup.Combat.Runtime
                 RegisterActionCardUse(CombatCardKind.Attack);
                 LastFailureReason = string.Empty;
                 LastInvestigateResult = string.Empty;
-            // Sunlit Rain (A03) and Field Heal (F02) should share the same VFX path.
-            // Preserve sourceRef as FieldHeal so catalog entries including scale/offset resolve consistently.
-                RaiseEffect(EffectKind.Heal, PlayerCoord, 0, healed, "player", CardEffectRefs.FieldHeal);
+                // 카드 id로 발신한다(트랙 ②, 2026-09-06). 예전엔 field.heal을 빌려 F02의 큐(CVF02H)를 탔고 A03 자신의
+                // 큐 CVA03H는 죽은 행이었다 — 두 큐는 같은 프리팹·파라미터라 화면은 그대로다.
+                RaiseEffect(EffectKind.Heal, PlayerCoord, 0, healed, "player", card.Id);
                 return true;
             }
 
@@ -2466,19 +2385,16 @@ namespace SeoulPlayup.Combat.Runtime
             LastDiscardedCard = CombatCardKind.Defend;
             RegisterActionCardUse(CombatCardKind.Defend);
             LastFailureReason = string.Empty;
-            // Protection Zone in Rain (D02) applies damage immunity instead of block.
-            // Double Edged Shield (D03) gets a separate reflected-damage status instead of the generic block text.
-            // Other defense cards use the generic "Block +N" status text.
-            var defendSourceRef = EffectSourceRefOf(card);
-            if (CombatEffectSourceClassifier.IsDamageImmunitySource(defendSourceRef))
-            {
-                // Named as the source card as well as the behaviour: the behaviour ref is what presentation
-                // matches by default, so without the card id a per-card VFX cue can never be selected.
-                RaiseEffect(EffectKind.Block, PlayerCoord, 0, 0, "player", defendSourceRef, sourceCardId: card.Id);
-            }
-            else if (defendSourceRef != CardEffectRefs.DefendHalfReflect && blockReported > 0)
+            // 방어도를 줬으면 그 수치로, 방어도 없이 피해 면역을 걸었으면(D02·D05) Block(0)을 효과 종류 키로 알린다 —
+            // 면역 여부는 카드의 발신 키가 아니라 규칙 상태(pending 플래그)에서 읽는다(트랙 ②, 2026-09-06). 반사(D03)는
+            // 둘 다 아니라 Block을 올리지 않고, 자기 Reflect 상태 부여로 말한다.
+            if (blockReported > 0)
             {
                 RaiseEffect(EffectKind.Block, PlayerCoord, 0, blockReported, "player", card.Id);
+            }
+            else if (pending.IncomingDamageNullifiedThisMonsterAction)
+            {
+                RaiseEffect(EffectKind.Block, PlayerCoord, 0, 0, "player", CardEffectRefs.DefendDamageImmunity, sourceCardId: card.Id);
             }
             return true;
         }
@@ -2687,7 +2603,7 @@ namespace SeoulPlayup.Combat.Runtime
         public bool TryPlayerUtility(string cardId)
         {
             // 빚 문서(X04, T2): 낼 수 있는 유일한 저주. 효과가 "기 1을 내고 자신을 소멸"이 전부라
-            // 핸들러 없이 여기서 끝낸다 — 소멸 더미로 가므로 회수(U02)·소멸 스케일(A13)과도 이어진다.
+            // 핸들러 없이 여기서 끝낸다 — 소멸은 카드 클래스의 Disposal 선언(X04_DebtNote)이 ConsumePlayedCard에서 결정한다.
             var playableCurse = string.IsNullOrEmpty(cardId)
                 ? null
                 : ActionDeck.Hand.FirstOrDefault(candidate =>
@@ -2700,7 +2616,7 @@ namespace SeoulPlayup.Combat.Runtime
                 }
 
                 SpendCardKi(playableCurse);
-                ActionDeck.PermanentRemoveFromHand(playableCurse);
+                ConsumePlayedCard(ActionDeck, playableCurse);
                 LastDiscardedCard = CombatCardKind.Utility;
                 RegisterActionCardUse(CombatCardKind.Utility);
                 LastFailureReason = string.Empty;
@@ -2714,29 +2630,16 @@ namespace SeoulPlayup.Combat.Runtime
                 return Fail(reason);
             }
 
-            var hasHandler = CardBehaviorRegistry.Resolve(card).HasUtilityEffect(this, card);
-            if (!hasHandler && card.Id != CardIds.Redraw)
+            // 유틸리티 규칙은 전부 카드 클래스다(U01 재드로우도 P4에서 클래스로 갔다). 카탈로그 밖 유틸리티 카드는 지원하지 않는다.
+            if (!CardBehaviorRegistry.Resolve(card).HasUtilityEffect(this, card))
             {
                 return Fail("Utility card effect is not supported.");
             }
 
             SpendCardKi(card);
-            if (hasHandler)
-            {
-                // U03 정화 뽑기 draws into the action hand itself, so unlike U01 it has to discard the
-                // played card explicitly — U01's whole-hand redraw below already sweeps it away.
-                CardBehaviorRegistry.Resolve(card).TryApplyUtility(this, card);
-                ConsumePlayedCard(ActionDeck, card);
-            }
-            else
-            {
-                var movementRedrawCount = MovementDeck.HandCount;
-                var actionRedrawCount = ActionDeck.HandCount;
-                MovementDeck.DiscardHand();
-                ActionDeck.DiscardHand();
-                MovementDeck.Draw(movementRedrawCount);
-                DrawActionCards(actionRedrawCount);
-            }
+            // 사용된 카드 자신의 배출은 단일 지점(ConsumePlayedCard). U01처럼 손패 전체를 버리는 카드는 DisposeAfterPlay가 HandledByRule을 돌려준다.
+            CardBehaviorRegistry.Resolve(card).TryApplyUtility(this, card);
+            ConsumePlayedCard(ActionDeck, card);
 
             LastDiscardedCard = CombatCardKind.Utility;
             RegisterActionCardUse(CombatCardKind.Utility);
@@ -3181,7 +3084,6 @@ namespace SeoulPlayup.Combat.Runtime
         private void ResetPerTurnSignalsStep()
         {
             lastMovedDistance = 0;
-            revealedFastTurtleDistance = 0;
             actionCardsUsedThisTurn = 0;
             bagAttackBonusThisTurn = 0;
             defensiveCardUsedThisTurn = false;
@@ -4369,14 +4271,15 @@ namespace SeoulPlayup.Combat.Runtime
             return incoming * percent / 100;
         }
 
-        internal void ApplyReflectToPlayer(int percent, int durationTurns, string sourceCardId = "")
+        internal void ApplyReflectToPlayer(int percent, int durationTurns, string sourceCardId)
         {
             var clamped = Math.Max(0, percent);
             var clampedTurns = Math.Max(1, durationTurns);
             // RefreshDuration / maxStacks 1: keep a single Reflect instance for the upcoming monster action.
-            activeEffects.ReplaceSingle(StatusEffectKind.Reflect, PlayerUnitId, clampedTurns, clamped, CardEffectRefs.DefendHalfReflect);
-            // As with D02 above: carry the card id alongside the behaviour ref so a per-card cue is reachable.
-            RaiseStatusEffect(StatusEffectKind.Reflect, PlayerCoord, 0, clamped, PlayerUnitId, CardEffectRefs.DefendHalfReflect, sourceCardId: sourceCardId);
+            // 부여의 출처는 카드 id다(트랙 ②). 반사가 되돌리는 피해 자체는 카드가 떠난 뒤 몬스터 행동에서 오르므로
+            // 그쪽만 효과 종류 키 DefendHalfReflect를 쓴다.
+            activeEffects.ReplaceSingle(StatusEffectKind.Reflect, PlayerUnitId, clampedTurns, clamped, sourceCardId);
+            RaiseStatusEffect(StatusEffectKind.Reflect, PlayerCoord, 0, clamped, PlayerUnitId, sourceCardId, sourceCardId: sourceCardId);
         }
 
         private void ApplyAgilityToPlayer(int amount, int durationTurns)
@@ -4437,10 +4340,10 @@ namespace SeoulPlayup.Combat.Runtime
         /// (지속 1 — 다음 턴 시작 경계에서 만료)으로 따라붙는 표시용 그림자다. 자기 버프 직접 추가
         /// 문법(반사·민첩과 동일 — skip 플래그 없음)이라 불리언 리셋과 같은 경계에서 사라진다.
         /// </summary>
-        internal void ApplyInvincibleStatusThisTurn(string sourceRef, string sourceCardId)
+        internal void ApplyInvincibleStatusThisTurn(string sourceCardId)
         {
-            activeEffects.ReplaceSingle(StatusEffectKind.Invincible, PlayerUnitId, 1, 0, sourceRef);
-            RaiseStatusEffect(StatusEffectKind.Invincible, PlayerCoord, 0, 0, PlayerUnitId, sourceRef, sourceCardId: sourceCardId);
+            activeEffects.ReplaceSingle(StatusEffectKind.Invincible, PlayerUnitId, 1, 0, sourceCardId);
+            RaiseStatusEffect(StatusEffectKind.Invincible, PlayerCoord, 0, 0, PlayerUnitId, sourceCardId, sourceCardId: sourceCardId);
         }
 
         /// <summary>
@@ -4471,8 +4374,8 @@ namespace SeoulPlayup.Combat.Runtime
             foreach (var monster in monsters.Where(candidate => !candidate.Combatant.IsDead))
             {
                 // RefreshDuration / maxStacks 1: keep a single Strength instance per monster.
-                activeEffects.ReplaceSingle(StatusEffectKind.Strength, monster.Id, clampedTurns, clampedAmount, CardEffectRefs.DefendZeroThenDouble);
-                RaiseStatusEffect(StatusEffectKind.Strength, monster.Coord, 0, clampedAmount, monster.Id, CardEffectRefs.DefendZeroThenDouble);
+                activeEffects.ReplaceSingle(StatusEffectKind.Strength, monster.Id, clampedTurns, clampedAmount, CardEffectRefs.DefendProvokeStrength);
+                RaiseStatusEffect(StatusEffectKind.Strength, monster.Coord, 0, clampedAmount, monster.Id, CardEffectRefs.DefendProvokeStrength);
             }
         }
 
@@ -4671,11 +4574,6 @@ namespace SeoulPlayup.Combat.Runtime
             PhaseChanged?.Invoke(previous, next);
         }
 
-        private bool UsesApprovedCardCatalog()
-        {
-            return string.Equals(CardCatalog.SourceId, ApprovedCardCatalogFactory.SourceId, StringComparison.Ordinal);
-        }
-
         private bool HasPlayableMovementCard()
         {
             return MovementDeck.Hand.Any(card =>
@@ -4850,7 +4748,7 @@ namespace SeoulPlayup.Combat.Runtime
 
                 var isControl = kind == StatusEffectKind.Immobilize || kind == StatusEffectKind.Stun;
                 var intent = isControl ? CaptureMonsterIntentForCancel(monster) : default;
-                AddDurationStatusEffect(kind, monster.Id, turns, entry.Amount, EffectSourceRefOf(card));
+                AddDurationStatusEffect(kind, monster.Id, turns, entry.Amount, card.Id);
                 if (isControl)
                 {
                     ApplyControlStatusConstraintToPlan(monster);
@@ -4858,7 +4756,7 @@ namespace SeoulPlayup.Combat.Runtime
 
                 // I-13(WS-I): 플로팅의 수치 슬롯 의미는 종류별이다 — 제어형(속박/기절)은 「N턴」이라 턴을,
                 // 값형(파열·쇠약 등)은 수치를 싣는다. 예전엔 전부 turns를 실어 값형이 턴수를 수치처럼 찍었다.
-                RaiseStatusEffect(kind, target, 0, isControl ? turns : entry.Amount, monster.Id, EffectSourceRefOf(card), sourceCardId: card.Id);
+                RaiseStatusEffect(kind, target, 0, isControl ? turns : entry.Amount, monster.Id, card.Id, sourceCardId: card.Id);
                 if (isControl)
                 {
                     EmitMonsterIntentCancelText(monster, intent.WasMoving, intent.WasAttacking, kind);
@@ -4885,12 +4783,11 @@ namespace SeoulPlayup.Combat.Runtime
                     if (immobilizeTarget != null && int.TryParse(action.Payload, out var turns) && turns > 0)
                     {
                         var intent = CaptureMonsterIntentForCancel(immobilizeTarget);
-                        AddDurationStatusEffect(StatusEffectKind.Immobilize, immobilizeTarget.Id, turns, 0, EffectSourceRefOf(card));
+                        AddDurationStatusEffect(StatusEffectKind.Immobilize, immobilizeTarget.Id, turns, 0, card.Id);
                         ApplyControlStatusConstraintToPlan(immobilizeTarget);
-                        // sourceRef stays the shared behaviour ref (attack.damage), which every attack card
-                        // emits; sourceCardId names the card so presentation can scope a cue to it.
+                        // 발신 키 = 카드 id(트랙 ②). 큐 player.status.hit.A11은 sourceCardId+sourceRef 모두 A11로 잠긴다.
                         RaiseStatusEffect(
-                            StatusEffectKind.Immobilize, target, 0, turns, immobilizeTarget.Id, EffectSourceRefOf(card),
+                            StatusEffectKind.Immobilize, target, 0, turns, immobilizeTarget.Id, card.Id,
                             sourceCardId: card.Id);
                         EmitMonsterIntentCancelText(immobilizeTarget, intent.WasMoving, intent.WasAttacking, StatusEffectKind.Immobilize);
                     }
@@ -4939,16 +4836,13 @@ namespace SeoulPlayup.Combat.Runtime
                 return Array.Empty<CardBehaviorMetadata.PostAction>();
             }
 
-            // 등록된 카드는 클래스가 선언한 후속 규칙, 카탈로그 밖 카드(테스트 픽스처)는 아직 문자열 컬럼(P2-d에서 제거).
-            return CardBehaviorRegistry.TryGet(card.Id, out var behavior)
-                ? behavior.PostActions
-                : CardBehaviorMetadata.ParsePostActions(card.PostActions);
+            return CardBehaviorRegistry.Resolve(card).PostActions;
         }
 
         private void InjectCardCopy(string payload)
         {
-            // 옛 postActions 문법 `InjectCopy:attack.multiplying_strike`는 복사본 카드 id(A09)로 읽는다.
-            var copyKey = string.IsNullOrWhiteSpace(payload) || payload.Trim() == CardEffectRefs.AttackMultiplyingStrike
+            // payload는 복사본 카드 id(A09). 비어 있으면 아지랑이 기본값.
+            var copyKey = string.IsNullOrWhiteSpace(payload)
                 ? CardIds.MultiplyingStrikeCopy
                 : payload.Trim();
             var copyEntry = CardCatalog.Entries
@@ -5167,13 +5061,28 @@ namespace SeoulPlayup.Combat.Runtime
                 - CountHandCurse(CardIds.Tardiness));
         }
 
-        internal HexCoord? ChooseRandomMovementDestination(int range)
+        /// <param name="avoidEnemyAdjacent">
+        /// M06+ 도착지를 모르는 여행 연마: 살아 있는 몬스터와 인접(거리 1)한 칸을 후보에서 뺀다. 남는 후보가 없으면
+        /// 전체 후보로 되돌아간다 — 연마가 「이동 불가」로 퇴화하면 안 된다(DEC-2026-09-06-08).
+        /// </param>
+        internal HexCoord? ChooseRandomMovementDestination(int range, bool avoidEnemyAdjacent = false)
         {
             var candidates = HexPathfinder.GetReachableCells(Map, new MovementQuery(PlayerCoord, range, includeStart: false, unitId: PlayerUnitId), runtimeStates, terrainTraits)
                 .Keys
                 .OrderBy(coord => coord.Q)
                 .ThenBy(coord => coord.R)
                 .ToList();
+            if (avoidEnemyAdjacent)
+            {
+                var safe = candidates
+                    .Where(coord => !monsters.Any(monster => !monster.Combatant.IsDead && monster.Coord.DistanceTo(coord) <= 1))
+                    .ToList();
+                if (safe.Count > 0)
+                {
+                    candidates = safe;
+                }
+            }
+
             return candidates.Count == 0 ? (HexCoord?)null : candidates[pushRng.Next(candidates.Count)];
         }
 
@@ -5623,7 +5532,8 @@ namespace SeoulPlayup.Combat.Runtime
             // 무작위 1가지만 옮긴다(#18). pushRng를 공유하는 이유는 PickContagionTarget과 같다 —
             // 전투 RNG는 이미 4벌로 흩어져 있어 다섯 번째를 더하면 시드 재현이 더 멀어진다.
             var spread = carried[pushRng.Next(carried.Count)];
-            ApplyStatusToMonster(infected, spread.Kind, spread.RemainingTurns, spread.Amount, EffectSourceRefOf(card));
+            // 전파는 카드의 직접 발신이 아니라 파생 효과다 — 효과 종류 키로 올려 표현층이 「전염! 」 접두를 단다(트랙 ②).
+            ApplyStatusToMonster(infected, spread.Kind, spread.RemainingTurns, spread.Amount, CardEffectRefs.PlagueContagion);
         }
 
         /// <summary>
@@ -5682,6 +5592,18 @@ namespace SeoulPlayup.Combat.Runtime
         // Exiles one random card from the action hand, excluding the card doing the exiling (D05). The hand
         // may hold nothing else, in which case the card still resolves and simply pays no cost — the same
         // "never refuse, just do less" rule the other new cards follow (D8).
+        /// <summary>D05+ 부적 방패의 대가 — 소멸(<see cref="ExileRandomActionHandCard"/>) 대신 버림. 같은 무작위 추첨(pushRng)이다.</summary>
+        internal bool DiscardRandomActionHandCard(CardDefinition exclude)
+        {
+            var candidates = ActionDeck.Hand.Where(candidate => !ReferenceEquals(candidate, exclude)).ToList();
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            return ActionDeck.DiscardFromHand(candidates[pushRng.Next(candidates.Count)]);
+        }
+
         internal bool ExileRandomActionHandCard(CardDefinition exclude)
         {
             var candidates = ActionDeck.Hand.Where(candidate => !ReferenceEquals(candidate, exclude)).ToList();
@@ -5794,7 +5716,7 @@ namespace SeoulPlayup.Combat.Runtime
         /// 상태 카드 → 봉인(어떤 상황에서도 못 쓰는 것이 먼저 — 「기다리면 풀린다」로 읽히면 안 된다) →
         /// 기절/속박(더 넓게 막는 것) → 무장 해제(공격만). 페이즈·기력·사거리는 <b>상황</b> 제약이라 각 면이 따로 본다.</para>
         /// </summary>
-        private enum CardRestriction
+        public enum CardRestriction
         {
             None,
             StatusCard,
@@ -5804,7 +5726,18 @@ namespace SeoulPlayup.Combat.Runtime
             Disarmed,
         }
 
+        /// <summary>카드 사용 불가 판정의 단일 입구 — 카드 클래스 훅(<see cref="CardBehavior.GetRestriction"/>)을 지난다.</summary>
         private CardRestriction GetCardRestriction(CardDefinition card)
+        {
+            return card == null ? CardRestriction.None : CardBehaviorRegistry.Resolve(card).GetRestriction(this, card);
+        }
+
+        /// <summary>
+        /// 모든 카드에 공통인 게이트(상태 카드·봉인·기절·속박·무장 해제). <see cref="CardBehavior.GetRestriction"/>의 기본 구현이
+        /// 부르며, <paramref name="ignoreStun"/>은 카드 클래스의 기절 면제 선언(<see cref="CardBehavior.UsableWhileStunned"/>)이다 —
+        /// 이동 카드의 기절은 속박과 같은 이동 차단이라 면제가 없다.
+        /// </summary>
+        internal CardRestriction GetCommonCardRestriction(CardDefinition card, bool ignoreStun)
         {
             if (card == null)
             {
@@ -5834,7 +5767,7 @@ namespace SeoulPlayup.Combat.Runtime
                 return CardRestriction.None;
             }
 
-            if (IsBlockedByStun(card))
+            if (!ignoreStun && IsBlockedByStun(card))
             {
                 return CardRestriction.Stunned;
             }
@@ -5880,7 +5813,8 @@ namespace SeoulPlayup.Combat.Runtime
         /// The single 기절(stun) action lockout predicate. Execution validation, the UI usable flag, and the
         /// grey status label all route through here — they gate the same card, so they must never disagree
         /// (one-sided edits produce "the button is live but the play is rejected", or the reverse).
-        /// <see cref="CardDefinition.UsableWhileStunned"/> is the per-card, data-authored exemption.
+        /// The per-card exemption is the card class declaration <see cref="CardBehavior.UsableWhileStunned"/>, applied by
+        /// <see cref="GetCommonCardRestriction"/> (P3: the cards.csv column is gone).
         /// </summary>
         private bool IsBlockedByStun(CardDefinition card)
         {
@@ -5888,7 +5822,6 @@ namespace SeoulPlayup.Combat.Runtime
             // so gating PlayerAction alone lets a stunned player slip them in through the movement phase.
             return (Phase == CombatPhase.PlayerAction || Phase == CombatPhase.PlayerMovement)
                 && card != null
-                && !card.UsableWhileStunned
                 && HasActivePlayerEffect(StatusEffectKind.Stun);
         }
 
@@ -5901,7 +5834,7 @@ namespace SeoulPlayup.Combat.Runtime
         /// <see cref="IsCardUsable"/>의 Move 조기 분기로 빠져 이 게이트를 타지 않는데, 무장 해제는
         /// 이동을 막지 않으므로 그것이 곧 옳은 동작이다(봉인 C-16은 그 4번째 지점을 따로 뚫어야 한다).
         ///
-        /// <see cref="CardDefinition.UsableWhileStunned"/> 면제는 <b>적용하지 않는다</b>: 그 컬럼은
+        /// <see cref="CardBehavior.UsableWhileStunned"/> 면제는 <b>적용하지 않는다</b>: 그 선언은
         /// "기절해도 쓸 수 있다"를 뜻하고 저작된 두 장(U03·D06)은 공격 카드가 아니다. 무장 해제에까지
         /// 재사용하면 한 컬럼이 두 규칙을 뜻하게 된다.
         /// </summary>
@@ -6243,74 +6176,45 @@ namespace SeoulPlayup.Combat.Runtime
             LastFailureReason = string.Empty;
         }
 
-        /// <summary>
-        /// 사용된 카드의 단일 배출 지점(T5-1 「소멸」 통일). <c>exhaustOnPlay</c> 저작 카드는 버림 더미
-        /// 대신 소멸 더미로 보낸다. 기존 3경로(additionalCost의 선택 카드 소멸·전용 behaviorId·
-        /// 아지랑이의 턴말 purge)는 이 지점을 지나지 않으며 그대로 유지된다 — 신규 저작만 컬럼을 쓴다.
-        /// </summary>
-        /// <summary>
-        /// 카드가 효과를 올릴 때 쓰는 sourceRef(<see cref="CardBehavior.EffectSourceRef"/>). 카탈로그 밖 카드(테스트 픽스처)는
-        /// 아직 <see cref="CardDefinition.EffectRef"/>를 돌려준다 — P2-d에서 그 필드가 사라지면 카드 id가 된다.
-        /// </summary>
-        private static string EffectSourceRefOf(CardDefinition card)
-        {
-            if (card == null)
-            {
-                return string.Empty;
-            }
-
-            return CardBehaviorRegistry.TryGet(card.Id, out var behavior) ? behavior.EffectSourceRef : card.EffectRef;
-        }
-
-        /// <summary>추가 비용(<see cref="CardBehavior.AdditionalCost"/>). 카탈로그 밖 카드는 아직 문자열 컬럼(P2-d에서 제거).</summary>
         private static string AdditionalCostOf(CardDefinition card)
         {
-            if (card == null)
-            {
-                return string.Empty;
-            }
-
-            if (CardBehaviorRegistry.TryGet(card.Id, out var behavior))
-            {
-                return behavior.AdditionalCost;
-            }
-
-            return CardBehaviorMetadata.HasToken(card.AdditionalCost, CardBehaviorMetadata.AdditionalCostExileSelectedHandCards)
-                ? CardBehaviorMetadata.AdditionalCostExileSelectedHandCards
-                : CardBehaviorMetadata.HasToken(card.AdditionalCost, CardBehaviorMetadata.AdditionalCostDiscardSelectedHandCards)
-                    ? CardBehaviorMetadata.AdditionalCostDiscardSelectedHandCards
-                    : string.Empty;
+            return CardBehaviorRegistry.Resolve(card).AdditionalCost;
         }
 
-        /// <summary>선택지(<see cref="CardBehavior.Choices"/>). 카탈로그 밖 카드는 아직 문자열 컬럼(P2-d에서 제거).</summary>
         private static IReadOnlyList<CardBehaviorMetadata.ChoiceOption> ChoicesOf(CardDefinition card)
         {
-            if (card == null)
-            {
-                return Array.Empty<CardBehaviorMetadata.ChoiceOption>();
-            }
-
-            return CardBehaviorRegistry.TryGet(card.Id, out var behavior)
-                ? behavior.Choices
-                : CardBehaviorMetadata.ParseChoiceOptions(card.ChoiceOptions);
+            return CardBehaviorRegistry.Resolve(card).Choices;
         }
 
         private static int ChoiceDrawCountOf(CardDefinition card)
         {
-            return CardBehaviorRegistry.TryGet(card.Id, out var behavior)
-                ? behavior.ChoiceDrawCount
-                : CardBehaviorMetadata.GetBehaviorParam(card.BehaviorParams, "drawCount", 0);
+            return CardBehaviorRegistry.Resolve(card).ChoiceDrawCount(card);
         }
 
-        private static void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
+        /// <summary>
+        /// 사용된 카드의 단일 배출 지점(P3 「소멸」 통일). 카드 클래스의 <see cref="CardBehavior.DisposeAfterPlay"/>가
+        /// 버림/소멸을 정한다 — 빚 문서(X04)가 소멸, 나머지는 버림. 다른 카드를 소멸시키는 비용(A10 제물·D05 부적 방패)과
+        /// 아지랑이의 턴말 purge(<c>IsTemporary</c>)는 「사용된 카드 자신」의 배출이 아니라 이 지점을 지나지 않는다.
+        /// </summary>
+        private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
         {
-            if (card != null && card.ExhaustOnPlay)
+            if (card == null)
             {
-                deck.PermanentRemoveFromHand(card);
                 return;
             }
 
-            deck.DiscardFromHand(card);
+            switch (CardBehaviorRegistry.Resolve(card).DisposeAfterPlay(this, card))
+            {
+                case CardDisposal.Exile:
+                    deck.PermanentRemoveFromHand(card);
+                    return;
+                case CardDisposal.HandledByRule:
+                    // 규칙이 손패 전체를 버렸다(U01). 재드로우로 같은 카드가 다시 손에 왔다면 그것은 새로 뽑은 손패다 — 건드리지 않는다.
+                    return;
+                default:
+                    deck.DiscardFromHand(card);
+                    return;
+            }
         }
 
         /// <summary>
@@ -6468,7 +6372,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.Range,
                 pile,
                 card.CatalogSourceId,
-                EffectSourceRefOf(card),
                 card.PhaseAvailability,
                 card.PlayMode,
                 card.FieldObjectKind,
@@ -6477,7 +6380,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.InstanceId,
                 card.UpgradeLevel,
                 card.IsTemporary,
-                card.ChoiceOptions,
                 card.ChoiceOptionTexts,
                 card.PresentationRef.IllustrationId,
                 baseCost: card.Cost,
@@ -6504,7 +6406,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.Range,
                 pile,
                 card.CatalogSourceId,
-                EffectSourceRefOf(card),
                 card.PhaseAvailability,
                 card.PlayMode,
                 card.FieldObjectKind,
@@ -6513,7 +6414,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.InstanceId,
                 card.UpgradeLevel,
                 card.IsTemporary,
-                card.ChoiceOptions,
                 card.ChoiceOptionTexts,
                 card.PresentationRef.IllustrationId,
                 baseCost: card.Cost,
@@ -6555,7 +6455,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.Range,
                 pile,
                 card.CatalogSourceId,
-                EffectSourceRefOf(card),
                 card.PhaseAvailability,
                 card.PlayMode,
                 card.FieldObjectKind,
@@ -6564,7 +6463,6 @@ namespace SeoulPlayup.Combat.Runtime
                 card.InstanceId,
                 card.UpgradeLevel,
                 card.IsTemporary,
-                card.ChoiceOptions,
                 card.ChoiceOptionTexts,
                 card.PresentationRef.IllustrationId,
                 baseCost: card.Cost,
@@ -6706,7 +6604,7 @@ namespace SeoulPlayup.Combat.Runtime
             {
                 // Single choke point: token-resolve then emphasise game keywords (+link for hover tooltip).
                 // Keyword decoration is a no-op unless a catalog is active (EditMode/plain surfaces keep raw text).
-                return CardKeywordDecorator.Decorate(ResolveDescriptionTokens(card.Description, card, hitCountOverride, valueOverride, rangeOverride, areaRadiusOverride));
+                return CardKeywordDecorator.DecorateForCard(ResolveDescriptionTokens(card.Description, card, hitCountOverride, valueOverride, rangeOverride, areaRadiusOverride), card.Id);
             }
 
             // Authored as templates rather than interpolated strings so the generated fallbacks get the
@@ -6896,7 +6794,7 @@ namespace SeoulPlayup.Combat.Runtime
 
         private void DiscardRemainingHands()
         {
-            // 유지(T5-2): retainOnTurnEnd 카드는 턴말 버림에서 제외돼 손에 남는다.
+            // 유지(T5-2): 카드 클래스가 RetainOnTurnEnd를 선언한 카드는 턴말 버림에서 제외돼 손에 남는다.
             // ⚠️ 「자리를 차지한다」는 예전 규칙은 2026-09-02 #6에서 뒤집혔다 — 유지 카드는 정원 <b>밖</b>이며
             //    다음 턴 드로우를 깎지 않는다(<see cref="CountRetainedInHand"/>).
             MovementDeck.DiscardHandExcept(IsRetainedOnTurnEnd);
@@ -6918,7 +6816,7 @@ namespace SeoulPlayup.Combat.Runtime
 
         private static bool IsRetainedOnTurnEnd(CardDefinition card)
         {
-            return card != null && card.RetainOnTurnEnd;
+            return card != null && CardBehaviorRegistry.Resolve(card).RetainOnTurnEnd;
         }
 
         // 손패는 두 벌(이동/행동)이고 유물도 축을 둘로 나눠 가진다 — "카드를 더 뽑는다"가 어느 덱을
@@ -6943,7 +6841,7 @@ namespace SeoulPlayup.Combat.Runtime
         /// 드로우가 일어나는 모든 자리에서 성립해야 한다(턴 시작 보충 · 갈림길 드로우 · 유물 드로우 ·
         /// U01 재드로우). 드로우 호출을 여기로 모아 두면 새 드로우 경로가 생겨도 저절로 따라온다.
         /// </summary>
-        private void DrawActionCards(int count)
+        internal void DrawActionCards(int count)
         {
             if (count <= 0)
             {
@@ -7398,15 +7296,6 @@ namespace SeoulPlayup.Combat.Runtime
             return CombatCatalogFactory.CreateMonsterCatalog(config);
         }
 
-        public static CardCatalogDefinition CreateApprovedCardCatalog(CombatConfig config)
-        {
-            return ApprovedCardCatalogFactory.CreateApprovedCatalog(config);
-        }
-
-        public static CardCatalogDefinition CreateCardCatalog(CombatConfig config)
-        {
-            return CombatCatalogFactory.CreateCardCatalog(config);
-        }
 
         private static void NoShuffle<T>(IList<T> cards)
         {
@@ -7417,7 +7306,8 @@ namespace SeoulPlayup.Combat.Runtime
         // to keep deterministic ordering. Decks passed explicitly into CombatState are never touched.
         private CardDeckState CreateDeck(CardCategory category, bool shuffle)
         {
-            var deck = new CardDeckState(PlayerDeck.CreateDeck(CardCatalog, category), DeckShuffleFor(category));
+            // 연마(P4): 인스턴스 UpgradeLevel ≥ 1인 카드는 카드 클래스의 Upgrade로 치환된 정의를 받는다(정의 시점 치환).
+            var deck = new CardDeckState(PlayerDeck.CreateDeck(CardCatalog, category).Select(CardUpgrades.Resolve), DeckShuffleFor(category));
             if (shuffle)
             {
                 deck.ShuffleDrawPile();

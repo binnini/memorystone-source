@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -14,14 +15,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var state = CombatState.CreateDefaultDemo();
 
-            Assert.That(state.CardCatalog.SourceId, Is.EqualTo(ApprovedCardCatalogFactory.SourceId));
+            Assert.That(state.CardCatalog.SourceId, Is.EqualTo(DemoCardCatalog.SourceId));
             Assert.That(state.CardCatalogEvidence.IsValid, Is.True);
             CollectionAssert.AreEqual(new[] { "M01", "M02", "M03", "M04", "M05", "M06" }, state.CardCatalogEvidence.MoveDeckCardIds);
             CollectionAssert.AreEqual(new[] { "A01", "D01", "S01", "I01", "A06", "A02", "A03", "A04", "A05", "A07", "A08", "A10", "A11", "D02", "D03", "S02", "F01", "F02", "F03", "U01" }, state.CardCatalogEvidence.ActionDeckCardIds);
             Assert.That(state.CardCatalogEvidenceText, Does.Contain("MoveDeck=[M01,M02,M03,M04,M05,M06]"));
             Assert.That(state.CardCatalogEvidenceText, Does.Contain("ActionDeck=[A01,D01,S01,I01,A06,A02,A03,A04,A05,A07,A08,A10,A11,D02,D03,S02,F01,F02,F03,U01]"));
             Assert.That(state.GetCombatCards().Select(card => card.CatalogSourceId).Distinct().Single(), Is.EqualTo(state.CardCatalog.SourceId));
-            Assert.That(state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.Move1HexId).EffectRef, Is.EqualTo(CardEffectRefs.MoveBasic));
         }
 
         [Test]
@@ -34,9 +34,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.ActionDeck.Hand.All(card => card.Category == CardCategory.Action), Is.True);
             Assert.That(state.MovementDeck.Hand.Select(card => card.Id), Is.EquivalentTo(new[] { "M01" }));
             Assert.That(state.ActionDeck.Hand.Select(card => card.Id), Is.EquivalentTo(new[] { "A01", "D01", "S01", "I01", "A06" }));
-            Assert.That(state.CardCatalog.Entries.Select(entry => entry.Id), Does.Contain(ApprovedCardCatalogFactory.ObjectiveInvestigateId));
+            Assert.That(state.CardCatalog.Entries.Select(entry => entry.Id), Does.Contain(DemoCardCatalog.ObjectiveInvestigateId));
             Assert.That(state.CardCatalog.Entries.Any(entry => entry.Id.StartsWith("m2-")), Is.False);
-            Assert.That(state.ActiveCardCatalogIds, Does.Contain(ApprovedCardCatalogFactory.ObjectiveInvestigateId));
+            Assert.That(state.ActiveCardCatalogIds, Does.Contain(DemoCardCatalog.ObjectiveInvestigateId));
             Assert.That(state.ActiveCardCatalogIds, Is.SupersetOf(new[] { "M01", "A01", "D01", "S01", "I01" }));
         }
 
@@ -52,13 +52,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement(); // DEC-2026-07-03-02: 몬스터 이동 해석 후 PlayerAction 도달.
 
-            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackSweepId).IsValid, Is.False);
-            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackDoubleHitId).IsValid, Is.True);
-            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackDoubleHitId), Is.True);
+            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), CardIds.Sweep).IsValid, Is.False);
+            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), CardIds.DoubleHit).IsValid, Is.True);
+            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), CardIds.DoubleHit), Is.True);
 
             Assert.That(state.Monsters.Single().Hp, Is.EqualTo(6));
-            Assert.That(state.GetCombatCards().Any(card => card.Id == ApprovedCardCatalogFactory.AttackSweepId && !card.IsDiscarded), Is.True);
-            Assert.That(state.GetCombatCards().Any(card => card.Id == ApprovedCardCatalogFactory.AttackDoubleHitId && card.IsDiscarded), Is.True);
+            Assert.That(state.GetCombatCards().Any(card => card.Id == CardIds.Sweep && !card.IsDiscarded), Is.True);
+            Assert.That(state.GetCombatCards().Any(card => card.Id == CardIds.DoubleHit && card.IsDiscarded), Is.True);
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.EndAction(), Is.True);
             state.ResolveMonsterMovement(); // DEC-2026-07-03-02: 몬스터 이동 해석 후 PlayerAction 도달.
 
-            var campfire = state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.FieldSacredCampfireId && !card.IsDiscarded);
+            var campfire = state.GetCombatCards().Single(card => card.Id == CardIds.SacredLamp && !card.IsDiscarded);
             Assert.That(campfire.Kind, Is.EqualTo(CombatCardKind.FieldObject));
             Assert.That(campfire.IsUsable, Is.True);
             Assert.That(campfire.Status, Is.EqualTo("사용 가능"));
@@ -85,7 +85,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
             // A ManualTarget field object cannot be placed on the player's own tile; place it on the
             // adjacent walkable tile (1,0) within range instead.
-            Assert.That(state.TryPlayerFieldObject(new HexCoord(1, 0), ApprovedCardCatalogFactory.FieldSacredCampfireId), Is.True);
+            Assert.That(state.TryPlayerFieldObject(new HexCoord(1, 0), CardIds.SacredLamp), Is.True);
 
             // cards.csv: 신성한 램프(F02) 코스트 3 → actionBudget 3을 전부 소모.
             Assert.That(state.ActionCostRemaining, Is.EqualTo(0));
@@ -93,7 +93,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.FieldObjects.Objects.Single().Kind, Is.EqualTo(FieldObjectKind.ConditionalHeal));
             Assert.That(state.FieldObjects.Objects.Single().Radius, Is.EqualTo(2));
             Assert.That(state.FieldObjects.Objects.Single().RemainingTurns, Is.EqualTo(4));
-            Assert.That(state.GetCombatCards().Single(card => card.Id == ApprovedCardCatalogFactory.FieldSacredCampfireId).IsDiscarded, Is.True);
+            Assert.That(state.GetCombatCards().Single(card => card.Id == CardIds.SacredLamp).IsDiscarded, Is.True);
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(3, 0),
                 new CombatConfig(20, 10, 1, 1, 4, 4, 0, 1, 3, actionBudget: 3, actionHandSize: 18));
 
-            var validation = state.ValidateFieldObjectTarget(state.PlayerCoord, ApprovedCardCatalogFactory.FieldSacredCampfireId);
+            var validation = state.ValidateFieldObjectTarget(state.PlayerCoord, CardIds.SacredLamp);
             Assert.That(validation.IsValid, Is.False);
             Assert.That(validation.FailureReason, Does.Contain("player action").Or.Contain("No matching action card"));
         }
@@ -116,7 +116,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var missingActionDeck = new CardCatalogDefinition(
                 "bad-catalog",
                 "Bad catalog",
-                new[] { new CardCatalogEntry("move-only", "Move Only", CardCategory.Movement, CardEffectType.Move, 0, 1, 1, "move.basic", "reachable_known_hex") });
+                new[] { new CardCatalogEntry("move-only", "Move Only", CardCategory.Movement, CardEffectType.Move, 0, 1, 1, "reachable_known_hex") });
 
             var evidence = missingActionDeck.CreateBindingEvidence();
             Assert.That(evidence.IsValid, Is.False);

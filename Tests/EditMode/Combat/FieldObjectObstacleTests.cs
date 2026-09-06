@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -123,12 +124,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var config = TestCombatConfigs.Standard(actionBudget: 4, movementHandSize: 1, actionHandSize: 15, playerVisionRange: 2);
             var catalog = new CardCatalogDefinition(
-                ApprovedCardCatalogFactory.SourceId + ".field-obstacle-test",
+                DemoCardCatalog.SourceId + ".field-obstacle-test",
                 "Field obstacle test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move, 1, 2, 2, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(FieldCardId, "Wall Field", CardCategory.Action, CardEffectType.FieldObject, 1, 5, 0, CardEffectRefs.FieldFogReveal, "walkable_map_cell", areaRadius: 0, fieldObjectKind: CardFieldObjectKind.FogReveal, durationTurns: 2, status: CardCatalogStatus.Approved)
+                    new CardCatalogEntry(CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move, 1, 2, 2, "reachable_hex", status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(FieldCardId, "Wall Field", CardCategory.Action, CardEffectType.FieldObject, 1, 5, 0, "walkable_map_cell", areaRadius: 0, fieldObjectKind: CardFieldObjectKind.FogReveal, durationTurns: 2, status: CardCatalogStatus.Approved)
                 });
             return new CombatState(CreateLineMap(), new HexCoord(0, 0), enemyCoord, config, cardCatalog: catalog);
         }

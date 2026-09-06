@@ -179,6 +179,8 @@ namespace SeoulPlayup.Map.Unity
         [SerializeField] [Range(0f, 1f)] private float visibilityLightingEdgeGradation;
         [Tooltip("마스크를 육각 셀 중심에서 샘플해 경계가 타일 변을 따라가게 한다(#1). 끄면 옛 평면 샘플(A/B 비교용).")]
         [SerializeField] private bool visibilityLightingHexSnap = true;
+        [Tooltip("물 타일의 밝기를 미지 조도 하나로 잠근다(밤). 끄면 물도 칸의 시야 조도를 따른다(낮·인트로). 정본은 VisibilityPresentationSettings 에셋.")]
+        [SerializeField] private bool visibilityWaterLockedToUnknown = true;
         [Tooltip("Enables a brightness falloff on Revealed tiles toward the vision edge. 0 = off (original behavior). Otherwise the maximum number of fade rings; set >= your largest vision range so a single light's center reaches full brightness. Opt in per-scene.")]
         [SerializeField] [Min(0)] private int visibilityRevealedFadeMaxSteps;
         [Tooltip("Darkening overlay opacity of the farthest Revealed tile (the vision edge). Fixed regardless of vision range; the tile at the light source fades to fully bright. Keep below the Unknown overlay opacity so the edge stays clearly brighter than Unknown.")]
@@ -1381,11 +1383,13 @@ namespace SeoulPlayup.Map.Unity
                 fogPropertyBlock.Clear();
                 if (waterMaterial != null)
                 {
-                    // 물은 시야에 들어와도 밝아지지 않는다(2026-09-05 실플레이 #6). 땅 타일은 블러된
+                    // 밤에는 물이 시야에 들어와도 밝아지지 않는다(2026-09-05 실플레이 #6). 땅 타일은 블러된
                     // 조명 마스크로 부드럽게 밝아지지만 물은 자기 셰이더를 지키느라 칸 단위 색 스케일을
-                    // 받았고, 그래서 강물 한가운데 육각형 밝은 조각이 떠 있었다. 물은 미지 조도 하나로
-                    // 고정한다 — 「보이느냐」는 오버레이·규칙이 답하고, 물의 밝기는 그 축이 아니다.
-                    var waterLighting = visibilityUnknownLighting;
+                    // 받았고, 그래서 강물 한가운데 육각형 밝은 조각이 떠 있었다. 그래서 밤 설정은 물을
+                    // 미지 조도 하나로 잠근다. 낮·인트로 설정(TutorialDayVisibility)은 이 잠금을 꺼서
+                    // 물이 땅과 같은 조도(Revealed=1)를 받는다 — 잠금을 무조건 걸었을 때 낮의 강이
+                    // 검게 죽었다(2026-09-06).
+                    var waterLighting = visibilityWaterLockedToUnknown ? visibilityUnknownLighting : lighting;
                     fogPropertyBlock.SetColor(
                         WaterSurfaceColorPropertyId,
                         ScaleColorRgb(waterMaterial.GetColor(WaterSurfaceColorPropertyId), waterLighting));
@@ -2304,6 +2308,34 @@ namespace SeoulPlayup.Map.Unity
 
             visibilitySettings = settings;
             ApplyVisibilitySettingsIfAssigned();
+            ReapplyPerCellVisibilityAfterSettingsChange();
+        }
+
+        /// <summary>
+        /// A settings swap after Render (the stage-intro day→night crossfade re-injects the night settings
+        /// while the map is already on screen) must reach the per-cell property blocks — otherwise cells
+        /// whose visibility does not change afterwards (everything around the player) keep the previous
+        /// look until they happen to flip. Only the property-block-driven coefficients (water lock, lighting
+        /// levels, fog tints) are re-applied here; the mask texture and material variants built during
+        /// Render are not rebuilt.
+        /// </summary>
+        private void ReapplyPerCellVisibilityAfterSettingsChange()
+        {
+            hasLastVisibilityEpoch = false;
+            lastVisibilityKeyByCoord.Clear();
+            if (map == null || visibilitySafeInfoCache.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var pair in visibilitySafeInfoCache)
+            {
+                if (cells.TryGetValue(pair.Key, out var visual))
+                {
+                    ApplyVisibilityState(visual, pair.Value);
+                    lastVisibilityKeyByCoord[pair.Key] = EncodeVisibilityKey(pair.Value);
+                }
+            }
         }
 
         // Runtime toggles (e.g. the lookdev mode button) intentionally win after Awake — the shared
@@ -2333,6 +2365,7 @@ namespace SeoulPlayup.Map.Unity
             visibilityLightingHardEdge = visibilitySettings.VisibilityLightingHardEdge;
             visibilityLightingEdgeGradation = visibilitySettings.VisibilityLightingEdgeGradation;
             visibilityLightingHexSnap = visibilitySettings.VisibilityLightingHexSnap;
+            visibilityWaterLockedToUnknown = visibilitySettings.VisibilityWaterLockedToUnknown;
             visibilityRevealedFadeMaxSteps = visibilitySettings.VisibilityRevealedFadeMaxSteps;
             visibilityRevealedFadeFloorAlpha = visibilitySettings.VisibilityRevealedFadeFloorAlpha;
             visibilityRevealedFadeColor = visibilitySettings.VisibilityRevealedFadeColor;

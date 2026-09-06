@@ -53,6 +53,16 @@ namespace SeoulPlayup.Combat.Unity
             configuredMap = map;
         }
 
+        /// <summary>
+        /// 테스트 전용: CSV 카드 카탈로그 에셋 대신 <see cref="DemoCardCatalog"/> 시드로 부팅한다. 직렬화되지 않으므로 씬은 이 길을 고를 수
+        /// 없다 — 본편은 에셋 미배선 시 예외다(P3-b, DEC-2026-09-06-04). 컨트롤러 픽스처가 카드 규칙과 무관한 동작(일시정지·연출·보상 흐름)을
+        /// 재는 데 출하 CSV를 읽게 하면 전부 ShippingData 게이트로 밀려나므로 명시적 이음새로 둔다.
+        /// </summary>
+        public void UseDemoCardCatalogForTests()
+        {
+            demoCardCatalogForTests = true;
+        }
+
         public void ConfigurePlayerVisionRangeForTests(int range)
         {
             testPlayerVisionRangeOverride = range < 0 ? 0 : range;

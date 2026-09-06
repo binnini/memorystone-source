@@ -77,11 +77,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                     // 전력 질주와 같은 저작: range 0 + SpendAll — 거리는 전부 남은 기에서 나온다.
                     new CardCatalogEntry(
                         "M-X", "전력 질주 테스트", CardCategory.Movement, CardEffectType.Move,
-                        1, 0, 0, CardEffectRefs.MoveBasic, "reachable_hex",
+                        1, 0, 0, "reachable_hex",
                         status: CardCatalogStatus.Approved, costMode: CardCostMode.SpendAll),
                     new CardCatalogEntry(
                         "D00", "방어의 기초", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 3, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved),
+                        1, 0, 3, "self", status: CardCatalogStatus.Approved),
                 });
         }
     }

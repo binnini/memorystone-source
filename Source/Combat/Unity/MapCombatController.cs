@@ -105,6 +105,8 @@ namespace SeoulPlayup.Combat.Unity
         [Header("M2 Combat Config")]
         [SerializeField] private CombatCatalogTextAssetSource catalogTextAssetSource;
         [SerializeField] private CardCatalogAsset cardCatalogAsset;
+        // 테스트 이음새(UseDemoCardCatalogForTests). 직렬화 금지 — 씬이 데모 시드를 고르는 길을 두지 않는다.
+        [System.NonSerialized] private bool demoCardCatalogForTests;
         [Tooltip("Player combat balance profile id from Assets/Data/Combat/Players/Source/player_combat_profiles.csv.")]
         [SerializeField] private string playerCombatProfileId = PlayerCombatProfileCatalog.DefaultProfileId;
         [SerializeField] private int playerHp = 80;
@@ -1261,13 +1263,16 @@ namespace SeoulPlayup.Combat.Unity
             var monsterConfigs = LoadedMap.MonsterSpawnRefs.Count > 0
                 ? CombatState.ResolveMonsterConfigsFromBoardSpawns(LoadedMap, config, monsterCatalog, hpVarianceSeed)
                 : System.Array.Empty<MonsterConfig>();
+            // S11 조용한 폴백 금지(P3-b): 출하 카탈로그는 cards.csv 에셋뿐이다. 미배선이면 데모 시드로 조용히 뛰지 않고 여기서 멈춘다.
+            // 테스트 픽스처만 UseDemoCardCatalogForTests()로 데모 시드를 명시적으로 고른다.
+            if (cardCatalogAsset == null && !demoCardCatalogForTests)
+            {
+                throw new System.InvalidOperationException("MapCombatController has no CSV CardCatalogAsset assigned; the shipping card catalog must be wired in the scene.");
+            }
+
             var cardCatalog = cardCatalogAsset != null
                 ? cardCatalogAsset.ToCardCatalogDefinition(config)
-                : CombatState.CreateCardCatalog(config);
-            if (cardCatalogAsset == null)
-            {
-                Debug.LogWarning("MapCombatController has no CSV CardCatalogAsset assigned; using runtime fallback catalog.", this);
-            }
+                : DemoCardCatalog.Create(config);
 
             // Inject the CSV-authored relic/curse catalog before inventory resolution so player builds
             // (where Assets/ CSVs are not on disk) resolve permanent-item effects. In the editor the

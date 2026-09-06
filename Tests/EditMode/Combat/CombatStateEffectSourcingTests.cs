@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -12,17 +13,17 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void SweepIsAreaRadiusOneWhileDoubleHitIsSingleTarget()
         {
-            var entries = CombatCatalogFactory.CreateCardCatalog(CombatConfig.Default).Entries;
+            var entries = DemoCardCatalog.Create(CombatConfig.Default).Entries;
 
-            Assert.That(entries.Single(entry => entry.Id == ApprovedCardCatalogFactory.AttackSweepId).AreaRadius, Is.EqualTo(1));
-            Assert.That(entries.Single(entry => entry.Id == ApprovedCardCatalogFactory.AttackDoubleHitId).AreaRadius, Is.EqualTo(0));
+            Assert.That(entries.Single(entry => entry.Id == CardIds.Sweep).AreaRadius, Is.EqualTo(1));
+            Assert.That(entries.Single(entry => entry.Id == CardIds.DoubleHit).AreaRadius, Is.EqualTo(0));
         }
 
         [Test]
         public void AreaRadiusPropagatesThroughCardDefinition()
         {
-            var entry = CombatCatalogFactory.CreateCardCatalog(CombatConfig.Default).Entries
-                .Single(candidate => candidate.Id == ApprovedCardCatalogFactory.AttackSweepId);
+            var entry = DemoCardCatalog.Create(CombatConfig.Default).Entries
+                .Single(candidate => candidate.Id == CardIds.Sweep);
 
             Assert.That(entry.ToCardDefinition("src").AreaRadius, Is.EqualTo(1));
         }
@@ -126,7 +127,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var events = new List<EffectResultEvent>();
             state.EffectResolved += events.Add;
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackSweepId), Is.True);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Sweep), Is.True);
 
             Assert.That(events, Has.Count.EqualTo(1));
             Assert.That(events[0].Radius, Is.EqualTo(1));

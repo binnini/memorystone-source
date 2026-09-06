@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using SeoulPlayup.Combat.Runtime;
@@ -11,8 +11,6 @@ namespace SeoulPlayup.CardCore.EditorTools
     public static class CardCatalogCsvImporter
     {
         public const string InputPath = CombatCsvPaths.CardsCsv;
-        public const string ChoiceOptionsInputPath = CombatCsvPaths.CardChoiceOptionsCsv;
-        public const string UpgradesInputPath = CombatCsvPaths.CardUpgradesCsv;
         public const string OutputPath = "Assets/Data/Combat/Cards/Catalogs/CardCatalog.asset";
 
         [MenuItem("Tools/Cards/Import cards.csv")]
@@ -40,14 +38,6 @@ namespace SeoulPlayup.CardCore.EditorTools
 
             var csvText = File.ReadAllText(csvPath, new UTF8Encoding(false, true));
             var parsedRows = CardCatalogAsset.ParseCsvText(csvText);
-            var choiceOptionsPath = Path.Combine(Path.GetDirectoryName(csvPath) ?? string.Empty, Path.GetFileName(ChoiceOptionsInputPath));
-            var parsedChoiceOptionRows = File.Exists(choiceOptionsPath)
-                ? CardCatalogAsset.ParseChoiceOptionsCsvText(File.ReadAllText(choiceOptionsPath, new UTF8Encoding(false, true)))
-                : Array.Empty<CardChoiceOptionCsvRow>();
-            var upgradesPath = Path.Combine(Path.GetDirectoryName(csvPath) ?? string.Empty, Path.GetFileName(UpgradesInputPath));
-            var parsedUpgradeRows = File.Exists(upgradesPath)
-                ? CardCatalogAsset.ParseUpgradesCsvText(File.ReadAllText(upgradesPath, new UTF8Encoding(false, true)))
-                : Array.Empty<CardUpgradeCsvRow>();
 
             var asset = AssetDatabase.LoadAssetAtPath<CardCatalogAsset>(assetPath);
             if (asset == null)
@@ -63,8 +53,6 @@ namespace SeoulPlayup.CardCore.EditorTools
             }
 
             asset.SetRows(parsedRows);
-            asset.SetChoiceOptionRows(parsedChoiceOptionRows);
-            asset.SetUpgradeRows(parsedUpgradeRows);
             if (!asset.ValidateRows(out var reason))
             {
                 throw new InvalidOperationException($"Card catalog import validation failed: {reason}");
@@ -73,7 +61,7 @@ namespace SeoulPlayup.CardCore.EditorTools
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[CardCatalogCsvImporter] Imported {asset.Rows.Count} cards, {asset.ChoiceOptionRows.Count} choice options and {asset.UpgradeRows.Count} upgrades from {csvPath} to {assetPath}.");
+            Debug.Log($"[CardCatalogCsvImporter] Imported {asset.Rows.Count} cards from {csvPath} to {assetPath}.");
             return asset;
         }
     }

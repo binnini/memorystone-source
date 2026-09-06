@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
 {
@@ -167,7 +168,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var state = CreateApprovedCatalogState();
             state.PlayerInventory.Wallet.Add(100);
-            var cardId = ApprovedCardCatalogFactory.FieldFlashbangId;
+            var cardId = CardIds.Flashbang;
             var beforeHand = CountHandCards(state, cardId);
             var beforeDeckData = TotalPlayerDeckInstances(state);
 
@@ -184,7 +185,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateApprovedCatalogState();
             state.PlayerInventory.Wallet.Add(50);
 
-            Assert.That(state.TryPurchaseShopCard(ApprovedCardCatalogFactory.FieldFlashbangId, 80, out var poor), Is.False);
+            Assert.That(state.TryPurchaseShopCard(CardIds.Flashbang, 80, out var poor), Is.False);
             Assert.That(poor, Does.Contain("Not enough"));
             Assert.That(state.PlayerInventory.Wallet.Balance, Is.EqualTo(50), "잔액 부족 실패는 차감하지 않는다.");
 
@@ -280,7 +281,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void PlayerDeckDataRemoveCardTargetsExactlyOneInstanceById()
         {
-            var catalog = ApprovedCardCatalogFactory.CreateApprovedCatalog(CombatConfig.Default);
+            var catalog = DemoCardCatalog.Create(CombatConfig.Default);
             var deck = PlayerDeckData.FromCatalog(catalog);
             var target = deck.ActionCards.FirstOrDefault() ?? deck.MovementCards.First();
             var before = deck.MovementCards.Count + deck.ActionCards.Count;
@@ -303,7 +304,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new SeoulPlayup.Map.Runtime.HexCoord(-1, 0),
                 new SeoulPlayup.Map.Runtime.HexCoord(2, 0),
                 CombatConfig.Default,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(CombatConfig.Default));
+                cardCatalog: DemoCardCatalog.Create(CombatConfig.Default));
         }
 
         private static int CountHandCards(CombatState state, string cardId)

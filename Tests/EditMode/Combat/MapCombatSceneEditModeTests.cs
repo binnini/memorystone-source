@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using SeoulPlayup.Map.Unity;
@@ -22,6 +23,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureSparseSourceForTests(sparseSource);
                 controller.ConfigureExpectedBoardPurposeForTests(HexMapPurpose.SmokeMap);
 
@@ -72,6 +74,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 atlas.ConfigureForTests(catalog);
 
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureForTests(atlas, null, null);
                 controller.ConfigureSparseSourceForTests(source);
                 controller.ConfigureExpectedBoardPurposeForTests(HexMapPurpose.PlayableMap);
@@ -102,6 +105,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureSparseSourceForTests(sparseSource);
                 controller.ConfigureExpectedBoardPurposeForTests(HexMapPurpose.PlayableMap);
 
@@ -128,6 +132,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 var state = new CombatState(
                     CombatState.CreateDemoMap(2),
                     new HexCoord(0, 0),
@@ -155,6 +160,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 var target = new HexCoord(1, 0);
                 var state = CreateSacrificeAttackState(target);
                 SetControllerState(controller, state);
@@ -204,6 +210,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 atlas.ConfigureForTests(catalog, heightStep: 0.5f);
                 var input = root.AddComponent<HexMapInputController>();
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 var camera = cameraObject.AddComponent<Camera>();
                 camera.orthographic = true;
                 camera.orthographicSize = 5f;
@@ -297,23 +304,20 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 1,
                 1,
                 1,
-                effectRef: CardEffectRefs.MoveBasic,
                 targeting: "reachable_hex",
                 instanceId: "move-instance");
             var sacrifice = new CardDefinition(
-                ApprovedCardCatalogFactory.AttackSacrificeId,
+                CardIds.Sacrifice,
                 "Sacrifice Attack",
                 CardCategory.Action,
                 CardEffectType.Attack,
                 1,
                 1,
                 5,
-                effectRef: CardEffectRefs.AttackDamage,
                 targeting: "living_monster_and_hand_card",
                 status: CardCatalogStatus.Approved,
                 targetMode: CardTargetMode.Enemy,
-                instanceId: "sacrifice-instance",
-                additionalCost: CardBehaviorMetadata.AdditionalCostExileSelectedHandCards);
+                instanceId: "sacrifice-instance");
             var strike = new CardDefinition(
                 "strike-test",
                 "Strike Test",
@@ -322,7 +326,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 1,
                 1,
                 2,
-                effectRef: CardEffectRefs.AttackDamage,
                 targeting: "living_monster_in_range",
                 status: CardCatalogStatus.Approved,
                 instanceId: "strike-instance");
@@ -334,7 +337,6 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 1,
                 0,
                 2,
-                effectRef: CardEffectRefs.DefendBlock,
                 targeting: "self",
                 playMode: CardPlayMode.Self,
                 status: CardCatalogStatus.Approved,
@@ -344,10 +346,10 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Sacrifice target-first test catalog",
                 new[]
                 {
-                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.EffectRef, move.Targeting, status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(sacrifice.Id, sacrifice.DisplayName, sacrifice.Category, sacrifice.EffectType, sacrifice.Cost, sacrifice.Range, sacrifice.Amount, sacrifice.EffectRef, sacrifice.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy, additionalCost: sacrifice.AdditionalCost),
-                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.EffectRef, strike.Targeting, status: CardCatalogStatus.Approved),
-                    new CardCatalogEntry(defend.Id, defend.DisplayName, defend.Category, defend.EffectType, defend.Cost, defend.Range, defend.Amount, defend.EffectRef, defend.Targeting, playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved)
+                    new CardCatalogEntry(move.Id, move.DisplayName, move.Category, move.EffectType, move.Cost, move.Range, move.Amount, move.Targeting, status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(sacrifice.Id, sacrifice.DisplayName, sacrifice.Category, sacrifice.EffectType, sacrifice.Cost, sacrifice.Range, sacrifice.Amount, sacrifice.Targeting, status: CardCatalogStatus.Approved, targetMode: CardTargetMode.Enemy),
+                    new CardCatalogEntry(strike.Id, strike.DisplayName, strike.Category, strike.EffectType, strike.Cost, strike.Range, strike.Amount, strike.Targeting, status: CardCatalogStatus.Approved),
+                    new CardCatalogEntry(defend.Id, defend.DisplayName, defend.Category, defend.EffectType, defend.Cost, defend.Range, defend.Amount, defend.Targeting, playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved)
                 });
             return new CombatState(
                 CombatState.CreateDemoMap(2),

@@ -355,6 +355,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var host = new GameObject("resume reward test");
             hosts.Add(host);
             var controller = host.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             controller.SetPlacementRandomization(enabled: false, hasSeed: true, seed: seed, stageId: "test");
             if (restore != null)
             {

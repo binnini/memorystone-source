@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -524,12 +525,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new HexCoord(0, 0),
                 new HexCoord(2, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config));
+                cardCatalog: DemoCardCatalog.Create(config));
             EnterActionPhase(state);
             var costBefore = state.ActionCostRemaining;
 
             Assert.That(state.GetVisibility(new HexCoord(2, 0)), Is.Not.EqualTo(HexCellVisibility.Revealed));
-            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackHolyLightId), Is.False);
+            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), CardIds.HolyLight), Is.False);
 
             Assert.That(state.LastFailureReason, Does.Contain("visible"));
             Assert.That(state.ActionCostRemaining, Is.EqualTo(costBefore));
@@ -558,7 +559,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var target = state.Monsters.Single().Coord;
             var costBefore = state.ActionCostRemaining;
 
-            Assert.That(state.TryPlayerAttack(target, ApprovedCardCatalogFactory.AttackSweepId), Is.False);
+            Assert.That(state.TryPlayerAttack(target, CardIds.Sweep), Is.False);
 
             Assert.That(state.LastFailureReason, Does.Contain("range"));
             Assert.That(state.ActionCostRemaining, Is.EqualTo(costBefore));
@@ -597,14 +598,14 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new CombatConfig(20, 10, 1, 1, 4, 4, 0, 1, 3, actionBudget: 3, actionHandSize: 5));
             EnterActionPhase(state);
 
-            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackSweepId).IsValid, Is.False);
-            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackDoubleHitId).IsValid, Is.True);
+            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), CardIds.Sweep).IsValid, Is.False);
+            Assert.That(state.ValidateAttackTarget(new HexCoord(2, 0), CardIds.DoubleHit).IsValid, Is.True);
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), ApprovedCardCatalogFactory.AttackDoubleHitId), Is.True);
+            Assert.That(state.TryPlayerAttack(new HexCoord(2, 0), CardIds.DoubleHit), Is.True);
 
             Assert.That(state.Monsters.Single().Hp, Is.EqualTo(6));
-            Assert.That(state.GetCombatCards().Any(card => card.Id == ApprovedCardCatalogFactory.AttackSweepId && !card.IsDiscarded), Is.True);
-            Assert.That(state.GetCombatCards().Any(card => card.Id == ApprovedCardCatalogFactory.AttackDoubleHitId && card.IsDiscarded), Is.True);
+            Assert.That(state.GetCombatCards().Any(card => card.Id == CardIds.Sweep && !card.IsDiscarded), Is.True);
+            Assert.That(state.GetCombatCards().Any(card => card.Id == CardIds.DoubleHit && card.IsDiscarded), Is.True);
         }
 
         [Test]

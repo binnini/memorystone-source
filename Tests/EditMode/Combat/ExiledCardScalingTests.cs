@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -21,7 +22,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             ExileActionCards(state, 2);
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackRemnantId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Remnant), Is.True, state.LastFailureReason);
 
             Assert.That(state.Monsters.Single().Hp, Is.EqualTo(10 - (3 * 2)), "damage 3 × 2 exiled cards.");
         }
@@ -37,7 +38,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Assert.That(state.MovementDeck.PermanentRemoveFromHand(movementCard), Is.True);
 
             Assert.That(state.GetExilePileCards(), Has.Count.EqualTo(2));
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackRemnantId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Remnant), Is.True, state.LastFailureReason);
 
             Assert.That(state.Monsters.Single().Hp, Is.EqualTo(10 - (3 * 2)));
         }
@@ -51,7 +52,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
 
             Assert.That(state.GetExilePileCards(), Is.Empty);
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackRemnantId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Remnant), Is.True, state.LastFailureReason);
 
             Assert.That(state.Monsters.Single().Hp, Is.EqualTo(10 - 3));
         }
@@ -65,7 +66,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             ExileActionCards(state, 3);
 
-            var snapshot = state.GetHandCards().Single(card => card.Id == ApprovedCardCatalogFactory.AttackRemnantId);
+            var snapshot = state.GetHandCards().Single(card => card.Id == CardIds.Remnant);
 
             Assert.That(snapshot.Description, Does.Contain("(3번)"));
         }
@@ -88,18 +89,18 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var fillers = Enumerable.Range(1, 5).Select(index => new CardCatalogEntry(
                 "FILLER" + index, "Filler " + index, CardCategory.Action, CardEffectType.Defend,
-                1, 0, 1, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved));
+                1, 0, 1, "self", status: CardCatalogStatus.Approved));
             return new CardCatalogDefinition(
                 "exiled-scaling-test",
                 "Exiled card scaling test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.AttackRemnantId, "잔혼 공격", CardCategory.Action, CardEffectType.Attack,
-                        2, 1, 3, CardEffectRefs.AttackDamage, "living_monster_in_range",
+                        CardIds.Remnant, "잔혼 공격", CardCategory.Action, CardEffectType.Attack,
+                        2, 1, 3, "living_monster_in_range",
                         description: "선택한 적에게 피해 {Damage}를 소멸된 부적 수({HitCount}번)만큼 반복합니다.",
                         scalingMode: CardScalingMode.ExiledCards, status: CardCatalogStatus.Approved)
                 }.Concat(fillers));

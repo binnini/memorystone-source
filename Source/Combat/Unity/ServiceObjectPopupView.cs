@@ -79,14 +79,28 @@ namespace SeoulPlayup.Combat.Unity
     public readonly struct ServiceCardComparePair
     {
         public ServiceCardComparePair(CombatCardSnapshot before, CombatCardSnapshot after)
+            : this(before, after, null, null)
+        {
+        }
+
+        /// <summary>정의 쌍까지 실으면 요약이 스냅샷에 없는 축(타수·버프/디버프·상태이상)도 말한다(효과 연마 2차).</summary>
+        public ServiceCardComparePair(
+            CombatCardSnapshot before,
+            CombatCardSnapshot after,
+            SeoulPlayup.CardCore.CardDefinition beforeDefinition,
+            SeoulPlayup.CardCore.CardDefinition afterDefinition)
         {
             Before = before;
             After = after;
+            BeforeDefinition = beforeDefinition;
+            AfterDefinition = afterDefinition;
             IsValid = !string.IsNullOrWhiteSpace(before.Id) && !string.IsNullOrWhiteSpace(after.Id);
         }
 
         public CombatCardSnapshot Before { get; }
         public CombatCardSnapshot After { get; }
+        public SeoulPlayup.CardCore.CardDefinition BeforeDefinition { get; }
+        public SeoulPlayup.CardCore.CardDefinition AfterDefinition { get; }
         public bool IsValid { get; }
     }
 
@@ -819,27 +833,13 @@ namespace SeoulPlayup.Combat.Unity
             element.preferredWidth = 60f;
         }
 
-        /// <summary>D-6: 변경 수치는 <b>초록</b>(2026-09-02 #9). 스냅샷 쌍에서 달라진 축만 골라
-        /// 「전 → 후」로 요약한다. 전 값은 흐리게 눌러 「무엇이 달라졌나」가 색 하나로 읽히게 한다.</summary>
+        /// <summary>D-6: 변경 수치는 <b>초록</b>(2026-09-02 #9), 전 값은 흐리게. 축 비교와 문안 구절 diff는
+        /// <see cref="RefineDiffSummary"/>(순수)가 만들고 뷰는 색만 넘긴다 — 효과 연마 카드도 「무엇이 달라졌나」가 보인다.</summary>
         private string BuildDiffSummary(ServiceCardComparePair pair)
         {
-            var improvedHex = ColorUtility.ToHtmlStringRGB(ImprovedColor);
-            var mutedHex = ColorUtility.ToHtmlStringRGB(MutedColor);
-            var lines = new List<string>();
-            void Append(string label, int before, int after)
-            {
-                if (before != after)
-                {
-                    lines.Add($"{label} <color=#{mutedHex}>{before}</color> → <color=#{improvedHex}>{after}</color>");
-                }
-            }
-
-            Append("코스트", pair.Before.Cost, pair.After.Cost);
-            Append("수치", pair.Before.Value, pair.After.Value);
-            Append("사거리", pair.Before.Range, pair.After.Range);
-            Append("범위", pair.Before.AreaRadius, pair.After.AreaRadius);
-            Append("지속", pair.Before.DurationTurns, pair.After.DurationTurns);
-            return lines.Count == 0 ? "문안이 달라집니다." : string.Join("   ·   ", lines);
+            return RefineDiffSummary.Build(
+                pair.Before, pair.After, pair.BeforeDefinition, pair.AfterDefinition,
+                ColorUtility.ToHtmlStringRGB(ImprovedColor), ColorUtility.ToHtmlStringRGB(MutedColor));
         }
 
         // 🔴 이 뷰는 런타임 생성(FindOrCreate/AddComponent)이라 SerializeField가 채워질 표면이

@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -172,7 +173,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Inject(state, StatusEffectKind.Seal, state.Player.Id, remainingTurns: 2, amount: 99);
 
             var card = state.ActionDeck.Hand.First(candidate =>
-                candidate.EffectType != CardEffectType.Status && !candidate.UsableWhileStunned);
+                candidate.EffectType != CardEffectType.Status && !CardBehaviorRegistry.Resolve(candidate).UsableWhileStunned);
             Assert.That(IsSealed(state, card), Is.True, "전제: 카드가 봉인됐다.");
 
             var view = state.GetCombatCards().Single(candidate => candidate.InstanceId == card.InstanceId);
@@ -419,7 +420,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static CardDefinition SealTargetCard(CombatState state, string instanceId)
         {
             var entry = state.CardCatalog.Entries.Single(candidate =>
-                candidate.Id == ApprovedCardCatalogFactory.DefendOldSuitId);
+                candidate.Id == CardIds.OldArmor);
             return entry.ToCardDefinition(state.CardCatalog.SourceId, instanceId);
         }
 
@@ -448,11 +449,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.DefendOldSuitId, "Defend", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 5, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved),
+                        CardIds.OldArmor, "Defend", CardCategory.Action, CardEffectType.Defend,
+                        1, 0, 5, "self", status: CardCatalogStatus.Approved),
                     StatusEntry(FineDustId, "미세먼지", CardEffectRefs.StatusFineDust, 0),
                     StatusEntry(BrokenGlassId, "깨진 유리", CardEffectRefs.StatusBrokenGlass, BrokenGlassDamage),
                     StatusEntry(BlackoutId, "정전", CardEffectRefs.StatusBlackout, 0)
@@ -463,7 +464,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             return new CardCatalogEntry(
                 id, name, CardCategory.Action, CardEffectType.Status,
-                0, 0, amount, effectRef, "none",
+                0, 0, amount, "none",
                 status: CardCatalogStatus.Approved,
                 gameplayType: CardGameplayType.Utility,
                 includeInGameplayDecks: false,
@@ -531,10 +532,10 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var deck = new PlayerDeckData(
                 movementCards: new[]
                 {
-                    new PlayerCardInstanceData("seal-move-0", ApprovedCardCatalogFactory.MoveBasicId)
+                    new PlayerCardInstanceData("seal-move-0", CardIds.Move2Hex)
                 },
                 actionCards: Enumerable.Range(0, 6).Select(i =>
-                    new PlayerCardInstanceData($"seal-target-{i}", ApprovedCardCatalogFactory.DefendOldSuitId)));
+                    new PlayerCardInstanceData($"seal-target-{i}", CardIds.OldArmor)));
 
             // CombatConfig.Default와 같되 행동 손패만 6(=덱 장수). 이동은 1이 하한이라 1로 둔다.
             var config = new CombatConfig(80, 30, 2, 1, 4, 4, 6, 1, 5, 4, 1, 6, 7, 4);

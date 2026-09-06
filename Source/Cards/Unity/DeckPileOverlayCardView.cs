@@ -25,7 +25,7 @@ namespace SeoulPlayup.Combat.Unity
         {
             CardFrontPresentationFormatting.ApplyCardFrame(transform, card, statusFrameSprite);
             SetText("CardNameText_TMP", card.Name);
-            SetText("DescriptionText_TMP", CardKeywordDecorator.Decorate(card.Description));
+            SetText("DescriptionText_TMP", CardKeywordDecorator.DecorateForCard(card.Description, card.Id));
             SetText("CostText_TMP", card.Cost.ToString(CultureInfo.InvariantCulture));
             ApplyCostColor(card);
             SetText("TypeText_TMP", CardFrontPresentationFormatting.KindLabel(card));

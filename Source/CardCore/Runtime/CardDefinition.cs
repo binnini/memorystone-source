@@ -13,7 +13,6 @@ namespace SeoulPlayup.CardCore
             int range,
             int amount,
             string catalogSourceId = "",
-            string effectRef = "",
             string targeting = "",
             int areaRadius = 0,
             CardUsePhase phaseAvailability = CardUsePhase.Default,
@@ -33,18 +32,12 @@ namespace SeoulPlayup.CardCore
             int upgradeLevel = 0,
             bool isTemporary = false,
             int hitCount = 1,
-            string additionalCost = "",
-            string postActions = "",
-            string choiceOptions = "",
             string choiceOptionTexts = "",
             string description = "",
-            bool usableWhileStunned = false,
-            string behaviorParams = "",
             string stateEffect = "",
             string buffDebuff = "",
-            bool exhaustOnPlay = false,
-            bool retainOnTurnEnd = false,
-            int healAmount = 0)
+            int healAmount = 0,
+            string descriptionUpgraded = "")
         {
             HealAmount = Math.Max(0, healAmount);
             Id = string.IsNullOrWhiteSpace(id) ? throw new ArgumentException("Card id is required.", nameof(id)) : id;
@@ -56,7 +49,6 @@ namespace SeoulPlayup.CardCore
             Range = Math.Max(0, range);
             Amount = Math.Max(0, amount);
             CatalogSourceId = catalogSourceId ?? string.Empty;
-            EffectRef = effectRef ?? string.Empty;
             Targeting = targeting ?? string.Empty;
             AreaRadius = Math.Max(0, areaRadius);
             PhaseAvailability = phaseAvailability == CardUsePhase.Default
@@ -80,16 +72,65 @@ namespace SeoulPlayup.CardCore
             UpgradeLevel = Math.Max(0, upgradeLevel);
             IsTemporary = isTemporary;
             HitCount = Math.Max(1, hitCount);
-            AdditionalCost = additionalCost ?? string.Empty;
-            PostActions = postActions ?? string.Empty;
-            ChoiceOptions = choiceOptions ?? string.Empty;
             ChoiceOptionTexts = choiceOptionTexts ?? string.Empty;
-            UsableWhileStunned = usableWhileStunned;
-            BehaviorParams = behaviorParams ?? string.Empty;
+            DescriptionUpgraded = descriptionUpgraded ?? string.Empty;
             StateEffect = stateEffect ?? string.Empty;
             BuffDebuff = buffDebuff ?? string.Empty;
-            ExhaustOnPlay = exhaustOnPlay;
-            RetainOnTurnEnd = retainOnTurnEnd;
+        }
+
+        /// <summary>
+        /// 일부 축만 바꾼 복사본(연마 P4: 카드 클래스 <c>Upgrade</c>가 <c>card.With(amount: 5)</c> 식으로 쓴다).
+        /// null = 그대로. 규칙·표시가 읽는 축만 열어 두었다 — id·종류·타게팅·프레젠테이션은 연마로 바뀌지 않는다.
+        /// </summary>
+        public CardDefinition With(
+            string displayName = null,
+            string description = null,
+            int? cost = null,
+            int? range = null,
+            int? amount = null,
+            int? healAmount = null,
+            int? areaRadius = null,
+            int? durationTurns = null,
+            int? hitCount = null,
+            string shapeId = null,
+            string stateEffect = null,
+            string buffDebuff = null,
+            int? upgradeLevel = null)
+        {
+            return new CardDefinition(
+                Id,
+                displayName ?? DisplayName,
+                Category,
+                EffectType,
+                cost ?? Cost,
+                range ?? Range,
+                amount ?? Amount,
+                CatalogSourceId,
+                Targeting,
+                areaRadius ?? AreaRadius,
+                PhaseAvailability,
+                PlayMode,
+                FieldObjectKind,
+                durationTurns ?? DurationTurns,
+                Status,
+                GameplayType,
+                CostMode,
+                TargetMode,
+                ScalingMode,
+                PresentationRef,
+                IncludeInGameplayDecks,
+                VisibleInCatalog,
+                shapeId ?? ShapeId,
+                InstanceId,
+                upgradeLevel ?? UpgradeLevel,
+                IsTemporary,
+                hitCount ?? HitCount,
+                ChoiceOptionTexts,
+                description ?? Description,
+                stateEffect ?? StateEffect,
+                buffDebuff ?? BuffDebuff,
+                healAmount ?? HealAmount,
+                DescriptionUpgraded);
         }
 
         public string Id { get; }
@@ -108,7 +149,6 @@ namespace SeoulPlayup.CardCore
         public int EffectiveHealAmount => HealAmount > 0 ? HealAmount : Amount;
 
         public string CatalogSourceId { get; }
-        public string EffectRef { get; }
         public string Targeting { get; }
 
         /// <summary>Area-of-effect radius in hex steps from the target tile. 0 = single target (default).</summary>
@@ -131,16 +171,13 @@ namespace SeoulPlayup.CardCore
         public int UpgradeLevel { get; }
         public bool IsTemporary { get; }
         public int HitCount { get; }
-        public string AdditionalCost { get; }
-        public string PostActions { get; }
-        public string ChoiceOptions { get; }
+
+        /// <summary>갈림길 선택지 문안(cards.csv `choiceTexts`, `optionId|표시명|문안;…`). 선택지 규칙은 카드 클래스 <c>Choices</c>.</summary>
         public string ChoiceOptionTexts { get; }
 
-        /// <summary>Exempts the card from the 기절(stun) action lockout. See <see cref="CardCatalogEntry.UsableWhileStunned"/>.</summary>
-        public bool UsableWhileStunned { get; }
+        /// <summary>강화(연마) 뒤 설명 문안(cards.csv `descriptionUpgraded`, D-3). 비면 원본 토큰 문안이 새 수치로 갱신된다. <c>CardUpgrades.Resolve</c>가 소비한다.</summary>
+        public string DescriptionUpgraded { get; }
 
-        /// <summary>Behavior-scoped <c>키:정수</c> scalars — see <see cref="CardBehaviorMetadata.GetBehaviorParam"/>.</summary>
-        public string BehaviorParams { get; }
 
         /// <summary>Authored 상태이상 grants as `kind:amount`. Duration comes from <see cref="DurationTurns"/>.</summary>
         public string StateEffect { get; }
@@ -148,17 +185,7 @@ namespace SeoulPlayup.CardCore
         /// <summary>Authored 버프/디버프 grants as `kind:amount`. Duration comes from <see cref="DurationTurns"/>.</summary>
         public string BuffDebuff { get; }
 
-        /// <summary>
-        /// 사용 시 버림 더미 대신 소멸 더미로 가는 카드(T5-1 「소멸」 통일 컬럼). 기존 3경로
-        /// (additionalCost·전용 behaviorId·isTemporary)는 그대로 유지되며, 신규 저작만 이 플래그를 쓴다.
-        /// </summary>
-        public bool ExhaustOnPlay { get; }
 
-        /// <summary>
-        /// 턴 종료 시 버려지지 않고 손에 남는 카드(T5-2 「유지」). 유지 카드는 손패 자리를 차지하고,
-        /// 다음 턴 드로우는 손패 상한까지만 채운다 — 신규 유입 −1이 유지의 기회비용이다.
-        /// </summary>
-        public bool RetainOnTurnEnd { get; }
 
         private static CardUsePhase ResolveDefaultPhase(CardCategory category, CardEffectType effectType)
         {

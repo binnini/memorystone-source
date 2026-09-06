@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -23,7 +24,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             AdvanceToPlayerAction(state);
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             Assert.That(MonsterHp(state, "plague-target"), Is.EqualTo(20 - 3), "No affliction, no bonus.");
         }
@@ -35,7 +36,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Poison, "plague-target");
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             Assert.That(MonsterHp(state, "plague-target"), Is.EqualTo(20 - 6), "damage 3 + a second {Damage} of 3.");
         }
@@ -49,7 +50,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Strength, "plague-target");
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             Assert.That(MonsterHp(state, "plague-target"), Is.EqualTo(20 - 3));
             Assert.That(HasEffect(state, "plague-neighbour", StatusEffectKind.Strength), Is.False, "Buffs do not spread either.");
@@ -65,7 +66,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Inject(state, StatusEffectKind.Poison, "plague-target");
             Inject(state, StatusEffectKind.Slow, "plague-target");
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             var spread = new[] { StatusEffectKind.Poison, StatusEffectKind.Slow }
                 .Where(kind => HasEffect(state, "plague-neighbour", kind))
@@ -77,6 +78,10 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // (사용자 재확정 2026-08-20 — 복사 유지).
             Assert.That(HasEffect(state, "plague-target", StatusEffectKind.Poison), Is.True, "The original keeps its debuff.");
             Assert.That(HasEffect(state, "plague-target", StatusEffectKind.Slow), Is.True);
+            // 옮겨진 상태의 출처는 카드 id가 아니라 파생 효과 키다(트랙 ②) — 표현층이 「전염! 」 접두를 다는 근거.
+            Assert.That(
+                state.ActiveEffects.Single(effect => effect.TargetUnitId == "plague-neighbour" && effect.Kind == spread[0]).SourceRef,
+                Is.EqualTo(CardEffectRefs.PlagueContagion));
         }
 
         [Test]
@@ -90,7 +95,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Poison, "plague-target");
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             var infected = candidates.Where(id => HasEffect(state, id, StatusEffectKind.Poison)).ToList();
             Assert.That(infected, Has.Count.EqualTo(1), "전염 hits one adjacent enemy, not the whole neighbourhood.");
@@ -103,7 +108,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             AdvanceToPlayerAction(state);
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActiveEffects.Any(effect => effect.TargetUnitId == "plague-neighbour"), Is.False);
         }
@@ -117,7 +122,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Poison, "plague-target");
 
-            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), ApprovedCardCatalogFactory.AttackPlagueId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerAttack(new HexCoord(1, 0), CardIds.Plague), Is.True, state.LastFailureReason);
 
             Assert.That(state.Monsters.Single(monster => monster.Id == "plague-target").IsDead, Is.True);
             Assert.That(HasEffect(state, "plague-neighbour", StatusEffectKind.Poison), Is.True);
@@ -131,14 +136,14 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var handBefore = state.ActionDeck.HandCount;
             var hpBefore = state.Player.Hp;
 
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendTalismanShieldId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.TalismanShield), Is.True, state.LastFailureReason);
 
             // -1 for the played card, -1 for the exiled one.
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 2));
             Assert.That(state.GetExilePileCards(), Has.Count.EqualTo(1));
             Assert.That(
                 state.GetExilePileCards().Single().Id,
-                Is.Not.EqualTo(ApprovedCardCatalogFactory.DefendTalismanShieldId),
+                Is.Not.EqualTo(CardIds.TalismanShield),
                 "The card exiles another card, not itself.");
             Assert.That(state.Player.Block, Is.EqualTo(0), "Immunity, not block.");
 
@@ -146,6 +151,25 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             state.ResolveMonsterAction();
 
             Assert.That(state.Player.Hp, Is.EqualTo(hpBefore), "The adjacent monster's attack must land for 0.");
+        }
+
+        [Test]
+        public void RefinedTalismanShieldDiscardsInsteadOfExiling()
+        {
+            // 부적 방패+ (효과 연마 2차): 대가가 소멸에서 버림으로. 손패 -2는 같고, 소멸 더미는 비고 버림 더미에 다른 카드가 있다.
+            var state = CreateState();
+            Assert.That(state.TryRefineCard(CardIds.TalismanShield, out var reason), Is.True, reason);
+            AdvanceToPlayerAction(state);
+            var handBefore = state.ActionDeck.HandCount;
+
+            Assert.That(state.TryPlayerDefend(CardIds.TalismanShield), Is.True, state.LastFailureReason);
+
+            Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 2));
+            Assert.That(state.GetExilePileCards(), Is.Empty, "연마 뒤에는 아무것도 소멸하지 않는다.");
+            Assert.That(
+                state.ActionDeck.DiscardPile.Any(card => card.Id != CardIds.TalismanShield),
+                Is.True, "버린 부적은 버림 더미로 간다(낸 카드 자신 말고 한 장 더).");
+            Assert.That(state.Player.Block, Is.EqualTo(0), "Immunity, not block.");
         }
 
         [Test]
@@ -158,7 +182,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var hpBefore = state.Player.Hp;
 
             Assert.That(state.ActionDeck.Hand.Count, Is.EqualTo(1));
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendTalismanShieldId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.TalismanShield), Is.True, state.LastFailureReason);
             Assert.That(state.GetExilePileCards(), Is.Empty);
 
             Assert.That(state.EndAction(), Is.True);
@@ -211,11 +235,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.DefendTalismanShieldId, "부적 방패", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 0, CardEffectRefs.DefendExileRandomNegate, "self", status: CardCatalogStatus.Approved)
+                        CardIds.TalismanShield, "부적 방패", CardCategory.Action, CardEffectType.Defend,
+                        1, 0, 0, "self", status: CardCatalogStatus.Approved)
                 });
             return CombatStateFixture.Arena(4)
                 .WithConfig(config)
@@ -230,23 +254,22 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var fillers = Enumerable.Range(1, 4).Select(index => new CardCatalogEntry(
                 "FILLER" + index, "Filler " + index, CardCategory.Action, CardEffectType.Defend,
-                1, 0, 1, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved));
+                1, 0, 1, "self", status: CardCatalogStatus.Approved));
             return new CardCatalogDefinition(
                 "plague-shield-test",
                 "Plague and talisman shield test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.AttackPlagueId, "전염병", CardCategory.Action, CardEffectType.Attack,
-                        2, 1, 3, CardEffectRefs.AttackPlague, "living_monster_in_range",
-                        postActions: $"{CardBehaviorMetadata.PostActionSpreadStatus}:1",
+                        CardIds.Plague, "전염병", CardCategory.Action, CardEffectType.Attack,
+                        2, 1, 3, "living_monster_in_range",
                         status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.DefendTalismanShieldId, "부적 방패", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 0, CardEffectRefs.DefendExileRandomNegate, "self", status: CardCatalogStatus.Approved)
+                        CardIds.TalismanShield, "부적 방패", CardCategory.Action, CardEffectType.Defend,
+                        1, 0, 0, "self", status: CardCatalogStatus.Approved)
                 }.Concat(fillers));
         }
 

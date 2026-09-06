@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using UnityEditor;
 
@@ -74,12 +75,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var entries = asset.ToCardCatalogDefinition(config).Entries.ToDictionary(entry => entry.Id);
 
             // Sweep (A01) is authored as a fixed range-0 area attack; its range/damage are literal, not profile tokens.
-            Assert.That(entries[ApprovedCardCatalogFactory.AttackSweepId].Range, Is.EqualTo(0));
-            Assert.That(entries[ApprovedCardCatalogFactory.AttackSweepId].Amount, Is.EqualTo(3));
+            Assert.That(entries[CardIds.Sweep].Range, Is.EqualTo(0));
+            Assert.That(entries[CardIds.Sweep].Amount, Is.EqualTo(3));
             // Final Blow (A05) cost is authored as the {MaxKi} token and resolves from the profile action budget.
-            Assert.That(entries[ApprovedCardCatalogFactory.AttackFinalBlowId].Cost, Is.EqualTo(config.MaxKi));
+            Assert.That(entries[CardIds.FinalBlow].Cost, Is.EqualTo(config.MaxKi));
             // One Strike Enough (A07) uses a fixed Ki cost.
-            Assert.That(entries[ApprovedCardCatalogFactory.AttackOneStrikeEnoughId].Cost, Is.EqualTo(2));
+            Assert.That(entries[CardIds.OneStrikeEnough].Cost, Is.EqualTo(2));
         }
 
         [Test]

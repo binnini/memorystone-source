@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 
@@ -44,22 +45,21 @@ namespace SeoulPlayup.Combat.Unity.Dev
         /// regression in the phase track shows up here too.
         /// </summary>
         /// <summary>
-        /// 연마 가능 카드가 든 데모 상태(camper-workshop P1 서비스 모달용). 카탈로그를 직접 저작해
-        /// A01(피해 3→5)·D01(방어 5→8, 코스트 1→0)에 <see cref="CardCatalogEntry.UpgradedEntry"/>를
-        /// 매단다 — 출하 card_upgrades.csv와 무관하게 갤러리에서 비교 화면을 시연할 수 있다.
+        /// 연마 가능 카드가 든 데모 상태(camper-workshop P1 서비스 모달용). 연마 값은 카드 클래스(P4)가 주므로
+        /// 출하 id(A01 휘둘러치기 3→5 · D01 낡은 방어구 5→8)로 엔트리를 만들면 갤러리에서 비교 화면을 시연할 수 있다.
         /// </summary>
         public static CombatState CreateRefineServiceState()
         {
-            CardCatalogEntry Attack(int amount, CardCatalogEntry upgraded = null, bool plus = false) =>
+            CardCatalogEntry Attack(int amount) =>
                 new CardCatalogEntry(
-                    "A01", plus ? "휘둘러치기+" : "휘둘러치기", CardCategory.Action, CardEffectType.Attack,
-                    1, 1, amount, CardEffectRefs.AttackDamage, "living_monster_in_range",
-                    status: CardCatalogStatus.Approved, upgradedEntry: upgraded);
-            CardCatalogEntry Defend(int cost, int amount, CardCatalogEntry upgraded = null, bool plus = false) =>
+                    CardIds.Sweep, "휘둘러치기", CardCategory.Action, CardEffectType.Attack,
+                    1, 1, amount, "living_monster_in_range",
+                    status: CardCatalogStatus.Approved);
+            CardCatalogEntry Defend(int cost, int amount) =>
                 new CardCatalogEntry(
-                    "D01", plus ? "낡은 방어구+" : "낡은 방어구", CardCategory.Action, CardEffectType.Defend,
-                    cost, 0, amount, CardEffectRefs.DefendBlock, "self",
-                    playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved, upgradedEntry: upgraded);
+                    CardIds.OldArmor, "낡은 방어구", CardCategory.Action, CardEffectType.Defend,
+                    cost, 0, amount, "self",
+                    playMode: CardPlayMode.Self, status: CardCatalogStatus.Approved);
 
             var catalog = new CardCatalogDefinition(
                 "service-demo",
@@ -67,10 +67,10 @@ namespace SeoulPlayup.Combat.Unity.Dev
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "1칸 이동", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
-                    Attack(3, Attack(5, plus: true)),
-                    Defend(1, 5, Defend(0, 8, plus: true)),
+                        CardIds.Move2Hex, "1칸 이동", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
+                    Attack(3),
+                    Defend(1, 5),
                 });
             return new CombatState(
                 CombatState.CreateDemoMap(2),
@@ -290,7 +290,7 @@ namespace SeoulPlayup.Combat.Unity.Dev
         public static CombatCardSnapshot CreateChoiceCard()
         {
             return new CombatCardSnapshot(
-                ApprovedCardCatalogFactory.AttackHolyLightId,
+                CardIds.HolyLight,
                 CombatCardKind.Attack,
                 "성스러운 빛",
                 "자신을 회복하거나 적을 공격합니다.",

@@ -25,23 +25,18 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
         )]
         [Description("실제 cards.csv를 CardCatalogAsset 파싱/검증 파이프라인(ParseCsvText → ValidateRows → " +
             "CardCatalogDefinition.Validate)에 통과시켜 카드 카탈로그 전체 정합을 씬 로드 없이 감사한다. " +
-            "행/중복/choice option/바인딩 증거를 구조화 JSON으로 반환하는 읽기 전용 감사.")]
+            "행/중복/선택지 문안/바인딩 증거를 구조화 JSON으로 반환하는 읽기 전용 감사.")]
         public CardCatalogAuditResult Audit
         (
             [Description("cards.csv 경로. 기본은 SoT 소스.")]
-            string cardsCsvPath = CombatCsvPaths.CardsCsv,
-            [Description("card_choice_options.csv 경로. 없으면 빈 목록으로 처리.")]
-            string choiceOptionsCsvPath = CombatCsvPaths.CardChoiceOptionsCsv,
-            [Description("card_upgrades.csv(연마 저작) 경로. 없으면 빈 목록으로 처리.")]
-            string upgradesCsvPath = CombatCsvPaths.CardUpgradesCsv
+            string cardsCsvPath = CombatCsvPaths.CardsCsv
         )
         {
             return MainThread.Instance.Run(() =>
             {
                 var result = new CardCatalogAuditResult
                 {
-                    cardsCsvPath = cardsCsvPath,
-                    choiceOptionsCsvPath = choiceOptionsCsvPath
+                    cardsCsvPath = cardsCsvPath
                 };
 
                 if (!File.Exists(cardsCsvPath))
@@ -67,21 +62,10 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
 
                 result.rowCount = rows.Count;
 
-                IReadOnlyList<CardChoiceOptionCsvRow> choiceRows = File.Exists(choiceOptionsCsvPath)
-                    ? CardCatalogAsset.ParseChoiceOptionsCsvText(File.ReadAllText(choiceOptionsCsvPath, encoding))
-                    : new List<CardChoiceOptionCsvRow>();
-                result.choiceOptionRowCount = choiceRows.Count;
-
-                IReadOnlyList<CardUpgradeCsvRow> upgradeRows = File.Exists(upgradesCsvPath)
-                    ? CardCatalogAsset.ParseUpgradesCsvText(File.ReadAllText(upgradesCsvPath, encoding))
-                    : new List<CardUpgradeCsvRow>();
-
                 var asset = ScriptableObject.CreateInstance<CardCatalogAsset>();
                 try
                 {
                     asset.SetRows(rows);
-                    asset.SetChoiceOptionRows(choiceRows);
-                    asset.SetUpgradeRows(upgradeRows);
 
                     result.valid = asset.ValidateRows(out var reason);
                     result.failureReason = reason ?? string.Empty;

@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -27,7 +28,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             Inject(state, StatusEffectKind.Agility, state.Player.Id);
             var handBefore = state.ActionDeck.HandCount;
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityCleanseDrawId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.CleanseDraw), Is.True, state.LastFailureReason);
 
             Assert.That(
                 state.ActiveEffects.Select(effect => effect.Kind),
@@ -36,9 +37,25 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // -1 for the played card, +2 for the two stripped debuffs.
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1 + 2));
             Assert.That(
-                state.ActionDeck.Hand.Any(card => card.Id == ApprovedCardCatalogFactory.UtilityCleanseDrawId),
+                state.ActionDeck.Hand.Any(card => card.Id == CardIds.CleanseDraw),
                 Is.False,
                 "The played card must leave the hand — unlike U01 there is no whole-hand redraw to sweep it away.");
+        }
+
+        [Test]
+        public void RefinedCleanseDrawDrawsOneMoreThanItRemoves()
+        {
+            // 정화 뽑기+ (효과 연마 2차): 제거 수 + 1. 깨끗한 상태에서도 1장은 뽑는다. 리터럴 기대값.
+            var state = CreateState();
+            Assert.That(state.TryRefineCard(CardIds.CleanseDraw, out var reason), Is.True, reason);
+            AdvanceToPlayerAction(state);
+            Inject(state, StatusEffectKind.Poison, state.Player.Id);
+            var handBefore = state.ActionDeck.HandCount;
+
+            Assert.That(state.TryPlayerUtility(CardIds.CleanseDraw), Is.True, state.LastFailureReason);
+
+            // -1 for the played card, +1 for the stripped debuff, +1 from the refinement.
+            Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1 + 1 + 1));
         }
 
         [Test]
@@ -49,7 +66,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             var handBefore = state.ActionDeck.HandCount;
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityCleanseDrawId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.CleanseDraw), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(handBefore - 1));
         }
@@ -57,12 +74,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void CleanseDrawIsPlayableOutOfAStunAndRemovesIt()
         {
-            // The whole point of usableWhileStunned: a cleanse locked behind 기절 could never undo one.
+            // The whole point of the class's UsableWhileStunned declaration: a cleanse locked behind 기절 could never undo one.
             var state = CreateState();
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Stun, state.Player.Id);
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityCleanseDrawId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.CleanseDraw), Is.True, state.LastFailureReason);
             Assert.That(state.ActiveEffects.Any(effect => effect.Kind == StatusEffectKind.Stun), Is.False);
         }
 
@@ -75,7 +92,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var actionHand = state.ActionDeck.HandCount;
             var movementHand = state.MovementDeck.HandCount;
 
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityRedrawId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.Redraw), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActionDeck.HandCount, Is.EqualTo(actionHand));
             Assert.That(state.MovementDeck.HandCount, Is.EqualTo(movementHand));
@@ -88,7 +105,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Poison, state.Player.Id);
 
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendHospitalizationId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.Hospitalization), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActiveEffects.Any(effect => effect.Kind == StatusEffectKind.Poison), Is.False);
             Assert.That(state.Player.Block, Is.EqualTo(5), "shield=5 is the authored block.");
@@ -106,7 +123,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             AdvanceToPlayerAction(state);
             var kiBefore = state.ActionCostRemaining;
 
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendHeavyArmorId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.HeavyArmor), Is.True, state.LastFailureReason);
 
             Assert.That(state.ActionCostRemaining, Is.EqualTo(kiBefore), "cost=0 spends no Ki.");
             Assert.That(state.Player.Block, Is.EqualTo(8));
@@ -120,8 +137,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             AdvanceToPlayerAction(state);
 
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendHeavyArmorId), Is.True, state.LastFailureReason);
-            Assert.That(state.TryPlayerUtility(ApprovedCardCatalogFactory.UtilityCleanseDrawId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.HeavyArmor), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerUtility(CardIds.CleanseDraw), Is.True, state.LastFailureReason);
             Assert.That(PendingSelfImmobilizeTurns(state), Is.EqualTo(1), "A booking is not an ActiveEffect, so a cleanse cannot see it.");
 
             AdvanceToNextOverallTurn(state);
@@ -157,7 +174,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState();
             AdvanceToPlayerAction(state);
             Inject(state, StatusEffectKind.Immobilize, state.Player.Id, remainingTurns: 1);
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendHeavyArmorId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.HeavyArmor), Is.True, state.LastFailureReason);
 
             AdvanceToNextOverallTurn(state);
 
@@ -174,7 +191,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             // Losing the booking across a suspend would let the player bank the block and save-scum the cost.
             var state = CreateState();
             AdvanceToPlayerAction(state);
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendHeavyArmorId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerDefend(CardIds.HeavyArmor), Is.True, state.LastFailureReason);
 
             var data = state.CreateSuspendSnapshot();
             Assert.That(data.PendingSelfImmobilizeTurns, Is.EqualTo(1));
@@ -204,29 +221,28 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var filler = Enumerable.Range(1, 4).Select(index => new CardCatalogEntry(
                 "FILLER" + index, "Filler " + index, CardCategory.Action, CardEffectType.Defend,
-                1, 0, 1, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved));
+                1, 0, 1, "self", status: CardCatalogStatus.Approved));
             return new CardCatalogDefinition(
                 "cleanse-cards-test",
                 "Cleanse cards test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.UtilityCleanseDrawId, "정화 뽑기", CardCategory.Action, CardEffectType.Utility,
-                        2, 0, 0, CardEffectRefs.UtilityCleanseDraw, "self", status: CardCatalogStatus.Approved,
-                        usableWhileStunned: true),
+                        CardIds.CleanseDraw, "정화 뽑기", CardCategory.Action, CardEffectType.Utility,
+                        2, 0, 0, "self", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.UtilityRedrawId, "다시 뽑기", CardCategory.Action, CardEffectType.Utility,
-                        1, 0, 0, CardEffectRefs.UtilityRedraw, "current_action_hand_except_self", status: CardCatalogStatus.Approved),
+                        CardIds.Redraw, "다시 뽑기", CardCategory.Action, CardEffectType.Utility,
+                        1, 0, 0, "current_action_hand_except_self", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.DefendHospitalizationId, "입원", CardCategory.Action, CardEffectType.Defend,
-                        2, 0, 5, CardEffectRefs.DefendCleanseBlock, "self", status: CardCatalogStatus.Approved,
-                        durationTurns: 1, usableWhileStunned: true),
+                        CardIds.Hospitalization, "입원", CardCategory.Action, CardEffectType.Defend,
+                        2, 0, 5, "self", status: CardCatalogStatus.Approved,
+                        durationTurns: 1),
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.DefendHeavyArmorId, "무거운 갑옷", CardCategory.Action, CardEffectType.Defend,
-                        0, 0, 8, CardEffectRefs.DefendBlockDelayedImmobilize, "self", status: CardCatalogStatus.Approved,
+                        CardIds.HeavyArmor, "무거운 갑옷", CardCategory.Action, CardEffectType.Defend,
+                        0, 0, 8, "self", status: CardCatalogStatus.Approved,
                         durationTurns: 1)
                 }.Concat(filler));
         }

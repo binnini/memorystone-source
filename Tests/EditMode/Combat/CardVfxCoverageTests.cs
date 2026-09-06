@@ -30,7 +30,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var catalog = CatalogWith(
                 Entry(EffectKind.Damage, sourceRef: "A01", cueId: "CVA01"));
 
-            var report = CardVfxCoverage.Evaluate(Row("A01", type: "공격", behaviorId: "attack.damage", damage: "3"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("A01", type: "공격", damage: "3"), catalog);
 
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.Dedicated));
             Assert.That(report.MatchedCueIds, Is.EqualTo(new[] { "CVA01" }));
@@ -38,18 +38,19 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         }
 
         [Test]
-        public void CardBorrowingCueViaBehaviorIdIsSharedBehavior()
+        public void FieldCardBorrowingCueViaItsSharedTickKeyIsSharedBehavior()
         {
-            // F05 ships this way: its behaviorId is field.damage, which is the sourceRef F01's cue is keyed on,
-            // so F05 renders F01's explosion rather than a generic burst.
+            // A field card's tick is raised by the field object under the shared field.damage key (its class
+            // FieldKind), which is the sourceRef F01's cue is keyed on, so F05 renders F01's explosion rather
+            // than a generic burst when it has no card-scoped row of its own.
             var catalog = CatalogWith(
                 Entry(EffectKind.Damage, sourceRef: "field.damage", cueId: "CVF01"));
 
-            var report = CardVfxCoverage.Evaluate(Row("F05", type: "필드", behaviorId: "field.damage", damage: "2"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("F05", type: "필드", damage: "2"), catalog);
 
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.SharedBehavior));
             Assert.That(report.MatchedCueIds, Is.EqualTo(new[] { "CVF01" }));
-            Assert.That(report.MatchKeys, Is.EqualTo(new[] { "behaviorId:field.damage" }));
+            Assert.That(report.MatchKeys, Is.EqualTo(new[] { "effectKey:field.damage" }));
         }
 
         [Test]
@@ -57,7 +58,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var catalog = CatalogWith(Entry(EffectKind.Damage));
 
-            var report = CardVfxCoverage.Evaluate(Row("A13", type: "공격", behaviorId: "attack.damage", damage: "3"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("A13", type: "공격", damage: "3"), catalog);
 
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.FallbackOnly));
             Assert.That(report.MatchedCueIds, Is.Empty);
@@ -69,7 +70,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var catalog = CatalogWith(Entry(EffectKind.Damage));
 
-            var report = CardVfxCoverage.Evaluate(Row("U01", type: "유틸리티", behaviorId: "utility.redraw"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("U01", type: "유틸리티"), catalog);
 
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.NoVfx));
             Assert.That(report.ProbedKinds, Is.Empty);
@@ -82,7 +83,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 Entry(EffectKind.Damage, sourceRef: "A01", cueId: "deprecated", deprecated: true),
                 Entry(EffectKind.Damage, sourceRef: "A01", cueId: "prefabless", withPrefab: false));
 
-            var report = CardVfxCoverage.Evaluate(Row("A01", type: "공격", behaviorId: "attack.damage", damage: "3"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("A01", type: "공격", damage: "3"), catalog);
 
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.NoVfx));
             Assert.That(report.MatchedCueIds, Is.Empty);
@@ -97,7 +98,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 Entry(EffectKind.StatusEffectApplied, sourceRef: "A11", cueId: "loop", loop: true));
 
             var report = CardVfxCoverage.Evaluate(
-                Row("A11", type: "공격", behaviorId: "attack.damage", damage: "2", postActions: "ApplyImmobilize:2"),
+                Row("A11", type: "공격", damage: "2"),
                 catalog);
 
             Assert.That(report.MatchedCueIds, Is.Empty);
@@ -107,13 +108,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void KeyedCueOfAnUnrelatedKindDoesNotCountAsCoverage()
         {
-            // `attack.damage` is shared by most attack cards and also keys a status cue authored for A11's
-            // freeze. A plain damage card must not be credited with a status cue it never triggers.
+            // A status cue keyed on this card's id must not be credited to a plain damage card: the kind gate
+            // is what keeps a card-id key from claiming a status cue the card never triggers.
             var catalog = CatalogWith(
-                Entry(EffectKind.StatusEffectApplied, sourceRef: "attack.damage", cueId: "player.status.hit.A11"),
+                Entry(EffectKind.StatusEffectApplied, sourceRef: "A13", cueId: "player.status.hit.A13"),
                 Entry(EffectKind.Damage));
 
-            var report = CardVfxCoverage.Evaluate(Row("A13", type: "공격", behaviorId: "attack.damage", damage: "3"), catalog);
+            var report = CardVfxCoverage.Evaluate(Row("A13", type: "공격", damage: "3"), catalog);
 
             Assert.That(report.MatchedCueIds, Is.Empty);
             Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.FallbackOnly));
@@ -124,27 +125,27 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             // M05 추진력 is a move card whose only cue is the buff it grants; buff_debuff is the signal.
             var catalog = CatalogWith(
-                Entry(EffectKind.StatusEffectApplied, sourceRef: "move.deferred_momentum", cueId: "CVM05"));
+                Entry(EffectKind.StatusEffectApplied, sourceRef: "M05", cueId: "CVM05"));
 
             var report = CardVfxCoverage.Evaluate(
-                Row("M05", type: "이동", behaviorId: "move.deferred_momentum", buffDebuff: "Agility:2"), catalog);
+                Row("M05", type: "이동", buffDebuff: "Agility:2"), catalog);
 
             Assert.That(report.ProbedKinds, Does.Contain("StatusEffectApplied"));
-            Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.SharedBehavior));
+            Assert.That(report.Status, Is.EqualTo(CardVfxCoverageStatus.Dedicated));
             Assert.That(report.MatchedCueIds, Is.EqualTo(new[] { "CVM05" }));
         }
 
         [Test]
-        public void CardScopedCueCountsAsDedicatedAndIgnoresTheBehaviorIdKey()
+        public void CardScopedCueCountsAsDedicatedAndIgnoresTheSharedKey()
         {
             // F05 overrides the shared field.damage look via sourceCardId. It must read as the card's own cue,
-            // and must not be handed to F01 (which reaches field.damage through the behaviorId key).
+            // and must not be handed to F01 (which reaches field.damage through its shared tick key).
             var catalog = CatalogWith(
                 Entry(EffectKind.Damage, sourceRef: "field.damage", cueId: "CVF01"),
                 Entry(EffectKind.Damage, sourceRef: "field.damage", sourceCardId: "F05", cueId: "CVF05"));
 
-            var f05 = CardVfxCoverage.Evaluate(Row("F05", type: "필드", behaviorId: "field.damage", damage: "2"), catalog);
-            var f01 = CardVfxCoverage.Evaluate(Row("F01", type: "필드", behaviorId: "field.damage", damage: "6"), catalog);
+            var f05 = CardVfxCoverage.Evaluate(Row("F05", type: "필드", damage: "2"), catalog);
+            var f01 = CardVfxCoverage.Evaluate(Row("F01", type: "필드", damage: "6"), catalog);
 
             Assert.That(f05.Status, Is.EqualTo(CardVfxCoverageStatus.Dedicated));
             Assert.That(f05.MatchedCueIds, Is.EqualTo(new[] { "CVF05" }));
@@ -156,7 +157,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             // D02/D03/D05 author no shield value but still raise Block when they resolve.
             var report = CardVfxCoverage.Evaluate(
-                Row("D02", type: "방어", behaviorId: "defend.zero_then_double"), CatalogWith(Entry(EffectKind.Block)));
+                Row("D02", type: "방어"), CatalogWith(Entry(EffectKind.Block)));
 
             Assert.That(report.ProbedKinds, Does.Contain("Block"));
         }
@@ -299,13 +300,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static CardCatalogCsvRow Row(
             string id,
             string type = "",
-            string behaviorId = "",
             string damage = "",
             string shield = "",
             string heal = "",
             string stateEffect = "",
-            string buffDebuff = "",
-            string postActions = "")
+            string buffDebuff = "")
         {
             // CardCatalogCsvRow's fields are serialized and private, so the CSV parser is the supported way to
             // build one. Columns are paired name-to-value here so a header/value length mismatch is impossible.
@@ -325,24 +324,18 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 ("stateEffect", stateEffect),
                 ("buff_debuff", buffDebuff),
                 ("duration", string.Empty),
-                ("scout", string.Empty),
-                ("behaviorId", behaviorId),
                 ("hitCount", string.Empty),
                 ("costMode", string.Empty),
                 ("scalingMode", string.Empty),
+                ("gameplayType", string.Empty),
                 ("targeting", string.Empty),
-                ("additionalCost", string.Empty),
-                ("postActions", postActions),
-                ("choiceOptions", string.Empty),
-                ("behaviorParams", string.Empty),
                 ("status", string.Empty),
                 ("includeInDecks", string.Empty),
                 ("visibleInCatalog", string.Empty),
-                ("usableWhileStunned", string.Empty),
                 ("illustrationId", string.Empty),
                 ("rarity", string.Empty),
-                ("exhaustOnPlay", string.Empty),
-                ("retainOnTurnEnd", string.Empty)
+                ("choiceTexts", string.Empty),
+                ("descriptionUpgraded", string.Empty)
             };
 
             var header = string.Join(",", columns.Select(column => column.Header));

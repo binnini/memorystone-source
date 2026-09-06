@@ -143,6 +143,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var cameraObject = new GameObject("Cinemachine Camera Mode Camera");
             var camera = cameraObject.AddComponent<Camera>();
             var controller = controllerObject.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             try
             {
                 var originalPosition = new Vector3(3f, 4f, 5f);
@@ -171,6 +172,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var controllerObject = new GameObject("Cinemachine Camera Shake Controller");
             var controller = controllerObject.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             try
             {
                 InvokePrivateMethod(
@@ -207,6 +209,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var cameraObject = new GameObject("Cinemachine Profile Mode Camera");
             var camera = cameraObject.AddComponent<Camera>();
             var controller = controllerObject.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             var profile = ScriptableObject.CreateInstance<CombatCameraProfile>();
             try
             {
@@ -242,6 +245,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             var controllerObject = new GameObject("Auto Camera Offset Controller");
             var controller = controllerObject.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             try
             {
                 SetPrivateField(controller, "autoCalculateCameraPlayerOffset", true);
@@ -268,6 +272,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
             var controller = controllerObject.AddComponent<MapCombatController>();
+            controller.UseDemoCardCatalogForTests();
             try
             {
                 var compatibilityOffset = new Vector3(4f, 5f, 6f);

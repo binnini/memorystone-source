@@ -25,7 +25,6 @@ namespace SeoulPlayup.Combat.Unity
             CardTargetMode targetMode = CardTargetMode.None,
             CardPlayMode playMode = CardPlayMode.ManualTarget,
             int areaRadius = 0,
-            string choiceOptions = "",
             string choiceOptionTexts = "",
             CardRarity rarity = CardRarity.Basic)
         {
@@ -39,7 +38,6 @@ namespace SeoulPlayup.Combat.Unity
             TargetMode = targetMode;
             PlayMode = playMode;
             AreaRadius = Math.Max(0, areaRadius);
-            ChoiceOptions = choiceOptions ?? string.Empty;
             ChoiceOptionTexts = choiceOptionTexts ?? string.Empty;
             Rarity = rarity;
         }
@@ -54,7 +52,6 @@ namespace SeoulPlayup.Combat.Unity
         public CardTargetMode TargetMode { get; }
         public CardPlayMode PlayMode { get; }
         public int AreaRadius { get; }
-        public string ChoiceOptions { get; }
         public string ChoiceOptionTexts { get; }
         public CardRarity Rarity { get; }
     }
@@ -970,7 +967,7 @@ namespace SeoulPlayup.Combat.Unity
                 SetText(costLabel, offer.Cost.ToString());
                 SetText(typeLabel, offer.TypeLabel);
                 SetText(nameLabel, offer.DisplayName);
-                SetText(descLabel, CardKeywordDecorator.Decorate(offer.Description));
+                SetText(descLabel, CardKeywordDecorator.DecorateForCard(offer.Description, offer.CardId));
                 KeywordHoverTooltipBinder.Ensure(descLabel);
 
                 if (background != null)
@@ -1137,7 +1134,6 @@ namespace SeoulPlayup.Combat.Unity
                     pile: "Reward",
                     playMode: offer.PlayMode,
                     areaRadius: offer.AreaRadius,
-                    choiceOptions: offer.ChoiceOptions,
                     choiceOptionTexts: offer.ChoiceOptionTexts,
                     targetMode: offer.TargetMode,
                     isStatusCard: offer.EffectType == CardEffectType.Status);

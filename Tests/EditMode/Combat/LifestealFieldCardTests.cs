@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -101,12 +102,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move2Hex, "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     // Mirrors the cards.csv row: cost 3 / range 2 / blast-1 / damage 2 / duration 2.
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.FieldLifestealId, "흡수진", CardCategory.Action, CardEffectType.FieldObject,
-                        3, 2, 2, CardEffectRefs.FieldLifesteal, "walkable_map_cell", areaRadius: 1,
+                        CardIds.LifestealZone, "흡수진", CardCategory.Action, CardEffectType.FieldObject,
+                        3, 2, 2, "walkable_map_cell", areaRadius: 1,
                         fieldObjectKind: CardFieldObjectKind.LifestealDamage, durationTurns: 2,
                         status: CardCatalogStatus.Approved)
                 });
@@ -122,12 +123,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
             // Field objects cannot be dropped on an occupied tile, so aim beside the monster and let the
             // radius-1 footprint cover it.
-            Assert.That(state.TryPlayerFieldObject(new HexCoord(1, 0), ApprovedCardCatalogFactory.FieldLifestealId), Is.True, state.LastFailureReason);
+            Assert.That(state.TryPlayerFieldObject(new HexCoord(1, 0), CardIds.LifestealZone), Is.True, state.LastFailureReason);
 
             var placed = state.FieldObjects.Objects.Single();
             Assert.That(placed.Kind, Is.EqualTo(FieldObjectKind.LifestealDamage));
             Assert.That(placed.Value, Is.EqualTo(2));
-            Assert.That(placed.VisualRef, Is.EqualTo(ApprovedCardCatalogFactory.FieldLifestealId));
+            Assert.That(placed.VisualRef, Is.EqualTo(CardIds.LifestealZone));
 
             var effects = new List<EffectResultEvent>();
             state.EffectResolved += effects.Add;

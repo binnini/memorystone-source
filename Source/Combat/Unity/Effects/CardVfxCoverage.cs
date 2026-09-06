@@ -38,13 +38,17 @@ namespace SeoulPlayup.Combat.Unity
         public string CardId = string.Empty;
         public string CardName = string.Empty;
         public string CardType = string.Empty;
-        public string BehaviorId = string.Empty;
+        /// <summary>
+        /// 카드가 떠난 뒤 오르는 효과의 공유 키(장판 틱 <c>field.*</c>) - 그 외 카드는 빈 문자열. 옛 behaviorId 자리
+        /// (트랙 ② 2026-09-06): 카드 직접 발신은 전부 카드 id이므로 공유 키는 장판 카드에만 있다.
+        /// </summary>
+        public string SharedEffectKey = string.Empty;
         public CardVfxCoverageStatus Status = CardVfxCoverageStatus.NoVfx;
 
         /// <summary>Cue ids of the sourceRef-keyed entries that serve this card (empty for fallback/no-VFX).</summary>
         public List<string> MatchedCueIds = new List<string>();
 
-        /// <summary>Which key produced each match, e.g. "cardId:A01" / "behaviorId:field.damage".</summary>
+        /// <summary>Which key produced each match, e.g. "cardId:A01" / "effectKey:field.damage".</summary>
         public List<string> MatchKeys = new List<string>();
 
         /// <summary>EffectKinds this card is expected to emit, derived from its authored columns (heuristic).</summary>
@@ -82,6 +86,11 @@ namespace SeoulPlayup.Combat.Unity
             "immobilize", "stun", "poison", "slow", "rupture", "reflect", "agility", "strength", "plague"
         };
 
+        /// <summary>상태이상의 표시 이름 전부 - 카드 클래스 <c>Keywords</c>와 대조해 상태 부여 카드를 가려낸다.</summary>
+        private static readonly HashSet<string> StatusKeywords = new HashSet<string>(
+            Enum.GetValues(typeof(StatusEffectKind)).Cast<StatusEffectKind>().Select(StatusEffectInfo.DisplayName),
+            StringComparer.Ordinal);
+
         public static List<CardVfxCoverageReport> EvaluateAll(
             IEnumerable<CardCatalogCsvRow> rows, EffectVfxCatalog catalog)
         {
@@ -112,21 +121,22 @@ namespace SeoulPlayup.Combat.Unity
             CardCatalogCsvRow row, IReadOnlyList<EffectVfxCatalog.Entry> renderable)
         {
             var cardId = Trim(row.Id);
-            var behaviorId = Trim(row.BehaviorId);
+            var sharedKey = SharedEffectKeyOf(row.Id);
 
             var report = new CardVfxCoverageReport
             {
                 CardId = cardId,
                 CardName = Trim(row.Name),
                 CardType = Trim(row.Type),
-                BehaviorId = behaviorId
+                SharedEffectKey = sharedKey
             };
 
             var probeKinds = DeriveProbeKinds(row);
             report.ProbedKinds = probeKinds.Select(kind => kind.ToString()).ToList();
 
-            // Tier 1/2 check: entries keyed on the card id win over entries keyed on the behaviorId, because
-            // a card-id key is authored for this card specifically while a behaviorId key is shared.
+            // Tier 1/2 check: entries keyed on the card id win over entries keyed on the shared effect key,
+            // because a card-id key is authored for this card specifically while a shared key serves every
+            // card of that field kind (track 2, 2026-09-06: card-raised effects all carry the card id).
             //
             // A keyed entry only counts when its EffectKind is one this card is expected to emit. Generic
             // behaviorIds are shared by many cards — `attack.damage` alone keys a status cue authored for
@@ -134,9 +144,9 @@ namespace SeoulPlayup.Combat.Unity
             // never triggers. When no kind could be derived the gate is skipped: there is nothing to filter on.
             CollectKeyedMatches(renderable, cardId, "cardId", isCardIdKey: true, probeKinds, report);
             var dedicated = report.MatchedCueIds.Count > 0;
-            if (!dedicated && !string.Equals(behaviorId, cardId, StringComparison.Ordinal))
+            if (!dedicated)
             {
-                CollectKeyedMatches(renderable, behaviorId, "behaviorId", isCardIdKey: false, probeKinds, report);
+                CollectKeyedMatches(renderable, sharedKey, "effectKey", isCardIdKey: false, probeKinds, report);
             }
 
             foreach (var kind in probeKinds)
@@ -179,8 +189,14 @@ namespace SeoulPlayup.Combat.Unity
         {
             var kinds = new List<EffectKind>();
             var type = Trim(row.Type);
-            var behaviorId = Trim(row.BehaviorId).ToLowerInvariant();
-            var postActions = Trim(row.PostActions).ToLowerInvariant();
+            // 옛 postActions 컬럼 대신 카드 클래스가 선언한 후속 규칙·키워드를 읽는다.
+            var hasBehavior = SeoulPlayup.Combat.Runtime.Cards.CardBehaviorRegistry.TryGet(row.Id, out var behavior);
+            var postActions = hasBehavior
+                ? string.Join(";", behavior.PostActions.Select(action => action.ActionId)).ToLowerInvariant()
+                : string.Empty;
+            // 클래스가 상태이상 이름을 키워드로 선언했으면(기절·속박·허점·반사·민첩·강화 …) 그 상태를 부여하는 카드다 -
+            // 옛 behaviorId 부분 문자열("scout.enemy_stun"의 "stun") 대신 P5의 명시 선언을 읽는다(트랙 ②).
+            var declaresStatusKeyword = hasBehavior && behavior.Keywords.Any(keyword => StatusKeywords.Contains(keyword));
 
             if (type == "이동")
             {
@@ -212,13 +228,26 @@ namespace SeoulPlayup.Combat.Unity
             // duration column, which also times non-status things like a field object's lifetime.
             var appliesStatus = !string.IsNullOrWhiteSpace(row.StateEffect)
                 || !string.IsNullOrWhiteSpace(row.BuffDebuff)
-                || StatusApplyHints.Any(hint => behaviorId.Contains(hint) || postActions.Contains(hint));
+                || declaresStatusKeyword
+                || StatusApplyHints.Any(hint => postActions.Contains(hint));
             if (appliesStatus)
             {
                 kinds.Add(EffectKind.StatusEffectApplied);
             }
 
             return kinds.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// 장판 카드의 틱은 카드가 떠난 뒤 장판이 올리므로 카드 id가 아니라 종류별 효과 키를 sourceRef로 쓴다.
+        /// 그 키는 클래스의 <c>FieldKind</c>에서 온다 - 다른 카드는 직접 발신(카드 id)뿐이라 공유 키가 없다.
+        /// </summary>
+        private static string SharedEffectKeyOf(string cardId)
+        {
+            return SeoulPlayup.Combat.Runtime.Cards.CardBehaviorRegistry.TryGet(cardId, out var behavior)
+                   && behavior is SeoulPlayup.Combat.Runtime.Cards.FieldObjectCard fieldCard
+                ? CardEffectRefs.FieldTickKey(fieldCard.FieldKind)
+                : string.Empty;
         }
 
         private static void CollectKeyedMatches(

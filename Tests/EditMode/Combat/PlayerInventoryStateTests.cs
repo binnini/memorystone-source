@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
 {
@@ -173,7 +174,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var state = CreateState(PlayerPermanentItemEffectKind.BlockGainBonus, 1);
             EnterActionPhase(state);
 
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendDoubleEdgedShieldId), Is.True);
+            Assert.That(state.TryPlayerDefend(CardIds.DoubleEdgedShield), Is.True);
             Assert.That(state.Player.Block, Is.EqualTo(0));
         }
 
@@ -236,7 +237,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new SeoulPlayup.Map.Runtime.HexCoord(0, 0),
                 new SeoulPlayup.Map.Runtime.HexCoord(2, 0),
                 config,
-                cardCatalog: ApprovedCardCatalogFactory.CreateApprovedCatalog(config),
+                cardCatalog: DemoCardCatalog.Create(config),
                 playerInventory: new PlayerInventoryState(inventory));
         }
 
@@ -248,7 +249,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         private static int PlayDefendAndReadBlock(CombatState state)
         {
             EnterActionPhase(state);
-            Assert.That(state.TryPlayerDefend(ApprovedCardCatalogFactory.DefendOldSuitId), Is.True);
+            Assert.That(state.TryPlayerDefend(CardIds.OldArmor), Is.True);
             return state.Player.Block;
         }
 

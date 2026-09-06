@@ -49,7 +49,7 @@ namespace SeoulPlayup.Combat.Unity
             CardFrontPresentationFormatting.ApplyCardFrame(
                 cardFront.transform, sourceCard, ResolveStatusCardFrameSprite(), defaultFrameSpriteBySlotFrame);
             SetCardFrontText(cardFront, "CardNameText_TMP", option.DisplayName);
-            SetCardFrontText(cardFront, "DescriptionText_TMP", CardKeywordDecorator.Decorate(option.CardText));
+            SetCardFrontText(cardFront, "DescriptionText_TMP", CardKeywordDecorator.DecorateForCard(option.CardText, sourceCard.Id));
             KeywordHoverTooltipBinder.EnsureOnChild(cardFront.transform, "DescriptionText_TMP");
             SetCardFrontText(cardFront, "CostText_TMP", sourceCard.KiCost.ToString(CultureInfo.InvariantCulture));
             SetCardFrontText(cardFront, "TypeText_TMP", CardFrontPresentationFormatting.KindLabel(sourceCard));
@@ -155,7 +155,6 @@ namespace SeoulPlayup.Combat.Unity
                 range,
                 sourceCard.Pile,
                 sourceCard.CatalogSourceId,
-                sourceCard.EffectRef,
                 sourceCard.PhaseAvailability,
                 sourceCard.PlayMode,
                 sourceCard.FieldObjectKind,
@@ -164,7 +163,6 @@ namespace SeoulPlayup.Combat.Unity
                 sourceCard.InstanceId,
                 sourceCard.UpgradeLevel,
                 sourceCard.IsTemporary,
-                sourceCard.ChoiceOptions,
                 sourceCard.ChoiceOptionTexts,
                 sourceCard.IllustrationId,
                 baseCost: sourceCard.BaseCost,

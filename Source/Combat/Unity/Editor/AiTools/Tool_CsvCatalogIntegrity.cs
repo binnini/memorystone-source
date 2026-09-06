@@ -133,17 +133,10 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
             }
 
             domain.bakedAssetExists = true;
-            // cards.csv, card_choice_options.csv and card_upgrades.csv bake together into CardCatalog.asset.
+            // cards.csv alone bakes into CardCatalog.asset (선택지 문안은 choiceTexts 컬럼, 연마는 카드 클래스 — P4에서 card_upgrades.csv 은퇴).
             var freshRows = CardCatalogAsset.ParseCsvText(File.ReadAllText(CombatCsvPaths.CardsCsv));
-            var freshChoices =
-                CardCatalogAsset.ParseChoiceOptionsCsvText(File.ReadAllText(CombatCsvPaths.CardChoiceOptionsCsv));
-            var freshUpgrades = File.Exists(CombatCsvPaths.CardUpgradesCsv)
-                ? CardCatalogAsset.ParseUpgradesCsvText(File.ReadAllText(CombatCsvPaths.CardUpgradesCsv))
-                : (IReadOnlyList<CardUpgradeCsvRow>)Array.Empty<CardUpgradeCsvRow>();
-            var fresh = RowsSignature(freshRows) + "\n##CHOICE##\n" + RowsSignature(freshChoices)
-                + "\n##UPGRADE##\n" + RowsSignature(freshUpgrades);
-            var stored = RowsSignature(baked.Rows) + "\n##CHOICE##\n" + RowsSignature(baked.ChoiceOptionRows)
-                + "\n##UPGRADE##\n" + RowsSignature(baked.UpgradeRows);
+            var fresh = RowsSignature(freshRows);
+            var stored = RowsSignature(baked.Rows);
             SetContentStaleness(domain, fresh, stored, "Tools/Cards/Import cards.csv");
         }
 
@@ -257,16 +250,10 @@ namespace SeoulPlayup.Combat.Unity.Editor.AiTools
             return Run("cards", new[] { CombatCsvPaths.CardsCsv }, () =>
             {
                 var rows = CardCatalogAsset.ParseCsvText(File.ReadAllText(CombatCsvPaths.CardsCsv));
-                // card_upgrades.csv도 같은 컨버터로 함께 변환한다 — 연마 행이 깨지면 병합 빌드에서
-                // 예외가 나므로 convert 무결성이 그대로 잡는다(semantic 검증은 card-catalog-audit 몫).
-                var upgrades = File.Exists(CombatCsvPaths.CardUpgradesCsv)
-                    ? CardCatalogAsset.ParseUpgradesCsvText(File.ReadAllText(CombatCsvPaths.CardUpgradesCsv))
-                    : (IReadOnlyList<CardUpgradeCsvRow>)Array.Empty<CardUpgradeCsvRow>();
                 var asset = UnityEngine.ScriptableObject.CreateInstance<CardCatalogAsset>();
                 try
                 {
                     asset.SetRows(rows);
-                    asset.SetUpgradeRows(upgrades);
                     return asset.ToCardCatalogDefinition(CombatConfig.Default).Entries.Count;
                 }
                 finally

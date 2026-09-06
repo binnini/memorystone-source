@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -11,9 +12,9 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void CardPresentationCatalogReturnsPlaceholderFrameWhenMissingArt()
         {
-            var card = ApprovedCardCatalogFactory.CreateApprovedCatalog(CombatConfig.Default)
+            var card = DemoCardCatalog.Create(CombatConfig.Default)
                 .CreateDeck(CardCategory.Action)
-                .Single(candidate => candidate.Id == ApprovedCardCatalogFactory.AttackHolyLightId);
+                .Single(candidate => candidate.Id == CardIds.HolyLight);
             var presentation = new CardPresentationCatalog(null).Resolve(card);
 
             Assert.That(presentation.PresentationId, Is.EqualTo(card.PresentationRef.PresentationId));
@@ -28,7 +29,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void ChoiceCardPanelCanRenderOptionSpecificCardTexts()
         {
             var card = new CombatCardSnapshot(
-                ApprovedCardCatalogFactory.AttackHolyLightId,
+                CardIds.HolyLight,
                 CombatCardKind.Attack,
                 "성스러운 빛",
                 string.Empty,
@@ -38,14 +39,12 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 "Ready",
                 cost: 1,
                 range: 3,
-                effectRef: CardEffectRefs.AttackHolyLight,
                 playMode: CardPlayMode.Choice,
-                choiceOptions: "heal:heal.player:self;attack:attack.damage:enemy",
                 choiceOptionTexts: "heal|성스러운 빛|자신을 {Heal} 회복합니다.;attack|성스러운 빛|사거리 {Range} 내 적에게 피해 {Damage}를 줍니다.");
 
             var model = ChoiceCardPanelModel.ForCard(card);
 
-            Assert.That(model.SourceCardId, Is.EqualTo(ApprovedCardCatalogFactory.AttackHolyLightId));
+            Assert.That(model.SourceCardId, Is.EqualTo(CardIds.HolyLight));
             Assert.That(model.Options.Count, Is.EqualTo(2));
             Assert.That(model.Options.Select(option => option.OptionId), Is.EqualTo(new[] { "heal", "attack" }));
             Assert.That(model.Options[0].DisplayName, Is.EqualTo("성스러운 빛"));
@@ -58,13 +57,13 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         [Test]
         public void UiCatalogOmitsDraftCards()
         {
-            var visibleIds = ApprovedCardCatalogFactory.CreateApprovedCatalog(CombatConfig.Default)
+            var visibleIds = DemoCardCatalog.Create(CombatConfig.Default)
                 .GetVisibleCatalogEntries()
                 .Select(entry => entry.Id)
                 .ToList();
 
-            Assert.That(visibleIds, Has.Member(ApprovedCardCatalogFactory.AttackTargetShotId));
-            Assert.That(visibleIds, Does.Contain(ApprovedCardCatalogFactory.UtilityRedrawId));
+            Assert.That(visibleIds, Has.Member(CardIds.TargetShot));
+            Assert.That(visibleIds, Does.Contain(CardIds.Redraw));
         }
     }
 }

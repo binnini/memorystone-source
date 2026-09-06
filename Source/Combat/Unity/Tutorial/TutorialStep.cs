@@ -98,7 +98,10 @@ namespace SeoulPlayup.Combat.Unity.Tutorial
         Monster,
         FieldObject,
         StatusIcon,
-        RewardCard
+        RewardCard,
+        // Appended (serialized as int): the monster's body plus its nameplate and the badge row above it,
+        // for steps that talk about the intent badge rather than the monster itself.
+        MonsterNameplate
     }
 
     [Serializable]

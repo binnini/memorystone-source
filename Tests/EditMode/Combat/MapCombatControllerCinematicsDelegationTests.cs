@@ -24,6 +24,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
 
                 controller.SetStageIntroLookPresets(day, night);
 
@@ -48,6 +49,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = root.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigureMapForTests(TestMaps.Line(4));
                 controller.InitializeIntegration();
 

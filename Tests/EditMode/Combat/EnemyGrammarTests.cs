@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -535,9 +536,8 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             var added = InjectedCurseIds(state).Except(before).ToList();
             Assert.That(added, Has.Count.EqualTo(1), "전제: 저주 한 장이 실제로 들어갔다.");
             Assert.That(injected, Has.Count.EqualTo(1), "덱에 든 장수만큼 신호가 나간다.");
-            // 🔑 신호는 <b>카드 id</b>를 싣는다(EffectRef가 아니라) — 표현층이 그 id로 카탈로그에서
-            //    카드를 찾아 스냅샷을 띄우기 때문이다. 픽스처의 저주는 id XTn ↔ ref curse.XTn 짝이다.
-            Assert.That($"curse.{injected[0].SourceCardId}", Is.EqualTo(added[0]),
+            // 🔑 신호는 <b>카드 id</b>를 싣는다 — 표현층이 그 id로 카탈로그에서 카드를 찾아 스냅샷을 띄우기 때문이다.
+            Assert.That(injected[0].SourceCardId, Is.EqualTo(added[0]),
                 "신호는 어떤 카드가 들었는지 말해야 한다 — 그것이 연출의 그림이다.");
             Assert.That(new[] { CurseA, CurseB, CurseC }, Does.Contain(injected[0].SourceCardId));
             Assert.That(injected[0].SourceRef, Is.EqualTo(CombatState.StatusCardInjectionRef));
@@ -1152,14 +1152,14 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         "D00", "방어의 기초", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 3, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved),
+                        1, 0, 3, "self", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         "A-T", "시험 타격", CardCategory.Action, CardEffectType.Attack,
-                        1, 5, AttackCardDamage, CardEffectRefs.AttackDamage, "enemy_in_range", status: CardCatalogStatus.Approved),
+                        1, 5, AttackCardDamage, "enemy_in_range", status: CardCatalogStatus.Approved),
                     // 심술이 뽑는 저주 셋. includeInGameplayDecks=false여야 주입 대상이 된다(TryInjectStatusCard 계약).
                     CurseEntry(CurseA), CurseEntry(CurseB), CurseEntry(CurseC),
                 });
@@ -1189,23 +1189,23 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         {
             return new CardCatalogEntry(
                 id, id, CardCategory.Action, CardEffectType.Attack,
-                1, 0, 0, "curse." + id, "self",
+                1, 0, 0, "self",
                 status: CardCatalogStatus.Approved,
                 includeInGameplayDecks: false);
         }
 
         /// <summary>
         /// 덱(뽑을 더미·손패·버린 더미)에 들어온 저주 카드 목록. 주입 카드의 <c>Id</c>는 런타임 인스턴스
-        /// id라 카탈로그 id와 다르다 — 그래서 <c>EffectRef</c>로 센다(CurseEntry가 "curse.{id}"로 저작).
+        /// id라 카탈로그 id와 다르다 — 그래서 카탈로그 id(<c>Card.Id</c>)로 센다.
         /// </summary>
         private static List<string> InjectedCurseIds(CombatState state)
         {
-            var curses = new[] { "curse." + CurseA, "curse." + CurseB, "curse." + CurseC };
+            var curses = new[] { CurseA, CurseB, CurseC };
             return state.ActionDeck.DrawPile
                 .Concat(state.ActionDeck.Hand)
                 .Concat(state.ActionDeck.DiscardPile)
-                .Select(card => card.EffectRef)
-                .Where(effectRef => curses.Contains(effectRef))
+                .Select(card => card.Id)
+                .Where(id => curses.Contains(id))
                 .ToList();
         }
 

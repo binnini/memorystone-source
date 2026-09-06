@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 using SeoulPlayup.Map.Unity;
 using UnityEngine;
@@ -62,13 +63,13 @@ namespace SeoulPlayup.Combat.Unity
 
             switch (visualRef.Trim())
             {
-                case ApprovedCardCatalogFactory.FieldFirebombId:
+                case CardIds.Firebomb:
                     objectRef = "bomb";
                     return true;
-                case ApprovedCardCatalogFactory.FieldSacredCampfireId:
+                case CardIds.SacredLamp:
                     objectRef = "Lantern_5000";
                     return true;
-                case ApprovedCardCatalogFactory.FieldFlashbangId:
+                case CardIds.Flashbang:
                     objectRef = "flashbang";
                     return true;
                 default:

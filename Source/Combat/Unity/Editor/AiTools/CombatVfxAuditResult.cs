@@ -56,7 +56,7 @@ namespace AIGD
         public string cardId = string.Empty;
         public string cardName = string.Empty;
         public string cardType = string.Empty;
-        public string behaviorId = string.Empty;
+        public string sharedEffectKey = string.Empty;
         public string status = string.Empty;
         public List<string> matchedCueIds = new();
         public List<string> matchKeys = new();

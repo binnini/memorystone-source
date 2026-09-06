@@ -17,7 +17,6 @@ namespace SeoulPlayup.Combat.Runtime
             int range = 0,
             string pile = "",
             string catalogSourceId = "",
-            string effectRef = "",
             CardUsePhase phaseAvailability = CardUsePhase.Default,
             CardPlayMode playMode = CardPlayMode.ManualTarget,
             CardFieldObjectKind fieldObjectKind = CardFieldObjectKind.None,
@@ -26,7 +25,6 @@ namespace SeoulPlayup.Combat.Runtime
             string instanceId = "",
             int upgradeLevel = 0,
             bool isTemporary = false,
-            string choiceOptions = "",
             string choiceOptionTexts = "",
             string illustrationId = "",
             int baseCost = int.MinValue,
@@ -51,7 +49,6 @@ namespace SeoulPlayup.Combat.Runtime
             Range = range;
             Pile = pile ?? string.Empty;
             CatalogSourceId = catalogSourceId ?? string.Empty;
-            EffectRef = effectRef ?? string.Empty;
             PhaseAvailability = phaseAvailability;
             PlayMode = playMode;
             FieldObjectKind = fieldObjectKind;
@@ -60,7 +57,6 @@ namespace SeoulPlayup.Combat.Runtime
             InstanceId = string.IsNullOrWhiteSpace(instanceId) ? Id : instanceId;
             UpgradeLevel = upgradeLevel < 0 ? 0 : upgradeLevel;
             IsTemporary = isTemporary;
-            ChoiceOptions = choiceOptions ?? string.Empty;
             ChoiceOptionTexts = choiceOptionTexts ?? string.Empty;
             IllustrationId = illustrationId ?? string.Empty;
             IsStatusCard = isStatusCard;
@@ -103,7 +99,6 @@ namespace SeoulPlayup.Combat.Runtime
         public int Range { get; }
         public string Pile { get; }
         public string CatalogSourceId { get; }
-        public string EffectRef { get; }
         public CardUsePhase PhaseAvailability { get; }
         public CardPlayMode PlayMode { get; }
         public CardFieldObjectKind FieldObjectKind { get; }
@@ -111,7 +106,7 @@ namespace SeoulPlayup.Combat.Runtime
         public int AreaRadius { get; }
         public int UpgradeLevel { get; }
         public bool IsTemporary { get; }
-        public string ChoiceOptions { get; }
+        /// <summary>갈림길 선택지 문안(데이터). 선택지 규칙은 <c>CardBehaviorRegistry.Get(Id).Choices</c>.</summary>
         public string ChoiceOptionTexts { get; }
         public string IllustrationId { get; }
 

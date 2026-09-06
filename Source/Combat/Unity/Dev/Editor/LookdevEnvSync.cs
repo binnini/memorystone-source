@@ -142,6 +142,7 @@ namespace SeoulPlayup.Combat.Unity.Dev.Editor
             "visibilityLightingHardEdge",
             "visibilityLightingEdgeGradation",
             "visibilityLightingHexSnap",
+            "visibilityWaterLockedToUnknown",
             "visibilityRevealedFadeMaxSteps",
             "visibilityRevealedFadeFloorAlpha",
             "visibilityRevealedFadeColor"

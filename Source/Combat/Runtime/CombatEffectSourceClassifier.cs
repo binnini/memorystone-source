@@ -65,14 +65,9 @@ namespace SeoulPlayup.Combat.Runtime
         /// </summary>
         public static bool IsDamageImmunitySource(string sourceRef)
         {
-            switch (sourceRef)
-            {
-                case CardEffectRefs.DefendZeroThenDouble:
-                case CardEffectRefs.DefendExileRandomNegate:
-                    return true;
-                default:
-                    return false;
-            }
+            // 효과 종류 키 하나로 판정한다(트랙 ②, 2026-09-06). 예전엔 카드별 behaviorId 두 개를 나열했다 —
+            // 카드가 늘면 목록도 늘어야 했고, 규칙층(TryPlayerDefend)이 이미 「면역이었는가」를 알고 있으므로 그쪽이 키를 찍는다.
+            return string.Equals(sourceRef, CardEffectRefs.DefendDamageImmunity, System.StringComparison.Ordinal);
         }
 
         /// <summary>

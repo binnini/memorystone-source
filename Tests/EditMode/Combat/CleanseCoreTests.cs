@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
 {
@@ -160,7 +161,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void StunGatesRejectANonExemptCard()
         {
             var state = StunnedActionPhaseState();
-            var card = Card(usableWhileStunned: false);
+            var card = Card(CardIds.BasicBlock);
 
             Assert.That(CanUseActionCard(state, card, out var reason), Is.False, "Execution validation must refuse.");
             Assert.That(reason, Does.Contain("기절"));
@@ -172,7 +173,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
         public void StunGatesAcceptAnExemptCard()
         {
             var state = StunnedActionPhaseState();
-            var card = Card(usableWhileStunned: true);
+            var card = Card(CardIds.Hospitalization);
 
             // Both gates must move together: exempting only one produces a live button that rejects the play
             // (or a greyed card that would have worked).
@@ -195,17 +196,17 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             return state;
         }
 
-        private static CardDefinition Card(bool usableWhileStunned)
+        /// <summary>기절 면제는 카드 클래스 선언(P3)이라 픽스처는 출하 id로 만든다 — D06 입원(면제) vs D00 방어의 기초(게이트).</summary>
+        private static CardDefinition Card(string shippingId)
         {
             return new CardDefinition(
-                "TEST_CLEANSE",
+                shippingId,
                 "정화 테스트",
                 CardCategory.Action,
                 CardEffectType.Defend,
                 cost: 0,
                 range: 0,
-                amount: 0,
-                usableWhileStunned: usableWhileStunned);
+                amount: 0);
         }
 
         private static void Inject(CombatState state, StatusEffectKind kind, string unitId)

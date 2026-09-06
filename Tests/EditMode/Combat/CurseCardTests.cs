@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Map.Runtime;
 
 namespace SeoulPlayup.Combat.Tests.EditMode
@@ -209,7 +210,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             CardCatalogEntry Curse(string id, string name, string effectRef, int cost = 0)
                 => new CardCatalogEntry(
                     id, name, CardCategory.Action, CardEffectType.Status,
-                    cost, 0, 0, effectRef, string.Empty,
+                    cost, 0, 0, string.Empty,
                     status: CardCatalogStatus.Approved, includeInGameplayDecks: false, visibleInCatalog: false);
 
             return new CardCatalogDefinition(
@@ -218,11 +219,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.Move1HexId, "Move 1", CardCategory.Movement, CardEffectType.Move,
-                        1, 1, 1, CardEffectRefs.MoveBasic, "reachable_hex", status: CardCatalogStatus.Approved),
+                        CardIds.Move1Hex, "Move 1", CardCategory.Movement, CardEffectType.Move,
+                        1, 1, 1, "reachable_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
                         "D00", "방어의 기초", CardCategory.Action, CardEffectType.Defend,
-                        1, 0, 3, CardEffectRefs.DefendBlock, "self", status: CardCatalogStatus.Approved),
+                        1, 0, 3, "self", status: CardCatalogStatus.Approved),
                     Curse("X04", "빚 문서", CardEffectRefs.StatusDebtNote, cost: 1),
                     Curse("X05", "악몽", CardEffectRefs.StatusNightmare),
                     Curse("X06", "미련", CardEffectRefs.StatusLingering),

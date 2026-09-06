@@ -1,19 +1,19 @@
 using System;
 using System.Linq;
 using SeoulPlayup.CardCore;
+using SeoulPlayup.Combat.Runtime.Cards;
 
 namespace SeoulPlayup.Combat.Runtime
 {
     /// <summary>
-    /// 카드 연마(D-1~D-3). card_upgrades.csv에 행이 있는 카드만 대상이고(행이 없는 카드 = 연마
-    /// 불가), 상한 「카드당 1회」는 세이브·데이터가 아니라 이 게이트(<c>UpgradeLevel >= 1</c> 거부)가
-    /// 강제한다 — 다단 연마 확장이 열려 있도록 코드·세이브에는 상한 제약을 두지 않는다(D-2).
-    /// 치환은 정의 시점(<see cref="CardCatalogEntry.ToCardDefinition(string,string,int,bool)"/>)에
-    /// 일어나므로 필드 카드의 배치 시점 저작값에도 연마가 먹는다.
+    /// 카드 연마(D-1~D-3 · P4 DEC-2026-09-06-05). 카드 클래스가 <see cref="CardBehavior.Upgrade"/>를 구현한 카드만 대상이고
+    /// (null = 연마 불가, 옛 card_upgrades.csv 행 없음과 같은 뜻), 상한 「카드당 1회」는 세이브·데이터가 아니라 이 게이트
+    /// (<c>UpgradeLevel >= 1</c> 거부)가 강제한다 — 다단 연마 확장이 열려 있도록 코드·세이브에는 상한 제약을 두지 않는다(D-2).
+    /// 치환은 정의 시점(<see cref="CardUpgrades.Resolve"/>)에 일어나므로 필드 카드의 배치 시점 저작값에도 연마가 먹는다.
     /// </summary>
     public sealed partial class CombatState
     {
-        /// <summary>연마 후보 필터 — 연마 값 저작 존재 && 미연마 && 임시·저주 아님.</summary>
+        /// <summary>연마 후보 필터 — 카드 클래스가 연마를 선언 && 미연마 && 임시·저주 아님.</summary>
         public bool CanRefineCard(string cardKey)
         {
             return CanRefineCard(cardKey, out _);
@@ -51,10 +51,9 @@ namespace SeoulPlayup.Combat.Runtime
                 return false;
             }
 
-            var entry = FindCatalogEntryById(card.Id);
-            if (entry?.UpgradedEntry == null)
+            if (!CardBehaviorRegistry.Resolve(card).CanUpgrade(card))
             {
-                reason = "이 카드는 연마 값이 저작되지 않았습니다.";
+                reason = "이 카드는 연마가 저작되지 않았습니다(카드 클래스에 Upgrade 없음).";
                 return false;
             }
 
@@ -162,8 +161,10 @@ namespace SeoulPlayup.Combat.Runtime
 
         private CardDefinition ResolveRefinedDefinition(CardDefinition card)
         {
+            // 저작 정의에 다음 연마 단계를 실어 카드 클래스의 Upgrade로 치환한다 — 덱 생성·세이브 복원과 같은 지점.
             var entry = FindCatalogEntryById(card.Id);
-            return entry?.ToCardDefinition(CardCatalog.SourceId, card.InstanceId, card.UpgradeLevel + 1, card.IsTemporary);
+            var next = entry?.ToCardDefinition(CardCatalog.SourceId, card.InstanceId, card.UpgradeLevel + 1, card.IsTemporary);
+            return CardUpgrades.Resolve(next);
         }
 
         private CardDefinition FindRefinableCard(string cardKey)

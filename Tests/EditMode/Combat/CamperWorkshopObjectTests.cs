@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using SeoulPlayup.CardCore;
 using SeoulPlayup.Combat.Runtime;
+using SeoulPlayup.Combat.Runtime.Cards;
 using SeoulPlayup.Combat.Unity;
 using SeoulPlayup.Map.Runtime;
 using TMPro;
@@ -182,8 +183,11 @@ namespace SeoulPlayup.Combat.Tests.EditMode
                 Assert.That(FindButtonByLabel(view, "체력 회복"), Is.Not.Null);
                 var refineButton = FindButtonByLabel(view, "카드 연마");
                 Assert.That(refineButton, Is.Not.Null);
-                Assert.That(refineButton.interactable, Is.False,
-                    "출하 CSV에는 아직 연마 저작이 없으므로(P4 예정) 연마 선택지는 비활성이어야 한다 — HasRefinableCard 배선 검증.");
+                // 연마 값은 카드 클래스가 준다(P4): 데모 덱에 연마 가능 카드(A01·D01 등)가 있으므로 선택지는 활성이어야 한다 —
+                // HasRefinableCard 배선 검증(닫히는 쪽은 HasRefinableCardTracksTheRefineGate가 잰다).
+                Assert.That(refineButton.interactable, Is.EqualTo(controller.State.HasRefinableCard()),
+                    "연마 버튼 활성은 HasRefinableCard와 같아야 한다.");
+                Assert.That(refineButton.interactable, Is.True, "데모 덱에는 클래스가 연마를 선언한 카드가 있다 — 버튼이 살아 있어야 한다.");
                 Assert.That(controller.State.ClaimedEventObjectIds, Does.Not.Contain("camper-van-test"),
                     "여는 것만으로는 소비되지 않는다 — 소비는 떠나는 순간이다.");
             });
@@ -251,6 +255,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 controller.ConfigureMapForTests(CreateServiceObjectMap("Workshop", "workshop-test"));
                 controller.InitializeIntegration();
@@ -287,6 +292,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 controller.ConfigureMapForTests(CreateServiceObjectMap(objectType, objectId));
                 controller.InitializeIntegration();
@@ -337,21 +343,20 @@ namespace SeoulPlayup.Combat.Tests.EditMode
 
         private static CombatState CreateRefineState()
         {
-            var upgraded = new CardCatalogEntry(
-                "A01", "테스트 공격+", CardCategory.Action, CardEffectType.Attack,
-                1, 1, 5, CardEffectRefs.AttackDamage, "living_monster_in_range", status: CardCatalogStatus.Approved);
+            // 연마 값은 카드 클래스(A01_Sweep.Upgrade)가 준다 — 픽스처는 출하 id로 저작값만 둔다.
             var catalog = new CardCatalogDefinition(
                 "camper-refine-test",
                 "Camper refine test catalog",
                 new[]
                 {
                     new CardCatalogEntry(
-                        ApprovedCardCatalogFactory.MoveBasicId, "Move", CardCategory.Movement, CardEffectType.Move,
-                        1, 2, 2, CardEffectRefs.MoveBasic, "reachable_known_hex", status: CardCatalogStatus.Approved),
+                        // 클래스 없는 필러 이동 카드 — A01이 유일한 연마 후보여야 하는 픽스처. 출하 이동 카드 8장은 효과 연마 2차(DEC-2026-09-06-08)부터 전부 연마 가능이다.
+                        "MOVE-FILLER", "Move", CardCategory.Movement, CardEffectType.Move,
+                        1, 2, 2, "reachable_known_hex", status: CardCatalogStatus.Approved),
                     new CardCatalogEntry(
-                        "A01", "테스트 공격", CardCategory.Action, CardEffectType.Attack,
-                        1, 1, 3, CardEffectRefs.AttackDamage, "living_monster_in_range",
-                        status: CardCatalogStatus.Approved, upgradedEntry: upgraded),
+                        CardIds.Sweep, "테스트 공격", CardCategory.Action, CardEffectType.Attack,
+                        1, 1, 3, "living_monster_in_range",
+                        status: CardCatalogStatus.Approved),
                 });
             return new CombatState(
                 CombatState.CreateDemoMap(2),

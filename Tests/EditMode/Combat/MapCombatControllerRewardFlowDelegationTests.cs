@@ -29,6 +29,7 @@ namespace SeoulPlayup.Combat.Tests.EditMode
             try
             {
                 var controller = host.AddComponent<MapCombatController>();
+                controller.UseDemoCardCatalogForTests();
                 controller.ConfigurePresentationForTests(immediateSequences: true);
                 controller.ConfigureMapForTests(CreateShopMap());
                 controller.InitializeIntegration();

@@ -1705,7 +1705,7 @@ namespace SeoulPlayup.Combat.Unity
 
         private static bool IsPlagueContagionEvent(EffectResultEvent resultEvent)
         {
-            return string.Equals(resultEvent.SourceRef, CardEffectRefs.AttackPlague, System.StringComparison.Ordinal);
+            return string.Equals(resultEvent.SourceRef, CardEffectRefs.PlagueContagion, System.StringComparison.Ordinal);
         }
 
         /// <summary>

@@ -1036,7 +1036,6 @@ namespace SeoulPlayup.Combat.Unity
                     entry.TargetMode,
                     entry.PlayMode,
                     entry.AreaRadius,
-                    entry.ChoiceOptions,
                     entry.ChoiceOptionTexts,
                     entry.Rarity))
                 .ToArray();
@@ -1686,12 +1685,13 @@ namespace SeoulPlayup.Combat.Unity
         private ServiceCardComparePair BuildServiceComparePair(ServiceObjectOptionModel option, ServiceCardCandidate candidate)
         {
             if (host.State == null ||
-                !host.State.TryPreviewRefinedCardSnapshots(candidate.Key, out var before, out var after, out _))
+                !host.State.TryPreviewRefinedCardSnapshots(candidate.Key, out var before, out var after, out _) ||
+                !host.State.TryPreviewRefinedCard(candidate.Key, out var current, out var refined, out _))
             {
                 return default;
             }
 
-            return new ServiceCardComparePair(before, after);
+            return new ServiceCardComparePair(before, after, current, refined);
         }
 
         private bool OnServiceCardConfirmed(ServiceObjectOptionModel option, ServiceCardCandidate candidate)

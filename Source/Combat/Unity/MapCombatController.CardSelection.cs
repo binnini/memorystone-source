@@ -79,10 +79,7 @@ namespace SeoulPlayup.Combat.Unity
 
             SelectMove(moveCard.Kind == CombatCardKind.Move ? moveCard.Id : string.Empty, moveCard.Kind == CombatCardKind.Move ? moveCard.InstanceId : string.Empty, moveCard.Kind == CombatCardKind.Move ? moveCard.Name : "Move");
             LastTargetInfoText = string.Empty;
-            var fastTurtleSuffix = State.RevealedFastTurtleDistance > 0 && moveCard.EffectRef == CardEffectRefs.MoveFastTurtle
-                ? $" Revealed distance: {State.RevealedFastTurtleDistance}."
-                : string.Empty;
-            LastInputMessage = $"TARGETING MOVE: {SelectedCardName} selected.{fastTurtleSuffix} Click one highlighted map cell to move. Highlighted cells are valid Move targets.";
+            LastInputMessage = $"TARGETING MOVE: {SelectedCardName} selected. Click one highlighted map cell to move. Highlighted cells are valid Move targets.";
             RequestAudioCue(AudioCueIds.UiCardSelect, $"select:{moveCard.Id}");
             RefreshView();
             return reachable.Count > 0;

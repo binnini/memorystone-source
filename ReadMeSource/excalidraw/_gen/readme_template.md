@@ -43,15 +43,34 @@
 
 <p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="전투 규칙 코어와 어셈블리 경계 도식"></p>
 
-전투 규칙은 `Map.Runtime` · `CardCore` · `Combat.Runtime` 세 어셈블리에 있고, 셋 다 `noEngineReferences: true`입니다. 이 어셈블리 안에서는 `UnityEngine` 타입을 쓰는 코드가 컴파일되지 않으므로, 규칙층이 연출이나 씬을 참조하는 일은 구조적으로 막혀 있습니다. 규칙의 중심은 `CombatState`이며 맵·설정·카드 카탈로그·몬스터 카탈로그·덱 두 벌·런 시드를 전부 생성자로 받습니다. Unity 쪽(`Flow` · `Combat` · `Cards.Unity` · `Map.Unity`)은 이 객체의 공개 메서드를 호출하는 것으로 규칙을 움직입니다(①).
+전투 코드는 "규칙"과 "화면"으로 나뉘어 있고, 둘은 서로 다른 어셈블리에 있습니다. 규칙 쪽 어셈블리 셋(`Map.Runtime` · `CardCore` · `Combat.Runtime`)은 `noEngineReferences: true`라서 그 안에서는 `UnityEngine`의 타입을 아예 쓸 수 없습니다. 화면 쪽 어셈블리(`Combat` · `Flow` · `Cards.Unity` · `Map.Unity`)는 규칙 쪽을 참조하지만, 규칙 쪽은 화면 쪽을 참조하지 않습니다. 참조가 한 방향뿐이므로 규칙 코드가 애니메이션이나 씬을 건드리는 일은 컴파일 단계에서 막힙니다.
 
-규칙 메서드가 실행되면 피해·이동·상태 변화 같은 결과가 `EffectResultEvent`로 `EffectPresentationBuffer`에 쌓입니다(②). 규칙은 여기까지만 하고 연출을 시작하지 않습니다. 대신 Unity 쪽 `MapCombatController`가 `BufferedEffects`를 읽어 가고(③), 규칙 실행 전후의 스냅샷과 함께 `CombatTimelineAssembler`의 `Build*` 메서드에 넘깁니다(④). 어셈블러는 정적 · 순수 코드이고 결과는 재생 순서가 정해진 `CombatTimeline`입니다.
+도식의 여섯 상자는 각각 이런 역할입니다.
 
-타임라인은 `PresentationScheduler.Play` 코루틴이 비트 하나씩 재생하며(⑤), 각 비트마다 `ICombatPresentationSink`의 메서드(이동 한 칸 · 공격 준비 · 임팩트 · 효과 디스패치)를 호출합니다(⑥). 이 인터페이스의 구현체가 곧 `MapCombatController` 자신입니다(⑦). 스케줄러 자체도 Unity 참조가 없어서 재생 순서 로직은 결정적이고 단위 테스트가 가능합니다.
+- **CombatState** — 전투 한 판의 상태(누가 어디 있고, 체력이 얼마고, 손패가 뭐고, 몇 턴째인지)를 전부 들고 있으면서, "카드를 썼다" "턴을 끝냈다" 같은 요청이 오면 규칙대로 그 자리에서 상태를 바꾸는 순수 C# 객체입니다. 필요한 것은 만들 때 생성자로 전부 받고, 그 뒤로는 밖에서 무엇을 찾아오지 않습니다. 화면이 있는지, 애니메이션이 몇 초 걸리는지 모릅니다.
+- **EffectPresentationBuffer** — `CombatState` 안의 사건 기록입니다. 규칙이 계산하면서 "A가 5 피해" "A 사망" "B 한 칸 밀림" 같은 사건을 일어난 순서대로 적습니다. 규칙에는 영향을 주지 않고, 나중에 화면이 무엇을 그릴지 알 수 있도록 남기는 기록입니다.
+- **CombatTimelineAssembler** — 사건 기록과 "규칙 실행 전/후 상태"를 받아, 화면에 무엇을 어떤 순서로 보여 줄지 목록(`CombatTimeline`)을 만듭니다. 이 클래스도 순수 C#이라 Unity 없이 순서만 결정합니다.
+- **MapCombatController** — 전투 씬에 붙어 있는 `MonoBehaviour`입니다. 플레이어 입력을 받아 규칙을 호출하고, 결과를 가져와 화면에 그립니다. 전투에서 Unity가 하는 일은 전부 이 클래스에서 시작합니다.
+- **PresentationScheduler** — 타임라인을 받아 첫 항목부터 차례로 실행하는 코루틴입니다. 항목 사이에 얼마나 기다릴지(공격 준비 시간, 타격 뒤 멈춤)도 여기서 관리합니다.
+- **ICombatPresentationSink** — 재생기가 내릴 수 있는 화면 지시의 목록(인터페이스)입니다. "한 칸 이동" "공격 모션 시작" "타격 순간까지 대기" "효과 표시" 같은 항목이 있고, 실제로 구현하는 것은 `MapCombatController`입니다.
+
+### 시나리오: 카드 한 장이 화면에 나오기까지
+
+플레이어가 "휘둘러치기"를 써서 옆의 몬스터 A와 B를 때리고, A는 죽고 B는 한 칸 밀려나는 상황입니다. 도식의 번호를 따라갑니다.
+
+1. 플레이어가 손패(`Cards.Unity`)에서 카드를 클릭하면 `MapCombatController`가 `CombatState`에 "이 카드 써"라고 요청합니다. 요청 직전에 플레이어 위치와 두 몬스터의 체력을 스냅샷으로 찍어 둡니다.
+2. `CombatState`가 그 자리에서 규칙을 끝까지 계산합니다. A 체력이 0이 되어 사망, B는 피해를 입고 한 칸 밀려 좌표가 바뀝니다. 상태는 이미 바뀌었습니다. 동시에 사건 기록에 "A 피해" "A 사망" "B 피해" "B 넉백"이 순서대로 남습니다. 화면에는 아직 아무 일도 없습니다.
+3. 요청이 끝나면 `MapCombatController`가 사건 기록을 읽어 갑니다. 규칙이 화면에게 "그려"라고 시키는 것이 아니라, 화면이 규칙에게 와서 "무엇이 일어났는가"를 가져갑니다.
+4. 사건 기록, 1의 스냅샷, 지금의 상태를 `CombatTimelineAssembler`에 넘겨 타임라인을 만듭니다. "공격 모션 시작 → 타격 순간에 A·B 피해 표시 → A 사망 연출 → B 넉백 한 칸" 같은 순서입니다.
+5. 타임라인을 `PresentationScheduler`에 넘겨 재생을 시작합니다. 여기서부터 시간이 흐릅니다. 그 전까지의 1~4는 한 프레임 안에서 즉시 끝났습니다.
+6. 재생기가 타임라인을 한 항목씩 꺼내 `ICombatPresentationSink`의 지시를 부릅니다.
+7. 그 지시를 실제로 수행하는 것은 `MapCombatController`입니다. 애니메이션을 재생하고, 이펙트를 띄우고, `Map.Unity`의 캐릭터 액터를 한 칸 움직입니다.
+
+규칙은 2에서 이미 끝났습니다. 6~7의 애니메이션이 몇 초 동안 재생되는 사이에도 `CombatState` 안에서 A는 이미 죽어 있습니다. 화면은 결정된 결과를 천천히 보여 줄 뿐입니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-「규칙은 연출을 모른다, 연출이 규칙 산출물을 가지러 온다」는 한 방향 의존을 어셈블리 정의 파일이 강제한다는 점입니다. 규칙 코드에 `MonoBehaviour`나 코루틴이 섞이는 실수는 코드 리뷰가 아니라 컴파일러가 잡습니다. 같은 이유로 `Tests/EditMode/Combat`의 테스트는 씬 없이 `CombatState`를 직접 만들어 규칙만 검증합니다.
+「규칙은 화면을 모른다, 화면이 규칙의 결과를 가지러 온다」는 한 방향 의존을 어셈블리 정의 파일이 강제한다는 점입니다. 규칙 코드에 `MonoBehaviour`나 코루틴이 섞이는 실수는 코드 리뷰가 아니라 컴파일러가 잡습니다. 같은 이유로 `Tests/EditMode/Combat`의 테스트는 씬 없이 `CombatState`를 직접 만들어 규칙만 검증하고, 연출 순서를 바꾸고 싶으면 `CombatTimelineAssembler`만 고치면 됩니다.
 
 ### 코드
 

@@ -225,20 +225,20 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 <p align="center"><img src="ReadMeSource/4.CardsAndDecks.svg" width="900" alt="카드 데이터와 카드 클래스 도식"></p>
 
-카드 하나는 두 조각으로 되어 있습니다. 표시 · 밸런스 값은 `cards.csv`의 한 행이고, 규칙은 `Combat.Runtime/Cards/`의 클래스 하나입니다. 둘은 카드 id로만 이어집니다.
+현재 카드는 `cards.csv`에서 사람이 밸런싱을 진행하고 규칙은 `Combat.Runtime/Cards/`의 클래스로 만들어집니다. 둘은 카드 id로만 이어집니다.
 
-스테이지 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
+덱은 이동 카드 덱과 행동 카드 덱 두 벌이 존재하며 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어지기 때문에 이동 카드와 행동 덱은 서로 섞이지 않습니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard`에서 정합니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **cards.csv** — 이름 · 설명 · 타입 · 비용 · 사거리 · 형상 · 피해 같은 표시와 밸런스 열. 규칙 로직은 없습니다.
+- **cards.csv** — 이름 · 설명 · 타입 · 비용 · 사거리 · 형상 · 피해 같은 표시와 밸런스 열. 사람이 관리합니다.
 - **CardCatalogCsvImporter / CardCatalogAsset** — 에디터에서 CSV를 에셋으로 베이크합니다. 행의 id에 대응하는 카드 클래스가 없으면 거부합니다.
 - **CardCatalogDefinition** — 런타임 카드 카탈로그.
 - **PlayerDeckData** — 런 동안 보유한 카드 목록(`MovementCards` · `ActionCards`).
 - **MovementDeck / ActionDeck (CardDeckState)** — 스테이지 중 덱 두 벌. `DrawPile` · `Hand` · `DiscardPile` · `RemovedPile`. 셔플 난수는 시드 스트림 8 · 9.
 - **DrawNewTurnHands** — 턴마다 정원에 유지 카드 수를 더한 만큼 손패를 채웁니다.
-- **CardBehaviorRegistry.Resolve(card)** — 카드 id로 카드 클래스 인스턴스를 찾습니다. 종류당 한 인스턴스이고 상태가 없습니다.
-- **CardBehavior** — 카드 클래스의 추상 기반. 규칙 훅(`TryResolveMoveDestination` · `TryApplyDefend` · `TryApplyUtility` · `ApplyAfterScoutReveal` · `GetAttackDamage` …)과 선언(`Disposal` · `RetainOnTurnEnd` · `Keywords` · `Upgrade`)을 가집니다. 훅은 기본이 no-op입니다.
+- **CardBehaviorRegistry.Resolve(card)** — 카드 id로 카드 클래스 인스턴스를 찾습니다.
+- **CardBehavior** — 카드의 추상 클래스. 규칙 훅(`TryResolveMoveDestination` · `TryApplyDefend` · `TryApplyUtility` · `ApplyAfterScoutReveal` · `GetAttackDamage` …)과 선언(`Disposal` · `RetainOnTurnEnd` · `Keywords` · `Upgrade`)을 가집니다.
 - **A01_Sweep** — 카드 클래스 하나의 예. 59개가 한 파일 한 클래스이고 등록은 한 줄입니다.
 - **ConsumePlayedCard** — 다 쓴 카드를 `DisposeAfterPlay`의 답에 따라 버림 더미 · 소멸 더미로 보내거나 그대로 둡니다.
 

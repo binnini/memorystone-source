@@ -173,6 +173,15 @@
 
 스테이지 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
 
+<!-- TODO(이미지): 카드 예시 3장 — 이동 1 · 행동 2 (복잡한 효과 카드 권장: A12 전염병 · U01 다시 뽑기 등)
+     ReadMeSource/4.Card_Move.png · 4.Card_Action_1.png · 4.Card_Action_2.png -->
+<!-- <p align="center">
+<img src="ReadMeSource/4.Card_Move.png" width="290" alt="이동 카드 예시">
+<img src="ReadMeSource/4.Card_Action_1.png" width="290" alt="행동 카드 예시 1">
+<img src="ReadMeSource/4.Card_Action_2.png" width="290" alt="행동 카드 예시 2">
+</p> -->
+(카드 이미지 3장 첨부 예정 — 이동 1 · 행동 2)
+
 도식의 상자는 각각 이런 역할입니다.
 
 - **cards.csv** — 이름 · 설명 · 타입 · 비용 · 사거리 · 형상 · 피해 같은 표시와 밸런스 열. 규칙 로직은 없습니다.

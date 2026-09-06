@@ -53,7 +53,7 @@
 <text x="1100" y="1114" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">DisposeAfterPlay → Discard / Exile / HandledByRule</text>
 <polyline points="660,800 740,800 740,320 820,320" fill="none" stroke="#1e1e1e" stroke-width="2.5"  marker-end="url(#ah1e1e1e)" />
 <polyline points="660,840 760,840 760,560 820,560" fill="none" stroke="#1e1e1e" stroke-width="2.5"  marker-end="url(#ah1e1e1e)" />
-<text x="540" y="762" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ 전투 시작 · 셔플</text>
+<text x="540" y="762" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ 스테이지 시작 · 셔플</text>
 <polyline points="1100,720 1100,660" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
 <text x="1120" y="695" font-size="15" fill="#e03131" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ 손패 드로우</text>
 <rect x="1500" y="140" width="640" height="1060" rx="16" fill="#ebfbee" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>

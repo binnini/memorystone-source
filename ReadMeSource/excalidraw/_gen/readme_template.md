@@ -36,7 +36,7 @@
 
 # 📜 목차
 
-1. [전투 연산과 어셈블리 경계](#1-전투-연산과-어셈블리-경계)
+1. [게임플레이 연산과 화면 연출 처리](#1-게임플레이-연산과-화면-연출-처리)
 2. [턴 페이즈와 턴 경계 처리](#2-턴-페이즈와-턴-경계-처리)
 3. [몬스터 AI 계획과 예고](#3-몬스터-ai-계획과-예고)
 4. [카드 데이터와 카드 클래스](#4-카드-데이터와-카드-클래스)
@@ -49,26 +49,26 @@
 
 # 🖥️ 개발 내용
 
-## 1. 전투 연산과 화면 연출 처리
+## 1. 게임플레이 연산과 화면 연출 처리
 
-<p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="전투 연산과 화면 연출 처리 도식"></p>
+<p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="게임플레이 연산과 화면 연출 처리 도식"></p>
 
-전투 코드는 **연산**과 **화면 연출**로 나뉩니다. 연산은 순수 C# 어셈블리(`Combat.Runtime` · `Map.Runtime` · `CardCore`)에 있고, 연출은 Unity 어셈블리(`Combat` 등)에 있습니다.
+게임플레이 코드는 **연산**과 **화면 연출**로 나뉩니다. 연산은 순수 C# 어셈블리(`Combat.Runtime` · `Map.Runtime` · `CardCore`)에 있고, 연출은 Unity 어셈블리(`Combat` 등)에 있습니다. 여기서 게임플레이 연산은 스테이지 맵 하나 안에서 일어나는 규칙 전체(이동 · 카드 · 몬스터 · 함정 · 상점 · 시야 · 유물)를 뜻합니다. 코드 이름의 `Combat`은 이 범위를 가리킵니다.
 
 연산 어셈블리는 `noEngineReferences: true`라서 `UnityEngine`을 쓸 수 없습니다. 참조는 Unity → 순수 C# 어셈블리 한 방향으로 이루어집니다. 따라서 연산 코드가 화면을 건드리는 일은 컴파일 단계에서 불가능합니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **CombatState** — 전투 상태(위치 · 체력 · 손패 · 턴)를 갖고 있고, 요청이 오면 규칙대로 전투 연산을 실행합니다.
+- **CombatState** — 게임플레이 상태(위치 · 체력 · 손패 · 턴 · 시야 · 유물)를 갖고 있고, 요청이 오면 규칙대로 연산을 실행합니다.
 - **EffectPresentationBuffer** — 연산 결과(`EffectResultEvent`)를 일어난 순서대로 기록합니다.
-- **CombatTimelineAssembler** — 전투 기록을 받아 연출 순서 목록(`CombatTimeline`)을 만듭니다.
-- **MapCombatController** — 전투 컨트롤러(`MonoBehaviour`)입니다. 입력을 받아 연산을 요청하고, 결과를 가져와 화면에 그립니다.
+- **CombatTimelineAssembler** — 연산 결과 기록을 받아 연출 순서 목록(`CombatTimeline`)을 만듭니다.
+- **MapCombatController** — 스테이지 컨트롤러(`MonoBehaviour`)입니다. 입력을 받아 연산을 요청하고, 결과를 가져와 화면에 그립니다.
 - **PresentationScheduler** — 연출 스케줄러입니다. 타임라인을 한 항목씩, 대기 시간을 두고 실행합니다.
 - **ICombatPresentationSink** — 스케줄러가 내릴 수 있는 화면 지시 목록(인터페이스)입니다. 구현체는 `MapCombatController`입니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-어셈블리를 통해 전투 연산 코드에서는 Unity의 화면 코드를 참조하지 못하도록 강제하였습니다. 그로 인해 `Tests/EditMode/Combat`의 테스트는 Unity 씬 없이 `CombatState`만 만들어 순수 C#만으로 연산을 검증하는 것이 가능했습니다. AI로 작업 시 병렬 세션 간의 맥락 공유가 어려워 잦은 테스트가 요구된다는 점과 Unity 에디터 점유가 한번에 한 세션만 가능하다는 문제 때문에 최대한 구현에서 에디터에 의존하는 경우를 줄이고자 이러한 구조를 채택하였습니다.
+어셈블리를 통해 게임플레이 연산 코드에서는 Unity의 화면 코드를 참조하지 못하도록 강제하였습니다. 그로 인해 `Tests/EditMode/Combat`의 테스트는 Unity 씬 없이 `CombatState`만 만들어 순수 C#만으로 연산을 검증하는 것이 가능했습니다. AI로 작업 시 병렬 세션 간의 맥락 공유가 어려워 잦은 테스트가 요구된다는 점과 Unity 에디터 점유가 한번에 한 세션만 가능하다는 문제 때문에 최대한 구현에서 에디터에 의존하는 경우를 줄이고자 이러한 구조를 채택하였습니다.
 
 ### 코드
 
@@ -122,7 +122,7 @@
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **IMonsterPlanningContext** — 플래너가 읽을 수 있는 전투 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
+- **IMonsterPlanningContext** — 플래너가 읽을 수 있는 게임플레이 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
 - **MonsterFsmContext** — 몬스터 하나에 대한 판단 재료(플레이어까지 거리 · 플레이어가 숨었는지 · 죽었는지).
 - **① RefreshAllIntents** — 행동 순서대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤 몬스터에 넘깁니다.
 - **② SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다. if/else 한 함수입니다.
@@ -154,7 +154,7 @@
 
 카드 하나는 두 조각으로 되어 있습니다. 표시 · 밸런스 값은 `cards.csv`의 한 행이고, 규칙은 `Combat.Runtime/Cards/`의 클래스 하나입니다. 둘은 카드 id로만 이어집니다.
 
-전투 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
+스테이지 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
@@ -162,7 +162,7 @@
 - **CardCatalogCsvImporter / CardCatalogAsset** — 에디터에서 CSV를 에셋으로 베이크합니다. 행의 id에 대응하는 카드 클래스가 없으면 거부합니다.
 - **CardCatalogDefinition** — 런타임 카드 카탈로그.
 - **PlayerDeckData** — 런 동안 보유한 카드 목록(`MovementCards` · `ActionCards`).
-- **MovementDeck / ActionDeck (CardDeckState)** — 전투 중 덱 두 벌. `DrawPile` · `Hand` · `DiscardPile` · `RemovedPile`. 셔플 난수는 시드 스트림 8 · 9.
+- **MovementDeck / ActionDeck (CardDeckState)** — 스테이지 중 덱 두 벌. `DrawPile` · `Hand` · `DiscardPile` · `RemovedPile`. 셔플 난수는 시드 스트림 8 · 9.
 - **DrawNewTurnHands** — 턴마다 정원에 유지 카드 수를 더한 만큼 손패를 채웁니다.
 - **CardBehaviorRegistry.Resolve(card)** — 카드 id로 카드 클래스 인스턴스를 찾습니다. 종류당 한 인스턴스이고 상태가 없습니다.
 - **CardBehavior** — 카드 클래스의 추상 기반. 규칙 훅(`TryResolveMoveDestination` · `TryApplyDefend` · `TryApplyUtility` · `ApplyAfterScoutReveal` · `GetAttackDamage` …)과 선언(`Disposal` · `RetainOnTurnEnd` · `Keywords` · `Upgrade`)을 가집니다. 훅은 기본이 no-op입니다.
@@ -272,7 +272,7 @@ Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 단계�
 - **① RandomizeWithProfile** — 몬스터. 그룹별로 슬롯을 비복원 추첨하고, 풀에서 종을 고를 때 이미 뽑힌 종은 가중치를 반감합니다(`WeightedPickWithRepeatDecay`).
 - **② RandomizeTraps / ③ PlaceServices / ④ ShuffleChests** — 함정 · 서비스 오브젝트 · 상자. 각각 시드 스트림 1 · 3 · 2.
 - **ValidateProfileAttempt** — 안전 반경 · 위협 합 범위 · 정예 하한과 거리 · 종 하한 · 밀도 상한을 검사합니다. 하나라도 어긋나면 재롤(상한은 프로파일의 `RerollLimit`).
-- **HexMapData** — 통과하면 랜덤화된 맵이 전투로 갑니다. 실패하거나 프로파일이 없으면 저작 원본 그대로.
+- **HexMapData** — 통과하면 랜덤화된 맵이 스테이지로 갑니다. 실패하거나 프로파일이 없으면 저작 원본 그대로.
 
 ### 이 시스템에서 중점을 둔 것
 

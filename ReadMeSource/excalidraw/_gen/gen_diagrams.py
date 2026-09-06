@@ -20,18 +20,18 @@ def emit(d, fname):
 
 
 # =============================================================================
-# 1. 전투 규칙 코어와 어셈블리 경계
+# 1. 게임플레이 연산과 화면 연출 처리
 # =============================================================================
 def d1():
     d = Diagram("core", 2200, 1560, seed=11)
-    d.title("전투 연산과 어셈블리 경계")
+    d.title("게임플레이 연산과 화면 연출 처리")
 
     d.zone(60, 120, 1180, 1350, "순수 C#  —  noEngineReferences: true  (UnityEngine 사용 불가)", bg=BG_BLUE)
     d.zone(1300, 120, 840, 1350, "Unity", bg=BG_ORANGE)
 
     d.box(100, 200, 220, 80, "Map.Runtime", sub="헥스 좌표 · 맵 · 시야", fs=20, sfs=13)
     d.box(360, 200, 220, 80, "CardCore", sub="덱 · 카드 정의 · 난수", fs=20, sfs=13)
-    d.zone(100, 330, 1100, 1100, "Combat.Runtime  (전투 연산)", bg="#d0ebff", label_pos="topleft")
+    d.zone(100, 330, 1100, 1100, "Combat.Runtime  (게임플레이 연산 — 스테이지 맵 안의 규칙 전체)", bg="#d0ebff", label_pos="topleft")
     d.arrow([(300, 330), (300, 290)], color=BLACK, style="dashed", sw=1.5)
     d.arrow([(470, 330), (470, 290)], color=BLACK, style="dashed", sw=1.5)
     d.note(620, 292, "참조", fs=14, color=GRAY, anchor="topleft", align="left")
@@ -39,20 +39,20 @@ def d1():
     # CombatState
     d.rect(160, 420, 560, 660, stroke=BLACK, sw=3)
     d.text(440, 445, "CombatState", fs=30)
-    d.note(440, 485, "전투 상태(위치·체력·손패·턴)을 입력 받고,\n요청이 오면 규칙대로 전투 연산을 실행", fs=15, color=GRAY)
+    d.note(440, 485, "게임플레이 상태(위치·체력·손패·턴·시야·유물)를 갖고,\n요청이 오면 규칙대로 연산을 실행", fs=15, color=GRAY)
     d.field(190, 545, 500, 250, "생성자 인자 (요청 시 입력 받음)",
-            ["HexMapData  (맵)", "CombatConfig  (전투 설정)", "CardCatalogDefinition  (카드 카탈로그)",
+            ["HexMapData  (맵)", "CombatConfig  (게임플레이 설정)", "CardCatalogDefinition  (카드 카탈로그)",
              "MonsterCatalogDefinition  (몬스터 카탈로그)", "PlayerDeckData  (플레이어 보유 덱)",
              "CardDeckState ×2  (셔플된 이동덱 · 행동덱)", "runSeed  (런 시드)"],
             bg="#a5d8ff", fs=16, lfs=15, align="left")
     d.box(190, 840, 500, 120, "EffectPresentationBuffer",
-          sub="EffectResultEvent(전투 연산 결과)를 일어난 순서대로\nBufferedEffects로 기록", sfs=14)
+          sub="EffectResultEvent(연산 결과)를 일어난 순서대로\nBufferedEffects로 기록", sfs=14)
 
     d.box(780, 720, 400, 190, "CombatTimelineAssembler",
-          sub="전투 화면 연출의 순서를 결정\nBuild (전투 기록)\n→ CombatTimeline (전투 연출 순서 목록)", sfs=14)
+          sub="화면 연출의 순서를 결정\nBuild (연산 결과 기록)\n→ CombatTimeline (연출 순서 목록)", sfs=14)
 
     # Unity side
-    d.box(1340, 200, 230, 80, "Flow", sub="씬 전환 · 전투 시작 · 런 시드", fs=20, sfs=12)
+    d.box(1340, 200, 230, 80, "Flow", sub="씬 전환 · 스테이지 시작 · 런 시드", fs=20, sfs=12)
     d.box(1605, 200, 230, 80, "Cards.Unity", sub="카드 UI · 입력", fs=20, sfs=12)
     d.box(1870, 200, 230, 80, "Map.Unity", sub="타일 좌표 · 캐릭터 액터", fs=20, sfs=12)
     d.note(1720, 172, "Combat 을 참조하는 다른 Unity 어셈블리 — 입력의 앞과 화면 출력의 뒤에 붙는다", fs=14, color=GRAY)
@@ -63,7 +63,7 @@ def d1():
     d.note(1210, 408, "참조", fs=13, color=GRAY, anchor="topleft", align="left")
 
     d.box(1380, 450, 680, 190, "MapCombatController",
-          sub="전투 컨트롤러(MonoBehaviour)\n사용자 입력을 받아 전투 규칙을 호출하고, 결과를 가져와 화면에 그린다\n아래 ICombatPresentationSink 의 구현체이기도 하다", sfs=14)
+          sub="스테이지 컨트롤러(MonoBehaviour)\n사용자 입력을 받아 연산을 요청하고, 결과를 가져와 화면에 그린다\n아래 ICombatPresentationSink 의 구현체이기도 하다", sfs=14)
     d.box(1380, 820, 680, 130, "PresentationScheduler (연출 스케줄러)",
           sub="Play(timeline, timing, sink) (연출 재생 코루틴)\n타임라인을 한 항목씩, 항목 사이 대기 시간을 두고 실행", sfs=14)
     d.field(1380, 1030, 680, 340, "ICombatPresentationSink (스케줄러의 화면 지시 목록)",
@@ -79,13 +79,13 @@ def d1():
     d.note(1050, 478, "① 「휘둘러치기 카드 사용」  「턴 종료」 요청", fs=16, color=RED)
 
     d.arrow([(440, 795), (440, 840)], color=BLACK, sw=2)
-    d.note(470, 805, "② 전투 규칙대로 연산 후 결과 기록", fs=15, anchor="topleft", align="left")
+    d.note(470, 805, "② 규칙대로 연산 후 결과 기록", fs=15, anchor="topleft", align="left")
 
     d.arrow([(1420, 640), (1420, 680), (740, 680), (740, 900), (690, 900)], color=BLUE, sw=3)
-    d.note(1000, 652, "③ 연산이 끝나면 전투 기록 읽기", fs=15, color=BLUE)
+    d.note(1000, 652, "③ 연산이 끝나면 결과 기록 읽기", fs=15, color=BLUE)
 
     d.arrow([(1500, 640), (1500, 760), (1180, 760)], color=RED, sw=3)
-    d.note(1340, 722, "④ 전투 기록 + 화면의 전후 스냅샷", fs=15, color=RED)
+    d.note(1340, 722, "④ 결과 기록 + 화면의 전후 스냅샷", fs=15, color=RED)
 
     d.arrow([(980, 910), (980, 960), (1250, 960), (1250, 885), (1380, 885)], color=RED, sw=3)
     d.note(1120, 968, "⑤ 완성된 연출 타임라인을 스케줄러로 전달", fs=15, color=RED)
@@ -96,7 +96,7 @@ def d1():
     d.arrow([(2060, 1200), (2085, 1200), (2085, 545), (2060, 545)], color=GREEN, sw=2, style="dashed")
     d.note(1935, 970, "⑦ 컨트롤러에서\n연출 실행", fs=13, color=GREEN, anchor="topleft", align="left")
 
-    d.note(440, 1130, "전투 연산은 ②에서 종료\n⑥,⑦이 진행되는 동안에도 이미 결과는 종료", fs=18, color=RED)
+    d.note(440, 1130, "게임플레이 연산은 ②에서 종료\n⑥,⑦이 진행되는 동안에도 이미 결과는 확정", fs=18, color=RED)
 
     d.legend(760, 1160, 420, [(RED, "solid", "연산 요청과 연출 요청"), (BLUE, "solid", "결과 읽기"),
                               (GREEN, "solid", "화면 재생"), (BLACK, "dashed", "어셈블리 참조 / 구현")])
@@ -180,7 +180,7 @@ def d3():
     d.title("몬스터 AI 계획과 예고")
 
     d.zone(60, 140, 540, 940, "입력 (읽기 전용)", bg=BG_BLUE)
-    d.field(90, 200, 480, 400, "IMonsterPlanningContext (전투 정보 · CombatState 가 구현)",
+    d.field(90, 200, 480, 400, "IMonsterPlanningContext (게임플레이 정보 · CombatState 가 구현)",
             ["Map · PlayerCoord  (맵 · 플레이어 좌표)", "RuntimeStates  (칸 상태)", "MonsterActionOrder()  (행동 순서)",
              "ClassifyMonsterActivity  (활성 / 휴면)", "IsMonsterMovementBlocked / Rooted  (이동 제한)",
              "IsPlayerHiddenFromMonsters  (은신)", "IsMonsterSenseBlindedAt  (실명)",
@@ -268,7 +268,7 @@ def d4():
 
     d.arrow([(660, 800), (740, 800), (740, 320), (820, 320)], color=BLACK, sw=2.5)
     d.arrow([(660, 840), (760, 840), (760, 560), (820, 560)], color=BLACK, sw=2.5)
-    d.note(540, 748, "③ 전투 시작 · 셔플", fs=14, anchor="topleft", align="left")
+    d.note(540, 748, "③ 스테이지 시작 · 셔플", fs=14, anchor="topleft", align="left")
 
     d.arrow([(1100, 720), (1100, 660)], color=RED, sw=3)
     d.note(1120, 680, "④ 손패 드로우", fs=15, color=RED, anchor="topleft", align="left")
@@ -393,7 +393,7 @@ def d6():
     d.box(800, 380, 300, 100, "movementShuffleRng", sub="스트림 8 (이동 덱 셔플)", fs=18, sfs=13)
     d.box(1130, 380, 300, 100, "actionShuffleRng", sub="스트림 9 (행동 덱 셔플)", fs=18, sfs=13)
     d.box(1460, 380, 630, 100, "SeededRewardRandom", sub="스트림 7 (보상) · MapCombatController 소유", fs=20, sfs=13)
-    d.note(1450, 525, "③ 전투 중 난수를 뽑을 때마다 각 인스턴스의 Consumed 증가", fs=16, color=RED)
+    d.note(1450, 525, "③ 스테이지 중 난수를 뽑을 때마다 각 인스턴스의 Consumed 증가", fs=16, color=RED)
     d.arrow([(660, 700), (730, 700), (730, 350), (760, 350)], color=RED, sw=3)
     d.note(745, 598, "② Derive →\n인스턴스 7개 생성", fs=15, color=RED, anchor="topleft", align="left")
 
@@ -479,7 +479,7 @@ def d7():
     d.arrow([(1500, 960), (1440, 960), (1440, 800), (1360, 800)], color=GREEN, sw=3, style="dashed")
     d.note(1365, 1010, "실패 → 재롤 (상한 = RerollLimit)", fs=14, color=GREEN, anchor="topleft", align="left")
 
-    d.box(1500, 1100, 640, 100, "HexMapData (랜덤화됨) → 전투", fs=22, bg=BG_YELLOW)
+    d.box(1500, 1100, 640, 100, "HexMapData (랜덤화됨) → 스테이지", fs=22, bg=BG_YELLOW)
     d.arrow([(1360, 1255), (1440, 1255), (1440, 1150), (1500, 1150)], color=RED, sw=3)
     d.note(1450, 1180, "⑦", fs=16, color=RED, anchor="topleft", align="left")
     d.box(1500, 1260, 640, 100, "저작 원본으로 폴백", sub="MapCombatController.MapView — 재롤 상한 초과 · 프로파일 없음", fs=20, sfs=13, style="dashed")

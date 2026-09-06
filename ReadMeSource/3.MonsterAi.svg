@@ -3,7 +3,7 @@
 <rect x="60" y="140" width="540" height="940" rx="16" fill="#e7f5ff" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>
 <text x="330" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">입력 (읽기 전용)</text>
 <rect x="90" y="200" width="480" height="400" rx="16" fill="url(#ha5d8ff)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="330" y="228" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">IMonsterPlanningContext (전투 정보 · CombatState 가 구현)</text>
+<text x="330" y="228" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">IMonsterPlanningContext (게임플레이 정보 · CombatState 가 구현)</text>
 <text x="110" y="254" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Map · PlayerCoord  (맵 · 플레이어 좌표)</text>
 <text x="110" y="272" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">RuntimeStates  (칸 상태)</text>
 <text x="110" y="289" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonsterActionOrder()  (행동 순서)</text>

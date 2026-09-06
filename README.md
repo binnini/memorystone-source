@@ -49,15 +49,17 @@
 
 # 🖥️ 개발 내용
 
-## 1. 전투 연산과 어셈블리 경계
+## 1. 전투 연산과 화면 연출 처리
 
-<p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="전투 연산과 어셈블리 경계 도식"></p>
+<p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="전투 연산과 화면 연출 처리 도식"></p>
 
-전투 코드는 **연산**과 **연출**로 나뉩니다. 연산은 순수 C# 어셈블리(`Combat.Runtime` · `Map.Runtime` · `CardCore`)에 있고, 연출은 Unity 어셈블리(`Combat` 등)에 있습니다. 순수 어셈블리는 `noEngineReferences: true`라서 `UnityEngine`을 쓸 수 없습니다. 참조는 Unity → 순수 한 방향뿐입니다. 그래서 연산 코드가 화면을 건드리는 일은 컴파일 단계에서 막힙니다.
+전투 코드는 **연산**과 **화면 연출**로 나뉩니다. 연산은 순수 C# 어셈블리(`Combat.Runtime` · `Map.Runtime` · `CardCore`)에 있고, 연출은 Unity 어셈블리(`Combat` 등)에 있습니다.
+
+연산 어셈블리는 `noEngineReferences: true`라서 `UnityEngine`을 쓸 수 없습니다. 참조는 Unity → 순수 C# 어셈블리 한 방향으로 이루어집니다. 따라서 연산 코드가 화면을 건드리는 일은 컴파일 단계에서 불가능합니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **CombatState** — 전투 상태(위치 · 체력 · 손패 · 턴)를 들고 있고, 요청이 오면 규칙대로 전투 연산을 실행합니다. 화면을 모릅니다.
+- **CombatState** — 전투 상태(위치 · 체력 · 손패 · 턴)를 갖고 있고, 요청이 오면 규칙대로 전투 연산을 실행합니다.
 - **EffectPresentationBuffer** — 연산 결과(`EffectResultEvent`)를 일어난 순서대로 기록합니다.
 - **CombatTimelineAssembler** — 전투 기록을 받아 연출 순서 목록(`CombatTimeline`)을 만듭니다.
 - **MapCombatController** — 전투 컨트롤러(`MonoBehaviour`)입니다. 입력을 받아 연산을 요청하고, 결과를 가져와 화면에 그립니다.
@@ -80,7 +82,7 @@
 
 ### 이 시스템에서 중점을 둔 것
 
-연산은 연출을 모르고, 연출이 연산 결과를 가지러 옵니다. 이 한 방향 의존을 어셈블리 정의가 강제합니다. 연산 코드에 `MonoBehaviour`가 섞이면 컴파일 에러입니다. 덕분에 `Tests/EditMode/Combat`의 테스트는 씬 없이 `CombatState`만 만들어 연산을 검증합니다. 연출 순서를 바꾸고 싶으면 `CombatTimelineAssembler`만 고치면 됩니다.
+어셈블리를 통해 전투 연산 코드에서는 Unity의 화면 코드를 참조하지 못하도록 강제하였습니다. 그로 인해 `Tests/EditMode/Combat`의 테스트는 Unity 씬 없이 `CombatState`만 만들어 순수 C#만으로 연산을 검증하는 것이 가능했습니다. AI로 작업 시 병렬 세션 간의 맥락 공유가 어려워 잦은 테스트가 요구된다는 점과 Unity 에디터 점유가 한번에 한 세션만 가능하다는 문제 때문에 최대한 구현에서 에디터에 의존하는 경우를 줄이고자 이러한 구조를 채택하였습니다.
 
 ### 코드
 

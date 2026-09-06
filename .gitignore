@@ -1,3 +1,4 @@
 .DS_Store
 *.meta
 .omc/
+__pycache__/

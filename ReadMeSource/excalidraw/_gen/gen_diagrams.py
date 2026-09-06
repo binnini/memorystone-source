@@ -24,30 +24,33 @@ def emit(d, fname):
 # =============================================================================
 def d1():
     d = Diagram("core", 2200, 1560, seed=11)
-    d.title("전투 규칙 코어와 어셈블리 경계")
+    d.title("전투 연산과 어셈블리 경계")
 
-    d.zone(60, 120, 1180, 1350, "순수 C#  —  noEngineReferences: true  (UnityEngine 을 쓸 수 없는 어셈블리)", bg=BG_BLUE)
+    d.zone(60, 120, 1180, 1350, "순수 C#  —  noEngineReferences: true  (UnityEngine 사용 불가)", bg=BG_BLUE)
     d.zone(1300, 120, 840, 1350, "Unity", bg=BG_ORANGE)
 
     d.box(100, 200, 220, 80, "Map.Runtime", sub="헥스 좌표 · 맵 · 시야", fs=20, sfs=13)
     d.box(360, 200, 220, 80, "CardCore", sub="덱 · 카드 정의 · 난수", fs=20, sfs=13)
-    d.zone(100, 330, 1100, 1100, "Combat.Runtime  (어셈블리 · 전투 규칙 전부)", bg="#d0ebff", label_pos="topleft")
+    d.zone(100, 330, 1100, 1100, "Combat.Runtime  (전투 연산)", bg="#d0ebff", label_pos="topleft")
     d.arrow([(300, 330), (300, 290)], color=BLACK, style="dashed", sw=1.5)
     d.arrow([(470, 330), (470, 290)], color=BLACK, style="dashed", sw=1.5)
     d.note(620, 292, "참조", fs=14, color=GRAY, anchor="topleft", align="left")
 
     # CombatState
-    d.rect(160, 420, 560, 600, stroke=BLACK, sw=3)
+    d.rect(160, 420, 560, 660, stroke=BLACK, sw=3)
     d.text(440, 445, "CombatState", fs=30)
     d.note(440, 485, "전투 한 판의 상태(위치·체력·손패·턴)를 들고 있고,\n요청이 오면 규칙대로 그 자리에서 상태를 바꾼다", fs=15, color=GRAY)
-    d.field(190, 545, 500, 190, "만들 때 받는 것 (그 뒤로는 밖을 찾지 않는다)",
-            ["맵 · 전투 설정", "카드 카탈로그 · 몬스터 카탈로그", "플레이어 덱 · 셔플된 덱 두 벌 (이동/행동)", "런 시드"], bg="#a5d8ff", fs=18)
-    d.box(190, 780, 500, 120, "EffectPresentationBuffer",
-          sub="규칙이 남긴 사건 기록\n「A 피해 5」「A 사망」「B 한 칸 밀림」을 일어난 순서대로", sfs=14)
-    d.note(440, 930, "화면·애니메이션·시간을 전혀 모른다", fs=15, color=GRAY)
+    d.field(190, 545, 500, 250, "생성자 인자 (만들 때 전부 받고, 그 뒤로는 밖을 찾지 않는다)",
+            ["HexMapData  (맵)", "CombatConfig  (전투 설정)", "CardCatalogDefinition  (카드 카탈로그)",
+             "MonsterCatalogDefinition  (몬스터 카탈로그)", "PlayerDeckData  (플레이어 보유 덱)",
+             "CardDeckState ×2  (셔플된 이동덱 · 행동덱)", "runSeed  (런 시드)"],
+            bg="#a5d8ff", fs=16, lfs=15, align="left")
+    d.box(190, 840, 500, 120, "EffectPresentationBuffer",
+          sub="규칙이 남긴 사건 기록 — EffectResultEvent 를 일어난 순서대로\nBufferedEffects  (읽기 전용 목록)", sfs=14)
+    d.note(440, 990, "화면·애니메이션·시간을 전혀 모른다", fs=15, color=GRAY)
 
     d.box(780, 720, 400, 190, "CombatTimelineAssembler",
-          sub="연출 순서 결정\n사건 기록 + 전후 상태를 받아\n무엇을 어떤 순서로 보여줄지 목록을 만든다\n(= CombatTimeline)", sfs=14)
+          sub="연출 순서 결정 (정적 · 순수)\nBuild*(사건 기록, 전후 스냅샷)\n→ CombatTimeline  (보여줄 항목의 순서 목록)", sfs=14)
 
     # Unity side
     d.box(1340, 200, 230, 80, "Flow", sub="씬 전환 · 전투 시작 · 런 시드", fs=20, sfs=12)
@@ -63,19 +66,23 @@ def d1():
     d.box(1380, 450, 680, 190, "MapCombatController",
           sub="전투 씬 컨트롤러 (MonoBehaviour)\n입력을 받아 규칙을 호출하고, 결과를 가져와 화면에 그린다\n아래 ICombatPresentationSink 의 구현체이기도 하다", sfs=14)
     d.box(1380, 820, 680, 130, "PresentationScheduler",
-          sub="연출 재생기 (코루틴)\n타임라인을 한 항목씩, 항목 사이 대기 시간을 두고 실행", sfs=14)
-    d.field(1380, 1030, 680, 300, "ICombatPresentationSink (인터페이스)",
-            ["재생기가 내릴 수 있는 화면 지시 목록", "", "한 칸 이동 · 넉백 한 칸", "공격 모션 시작 · 타격 순간까지 대기",
-             "피격 · 사망 반응 · 효과 표시 · 히트스톱 …"], bg="#ffd8a8", lfs=15)
+          sub="연출 재생기 — Play(timeline, timing, sink)  (코루틴)\n타임라인을 한 항목씩, 항목 사이 대기 시간을 두고 실행", sfs=14)
+    d.field(1380, 1030, 680, 340, "ICombatPresentationSink  (인터페이스 — 재생기가 내릴 수 있는 화면 지시)",
+            ["Wait  (대기)", "MovePlayerStep · MoveEnemyStep  (한 칸 이동)",
+             "KnockbackPlayerStep · KnockbackEnemyStep  (넉백 한 칸)",
+             "StartPlayerAttack · StartEnemyAttack  (공격 모션 시작)",
+             "AttackWindup · AttackImpactWait  (타격 순간까지 대기)", "CommitImpact  (타격 확정)",
+             "ReactActorHit · ReactActorDeath  (피격 · 사망 반응)", "DispatchEffect · HitStop · …  (효과 표시 · 히트스톱)"],
+            bg="#ffd8a8", fs=16, lfs=15, align="left")
 
     # arrows
     d.arrow([(1380, 520), (720, 520)], color=RED, sw=3)
     d.note(1050, 478, "① 「이 카드 써」「턴 끝내」 요청\n(요청 직전 상태를 스냅샷으로 찍어 둔다)", fs=16, color=RED)
 
-    d.arrow([(440, 735), (440, 780)], color=BLACK, sw=2)
-    d.note(470, 745, "② 규칙을 끝까지 계산하며 사건을 기록", fs=15, anchor="topleft", align="left")
+    d.arrow([(440, 795), (440, 840)], color=BLACK, sw=2)
+    d.note(470, 805, "② 규칙을 끝까지 계산하며 사건을 기록", fs=15, anchor="topleft", align="left")
 
-    d.arrow([(1420, 640), (1420, 680), (740, 680), (740, 840), (690, 840)], color=BLUE, sw=3)
+    d.arrow([(1420, 640), (1420, 680), (740, 680), (740, 900), (690, 900)], color=BLUE, sw=3)
     d.note(1000, 652, "③ 요청이 끝나면 사건 기록을 읽어 간다 — 화면이 규칙에게 가지러 온다", fs=15, color=BLUE)
 
     d.arrow([(1500, 640), (1500, 760), (1180, 760)], color=RED, sw=3)
@@ -87,12 +94,12 @@ def d1():
     d.arrow([(1720, 950), (1720, 1030)], color=GREEN, sw=3)
     d.note(1740, 972, "⑥ 한 항목씩 화면 지시", fs=16, color=GREEN, anchor="topleft", align="left")
 
-    d.arrow([(2060, 1180), (2085, 1180), (2085, 545), (2060, 545)], color=GREEN, sw=2, style="dashed")
+    d.arrow([(2060, 1200), (2085, 1200), (2085, 545), (2060, 545)], color=GREEN, sw=2, style="dashed")
     d.note(1935, 970, "⑦ 지시를 실제로\n수행하는 것은\n컨트롤러 자신", fs=13, color=GREEN, anchor="topleft", align="left")
 
-    d.note(440, 1090, "규칙은 ②에서 이미 끝난다\n⑥⑦이 재생되는 동안에도 상태는 결과 상태다\n연출은 결정된 결과를 천천히 보여줄 뿐", fs=18, color=RED)
+    d.note(440, 1130, "규칙은 ②에서 이미 끝난다\n⑥⑦이 재생되는 동안에도 상태는 결과 상태다\n연출은 결정된 결과를 천천히 보여줄 뿐", fs=18, color=RED)
 
-    d.legend(760, 1130, 420, [(RED, "solid", "요청과 연출 준비"), (BLUE, "solid", "결과 읽기"),
+    d.legend(760, 1160, 420, [(RED, "solid", "요청과 연출 준비"), (BLUE, "solid", "결과 읽기"),
                               (GREEN, "solid", "화면 재생"), (BLACK, "dashed", "어셈블리 참조 / 구현")])
     emit(d, "1.CombatCore")
 

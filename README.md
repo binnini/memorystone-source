@@ -37,12 +37,12 @@
 # 📜 목차
 
 1. [전투 연산과 어셈블리 경계](#1-전투-연산과-어셈블리-경계)
-2. [턴 흐름](#2-턴-흐름)
-3. [몬스터 AI — 계획 · 예고 · 해소](#3-몬스터-ai--계획--예고--해소)
-4. [카드와 덱](#4-카드와-덱)
-5. [암시야](#5-암시야)
-6. [세이브와 시드](#6-세이브와-시드)
-7. [배치 랜덤화](#7-배치-랜덤화)
+2. [턴 페이즈와 턴 경계 처리](#2-턴-페이즈와-턴-경계-처리)
+3. [몬스터 AI 계획과 예고](#3-몬스터-ai-계획과-예고)
+4. [카드 데이터와 카드 클래스](#4-카드-데이터와-카드-클래스)
+5. [암시야 정보 처리와 렌더](#5-암시야-정보-처리와-렌더)
+6. [세이브와 시드 재현](#6-세이브와-시드-재현)
+7. [맵 배치 랜덤화](#7-맵-배치-랜덤화)
 - [🕹️ 인게임 영상](#️-인게임-영상)
 
 <br>
@@ -96,19 +96,27 @@
 
 <br>
 
-## 2. 턴 흐름
+## 2. 턴 페이즈와 턴 경계 처리
 
-<p align="center"><img src="ReadMeSource/2.TurnFlow.svg" width="900" alt="턴 흐름 도식"></p>
+<p align="center"><img src="ReadMeSource/2.TurnFlow.svg" width="900" alt="턴 페이즈와 턴 경계 처리 도식"></p>
 
-한 턴은 `CombatPhase`의 네 페이즈 `PlayerMovement → MonsterMovement → PlayerAction → MonsterAction`을 한 바퀴 돕니다. 페이즈를 바꾸는 `SetPhase`는 private이고, 밖에서 쓸 수 있는 진입점은 `EndAction()` · `ResolveMonsterMovement()` · `ResolveMonsterAction()` 셋입니다. 플레이어가 이동 페이즈를 끝내면 `EndAction()`이 몬스터 공격 예고를 확정(`CommitMonsterAttackIntentsAfterPlayerMovementEnd`)한 뒤 몬스터 이동으로 넘깁니다(①). 행동 페이즈를 끝내면 상태이상 · 저주 · 유물의 턴 끝 효과를 처리하고 몬스터 액션으로 넘깁니다(②).
+한 턴은 네 페이즈 `PlayerMovement → MonsterMovement → PlayerAction → MonsterAction`을 한 바퀴 돕니다. 페이즈를 바꾸는 함수는 `CombatState` 안에만 있고(`SetPhase`, private), 밖에서 부를 수 있는 진입점은 셋입니다.
 
-`ResolveMonsterMovement()`는 계획된 이동을 해소한 뒤 플레이어 행동 페이즈로 넘기기만 합니다(③). 턴의 경계는 `ResolveMonsterAction()` 쪽에 있습니다. 몬스터 공격을 해소한 뒤 `FinishMonsterActionTurnBoundary`가 현재 턴을 닫고(④) `BeginNextOverallTurn`을 호출합니다(⑤). 이 함수는 턴 번호 증가 · 방어도 소거 · 필드 오브젝트 틱 · 상태이상 틱 · 기 회복 · 유물 훅 · 예약 소진 · 시야 갱신 · 몬스터 예고 갱신 · 페이즈 진입까지 16단계를 정해진 순서로 호출하고, 마지막 단계가 `PlayerMovement`로 되돌립니다(⑥). 새 손패 드로우는 경계 안이 아니라 그 뒤 `StartPlayerTurn` → `DrawNewTurnHands`에서 일어나며, 정원에 유지 카드 수를 더한 만큼 채웁니다(⑦).
+턴과 턴 사이의 처리(턴 경계)는 `BeginNextOverallTurn` 한 함수가 16단계를 정해진 순서로 실행합니다. 「다음 턴에 발효되는 효과」는 `PendingEffects`에 예약해 두었다가 이 경계에서 꺼내 씁니다.
 
-「다음 턴에 발효되는 효과」는 `PendingEffects`가 맡습니다. 카드나 유물이 민첩 · 자기 속박 · 도발 강화 같은 예약을 값과 지속 턴으로 기록하면(⑧), `BeginNextOverallTurn`의 해당 단계가 `Take*`로 꺼내면서 비웁니다(⑨). 꺼낸 자리는 곧바로 기본값이 되므로 같은 예약이 두 번 발효될 수 없습니다. 승리 · 패배 판정은 해소가 끝날 때마다 `CheckTerminalOutcomeStep`이 확인합니다(⑩).
+도식의 상자는 각각 이런 역할입니다.
+
+- **EndAction()** — 플레이어가 페이즈를 끝낼 때 부르는 진입점입니다. 이동 페이즈라면 몬스터 공격 예고를 확정하고 몬스터 이동으로, 행동 페이즈라면 턴 끝 효과(상태이상 · 저주 · 유물)를 처리하고 몬스터 액션으로 넘깁니다.
+- **ResolveMonsterMovement()** — 몬스터의 계획된 이동을 실행하고 플레이어 행동 페이즈로 넘깁니다.
+- **ResolveMonsterAction()** — 몬스터의 공격을 실행한 뒤 턴 경계(`FinishMonsterActionTurnBoundary`)로 들어갑니다.
+- **BeginNextOverallTurn** — 턴 경계 16단계. 턴 번호 증가 → 방어도 소거 → 필드 오브젝트 틱 → 상태이상 틱 → 기 회복 → 유물 훅 → 예약 소진 → 시야 갱신 → 몬스터 예고 갱신 → `PlayerMovement` 진입 순입니다.
+- **StartPlayerTurn / DrawNewTurnHands** — 턴 경계가 끝난 뒤 새 손패를 뽑습니다. 정원에 유지 카드 수를 더한 만큼 채웁니다.
+- **PendingEffects** — 「다음 턴에 발효」 예약(값 · 지속 턴). 카드나 유물이 기록하고, 턴 경계의 해당 단계가 `Take*`로 꺼내면서 비웁니다. 한 번 꺼내면 기본값으로 돌아가므로 두 번 발효되지 않습니다.
+- **Victory / Defeat** — 해소가 끝날 때마다 `CheckTerminalOutcomeStep`이 승패를 확인합니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-턴 경계에서 일어나는 일의 **순서 자체가 게임 규칙**이라는 점입니다. 방어도가 먼저 사라지고 그 다음 상태이상이 틱하고 그 다음 기가 회복되는 순서는 밸런스에 직접 닿습니다. 그래서 16단계를 여러 곳에 흩어 두지 않고 한 함수의 호출 순서로 고정했고, 각 단계는 이름만 읽어도 무엇을 하는지 드러나는 메서드로 나눴습니다.
+턴 경계에서 일어나는 일의 순서가 곧 게임 규칙입니다. 방어도가 먼저 사라지고, 그 다음 상태이상이 틱하고, 그 다음 기가 회복되는 순서는 밸런스에 직접 닿습니다. 그래서 16단계를 여러 곳에 흩어 두지 않고 한 함수의 호출 순서로 고정했고, 각 단계는 이름만 읽어도 무엇을 하는지 드러나는 메서드로 나눴습니다.
 
 ### 코드
 
@@ -138,19 +146,31 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 <br>
 
-## 3. 몬스터 AI — 계획 · 예고 · 해소
+## 3. 몬스터 AI 계획과 예고
 
-<p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 도식"></p>
+<p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 계획과 예고 도식"></p>
 
-몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 받습니다. `CombatState`가 이 인터페이스를 구현하며(①) 맵 · 플레이어 좌표 · 행동 순서 · 활성 상태 · 은신 · 실명 · 행동 프로파일을 읽기 전용으로 제공합니다. 플래너는 여기서 몬스터별 `MonsterFsmContext`(거리 · `PlayerHidden` · 플레이어 사망 여부)를 만들어(②) 의도 선택에 넘깁니다(③).
+몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
 
-파이프라인은 여섯 단계입니다. `RefreshAllIntents`가 행동 순서대로 몬스터를 돌고(①), `SelectMovementIntent`가 `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 if/else 한 함수로 갱신해 이동 의도를 정합니다(②). `ChooseEnemyMovementStep`은 `HexPathfinder.FindPath`로 목적지를 고르는데, 앞 몬스터가 예약한 목적지를 `temporaryBlocked` 칸으로 주입해 같은 칸으로 두 몬스터가 몰리지 않게 합니다(③). 공격 패턴은 `monster_attack_patterns.csv`의 가중치로 시드 스트림 4에서 추첨하고(④), 도약 공격이 가능하면 착지 칸을 정한 뒤(⑤) 결과를 `MonsterRuntime.TurnPlan`에 커밋합니다(⑥). 커밋된 목적지는 `reservedDestinations`에 들어가 다음 몬스터의 ③에 영향을 줍니다(⑨).
+플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
 
-`TurnPlan`은 소비자가 둘입니다. `GetMonsterIntentPreviews`는 플레이어에게 보여 줄 예고를 만드는데, AI를 다시 돌리지 않고 커밋된 계획의 목적지와 잠긴 조준을 그대로 펼칩니다(⑩). `ResolveMonsterMovementStep` · `ResolveMonsterAttackStep`은 같은 계획을 실제로 집행합니다(⑪). 공격 범위 형상은 `attack_shapes.csv`에서 `AttackShapeLibrary`로 읽어 오며, 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 어느 방향이든 같은 문법으로 폅니다(⑫). 형상마다 `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.
+도식의 상자는 각각 이런 역할입니다.
+
+- **IMonsterPlanningContext** — 플래너가 읽을 수 있는 전투 정보(맵 · 플레이어 좌표 · 행동 순서 · 은신 · 실명 · 행동 프로파일). `CombatState`가 구현합니다.
+- **MonsterFsmContext** — 몬스터 하나에 대한 판단 재료(플레이어까지 거리 · 플레이어가 숨었는지 · 죽었는지).
+- **① RefreshAllIntents** — 행동 순서대로 몬스터를 돌며 계획을 세웁니다. 앞 몬스터의 목적지를 `reservedDestinations`에 모아 뒤 몬스터에 넘깁니다.
+- **② SelectMovementIntent** — `MonsterFsmMemory`의 상태(Patrol · Chase · Attack · Search · Alert · Return)를 갱신해 이동 의도를 정합니다. if/else 한 함수입니다.
+- **③ ChooseEnemyMovementStep** — `HexPathfinder.FindPath`로 목적지를 고릅니다. 예약된 목적지는 막힌 칸으로 취급해 두 몬스터가 같은 칸으로 몰리지 않게 합니다.
+- **④ SelectWeightedAttackPattern** — `monster_attack_patterns.csv`의 가중치로 공격 패턴을 추첨합니다. 난수는 시드 스트림 4를 씁니다.
+- **⑤ TryPlanLeapAttack** — 도약 공격이 가능하면 착지 칸과 패턴을 정합니다.
+- **⑥ MonsterTurnPlan 커밋** — 이동 의도 · 목적지 · 조준 · 도약을 `monster.TurnPlan`에 기록합니다.
+- **GetMonsterIntentPreviews** — 화면에 보여 줄 예고. `TurnPlan`을 그대로 펼칩니다.
+- **ResolveMonsterMovementStep / ResolveMonsterAttackStep** — 같은 `TurnPlan`을 실제로 실행합니다.
+- **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상. 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 씁니다. `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-**예고가 곧 계획**이라는 점입니다. 화면에 그려지는 예고와 다음 턴에 실제로 집행되는 행동이 같은 `TurnPlan` 객체에서 나오므로, 예고와 실행이 어긋날 여지가 없습니다. 플래너가 컨텍스트 밖의 상태를 건드리지 않고 유일한 가변 상태가 패턴 추첨 RNG뿐이라는 것도 같은 목적입니다. 해소(피해 · 넉백 · 상태이상)는 플래너에 없고 `CombatState`에 남습니다.
+예고가 곧 계획입니다. 화면에 그려지는 예고와 다음 턴에 실행되는 행동이 같은 `TurnPlan` 객체에서 나오므로 둘이 어긋날 여지가 없습니다. 플래너는 컨텍스트 밖의 상태를 건드리지 않고, 유일한 가변 상태는 패턴 추첨 난수뿐입니다.
 
 ### 코드
 
@@ -184,19 +204,30 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 <br>
 
-## 4. 카드와 덱
+## 4. 카드 데이터와 카드 클래스
 
-<p align="center"><img src="ReadMeSource/4.CardsAndDecks.svg" width="900" alt="카드와 덱 도식"></p>
+<p align="center"><img src="ReadMeSource/4.CardsAndDecks.svg" width="900" alt="카드 데이터와 카드 클래스 도식"></p>
 
-카드 데이터의 정본은 `cards.csv`입니다. 이 표에는 이름 · 설명 · 타입 · 비용 · 사거리 · 형상 · 피해 같은 표시와 밸런스 열만 있고 규칙 로직은 없습니다. 에디터의 `CardCatalogCsvImporter`가 이 표를 `CardCatalogAsset`으로 베이크하고, 런타임에는 `CardCatalogDefinition`이 됩니다(①). 베이크 단계에서 각 행의 id에 대응하는 카드 클래스가 `CardBehaviorRegistry`에 등록돼 있는지 검사해, 클래스 없는 카드는 카탈로그에 들어가지 못합니다(⑩).
+카드 하나는 두 조각으로 되어 있습니다. 표시 · 밸런스 값은 `cards.csv`의 한 행이고, 규칙은 `Combat.Runtime/Cards/`의 클래스 하나입니다. 둘은 카드 id로만 이어집니다.
 
-런이 시작되면 카탈로그에서 `PlayerDeckData`(보유 카드 목록)가 만들어지고(②), 전투가 시작되면 이동 덱과 행동 덱이 각각 `CardDeckState`로 세워집니다(③). 덱 하나는 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어지고, 셔플은 이동 덱이 시드 스트림 8, 행동 덱이 9를 씁니다. 턴마다 `DrawNewTurnHands`가 정원에 유지 카드 수를 더한 만큼 손패를 채웁니다(④).
+전투 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
 
-카드를 쓰면 `CombatState`가 `CardBehaviorRegistry.Resolve(card)`로 카드 클래스를 찾고(⑤) 훅을 호출합니다(⑥). `CardBehavior`는 추상 클래스로, 이동 목적지 결정 · 방어 · 유틸리티 · 정찰 후속 · 공격 피해 같은 규칙 훅과 `Disposal` · `RetainOnTurnEnd` · `Keywords` · `Upgrade` 같은 선언을 가집니다. 훅은 기본이 no-op이고 카드 클래스는 필요한 것만 override합니다. 훅은 `CombatState`의 규칙 메서드를 호출해 실제 피해 · 이동 · 상태를 적용하고(⑦), 사용이 끝나면 `ConsumePlayedCard`가 `DisposeAfterPlay`의 답에 따라 버림 더미 또는 소멸 더미로 보냅니다(⑧ · ⑨). 카드 클래스는 59개이고 한 파일에 한 클래스, 등록은 한 줄입니다. 클래스는 종류당 한 인스턴스이며 상태를 갖지 않습니다.
+도식의 상자는 각각 이런 역할입니다.
+
+- **cards.csv** — 이름 · 설명 · 타입 · 비용 · 사거리 · 형상 · 피해 같은 표시와 밸런스 열. 규칙 로직은 없습니다.
+- **CardCatalogCsvImporter / CardCatalogAsset** — 에디터에서 CSV를 에셋으로 베이크합니다. 행의 id에 대응하는 카드 클래스가 없으면 거부합니다.
+- **CardCatalogDefinition** — 런타임 카드 카탈로그.
+- **PlayerDeckData** — 런 동안 보유한 카드 목록(`MovementCards` · `ActionCards`).
+- **MovementDeck / ActionDeck (CardDeckState)** — 전투 중 덱 두 벌. `DrawPile` · `Hand` · `DiscardPile` · `RemovedPile`. 셔플 난수는 시드 스트림 8 · 9.
+- **DrawNewTurnHands** — 턴마다 정원에 유지 카드 수를 더한 만큼 손패를 채웁니다.
+- **CardBehaviorRegistry.Resolve(card)** — 카드 id로 카드 클래스 인스턴스를 찾습니다. 종류당 한 인스턴스이고 상태가 없습니다.
+- **CardBehavior** — 카드 클래스의 추상 기반. 규칙 훅(`TryResolveMoveDestination` · `TryApplyDefend` · `TryApplyUtility` · `ApplyAfterScoutReveal` · `GetAttackDamage` …)과 선언(`Disposal` · `RetainOnTurnEnd` · `Keywords` · `Upgrade`)을 가집니다. 훅은 기본이 no-op입니다.
+- **A01_Sweep** — 카드 클래스 하나의 예. 59개가 한 파일 한 클래스이고 등록은 한 줄입니다.
+- **ConsumePlayedCard** — 다 쓴 카드를 `DisposeAfterPlay`의 답에 따라 버림 더미 · 소멸 더미로 보내거나 그대로 둡니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-카드 하나의 규칙이 **클래스 하나에 모여 있고**, 규칙이 카드를 부르는 지점이 `CombatState`의 `Resolve` 호출부로 한정된다는 점입니다. 데이터(CSV)와 규칙(클래스)이 id로만 이어지므로 밸런스 수정은 표에서, 규칙 수정은 클래스에서 끝납니다. 카드 클래스는 연출 타입을 전혀 모르고 `CombatState`의 규칙 메서드만 호출합니다.
+카드 하나의 규칙이 클래스 하나에 모여 있고, `CombatState`가 카드를 부르는 지점은 `Resolve` 호출부로 한정됩니다. 밸런스 수정은 CSV에서, 규칙 수정은 클래스에서 끝납니다. 카드 클래스는 화면 연출을 전혀 모르고 `CombatState`의 연산 메서드만 호출합니다.
 
 ### 코드
 
@@ -245,15 +276,22 @@ private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
 
 <br>
 
-## 5. 암시야
+## 5. 암시야 정보 처리와 렌더
 
-<p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 도식"></p>
+<p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 정보 처리와 렌더 도식"></p>
 
-시야 갱신은 턴 경계와 이동 뒤에 `CombatState.RefreshPlayerVision`이 맡습니다(①). 시야 반경 안의 칸, 횃불 같은 필드 오브젝트가 비추는 칸, 이번 턴 정찰 카드로 밝힌 칸을 하나의 집합으로 합쳐 `HexVisibilityRuntime`에 넘깁니다(②). 런타임은 칸마다 `Unknown → Hinted → Revealed` 세 단계를 `states`에 들고, 이번 갱신에서 보인 칸 · 영구히 밝혀진 칸 · 함정이 드러난 칸을 별도 집합으로 관리합니다. `SetVisibility`는 단계를 올리기만 하는 단조 연산이고(③), 단계를 내리는 `ForceVisibility`는 세이브 복원 때만 쓰입니다(⑦).
+칸마다 시야 단계가 `Unknown → Hinted → Revealed` 셋 중 하나입니다. `CombatState`가 시야 반경 · 필드 오브젝트 · 정찰 카드를 합쳐 밝힐 칸을 정하고, `HexVisibilityRuntime`이 단계를 관리합니다.
 
-Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 돌려주는 `HexVisibilitySafeCellInfo`만 받습니다(④). 이 구조체는 단계에 따라 내용을 거릅니다. `Unknown`이면 좌표만, `Hinted`면 지형과 이동 비용은 주되 이벤트 id와 랜드마크 id는 비우고, `Revealed`여야 전부 채웁니다. 툴팁(`CombatVisibilityPresenter`) · 미니맵(`TacticalMinimapView`) · 맵 오브젝트 표시 여부(`MapObjectVisualRegistry`)가 모두 이 구조체를 통해 정보를 얻습니다.
+Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 단계에 맞게 걸러 준 구조체만 받습니다. 툴팁 · 미니맵 · 오브젝트 표시가 이 구조체를 쓰고, 화면의 어둠도 같은 구조체에서 마스크 텍스처로 만들어 셰이더가 샘플링합니다.
 
-렌더는 같은 구조체에서 갈라집니다. `VisibilityLightingMaskService`가 칸 단계를 바이트 마스크 텍스처로 굽고(⑤), 바뀐 슬롯이 하나도 없으면 업로드를 건너뜁니다. 텍스처는 전역 프로퍼티 `_SP_VisibilityMask`로 올라가고, `MapVisibilityLit.shader`(URP Lit 변형)가 픽셀의 월드 좌표를 마스크 UV로 바꿔 샘플링해 밝기를 정합니다(⑥). 출력 직전에는 `max`/`min`으로 NaN을 씻어 후처리 블룸이 화면 전체로 번지는 것을 막습니다.
+도식의 상자는 각각 이런 역할입니다.
+
+- **RefreshPlayerVision** — 시야 반경(`GetEffectivePlayerVisionRange`) · 필드 오브젝트(`FieldObjects`) · 이번 턴 정찰(`scoutRevealedThisTurn`)을 합쳐 밝힐 칸 집합을 만듭니다. 턴 경계와 이동 뒤에 불립니다.
+- **HexVisibilityRuntime** — 칸별 단계 `states`(저장 대상)와 보조 집합(`temporaryRevealed` · `permanentlyRevealed` · `trapRevealed`)을 가집니다. `SetVisibility`는 단계를 올리기만 하고, 내리는 `ForceVisibility`는 세이브 복원에만 씁니다.
+- **GetSafeCellInfo → HexVisibilitySafeCellInfo** — 단계별로 거른 정보. `Unknown`은 좌표만, `Hinted`는 지형 · 이동 비용만(이벤트 · 랜드마크 id는 비움), `Revealed`는 전부.
+- **CombatVisibilityPresenter / TacticalMinimapView / MapObjectVisualRegistry** — 툴팁 · 미니맵 · 오브젝트 표시 여부. 전부 걸러진 구조체만 봅니다.
+- **VisibilityLightingMaskService** — 칸 단계를 바이트 마스크 텍스처로 굽습니다. 바뀐 슬롯이 없으면 업로드를 건너뜁니다.
+- **MapVisibilityLit.shader** — URP Lit 변형. 픽셀의 월드 좌표를 마스크 UV로 바꿔 샘플링해 밝기를 정하고, 출력 전에 NaN을 씻습니다.
 
 <p align="center">
 <img src="ReadMeSource/5.FogRenderAB_1.png" width="440" alt="LightingMask 렌더. 시야 원판을 중심으로 밝기가 방사형으로 떨어진다.">
@@ -262,7 +300,7 @@ Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 돌려�
 
 ### 이 시스템에서 중점을 둔 것
 
-정보 은닉을 **자료구조 수준**에서 처리한다는 점입니다. 보이지 않는 칸의 이벤트나 랜드마크는 Unity 쪽 코드에 아예 전달되지 않으므로, UI 코드가 실수로 미지의 칸 정보를 그리는 일이 생기지 않습니다. 렌더 마스크도 같은 구조체에서 파생되어 논리 시야와 화면 시야가 한 소스를 공유합니다.
+정보 은닉을 자료구조에서 처리합니다. 보이지 않는 칸의 이벤트나 랜드마크는 Unity 쪽 코드에 전달되지 않으므로 UI가 실수로 그릴 수 없습니다. 렌더 마스크도 같은 구조체에서 나오므로 연산의 시야와 화면의 시야가 한 소스를 공유합니다.
 
 ### 코드
 
@@ -305,19 +343,27 @@ public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
 
 <br>
 
-## 6. 세이브와 시드
+## 6. 세이브와 시드 재현
 
-<p align="center"><img src="ReadMeSource/6.SaveAndSeed.svg" width="900" alt="세이브와 시드 도식"></p>
+<p align="center"><img src="ReadMeSource/6.SaveAndSeed.svg" width="900" alt="세이브와 시드 재현 도식"></p>
 
-런 시드는 `MainGameplayController`가 발급합니다. 디버그 패널에서 지정한 값이 있으면 그것을, 없으면 무작위 값을 쓰며 배치 랜덤화가 꺼진 스테이지에서도 발급합니다(①). 시드 하나를 그대로 쓰지 않고 `RunSeedStreams`의 번호표(0 몬스터 배치 · 1 함정 · 2 상자 · 3 서비스 · 4 공격 패턴 · 5 전투 판정 · 6 보스 기물 · 7 보상 · 8 이동 덱 셔플 · 9 행동 덱 셔플)로 `Derive`해 용도별 스트림 시드를 만듭니다(②). 번호표는 추가만 하고 바꾸지 않습니다.
+런 하나에 시드 하나가 발급되고, 용도별로 번호(0~9)를 붙여 파생한 스트림 시드로 난수 인스턴스를 만듭니다. 각 인스턴스는 `CountingRandom`이라서 지금까지 몇 번 뽑았는지(`Consumed`)를 셉니다.
 
-스트림마다 `CountingRandom` 인스턴스가 하나씩 섭니다. 전투 판정용 `pushRng`, 플래너의 패턴 추첨과 피해 변주, 보스 기물, 덱 셔플 둘, 그리고 컨트롤러가 소유하는 보상 RNG까지 일곱입니다. `CountingRandom`은 `System.Random`을 감싸 지금까지 소비한 표본 수 `Consumed`를 셉니다(③). 세이브는 RNG 내부 상태를 저장하지 않습니다. `CreateSuspendSnapshot`이 인스턴스 여섯의 커서를 `CombatSuspendData.RngCursors`에 담고(④), 보상 커서는 바깥 봉투 `CombatSuspendEnvelope`에 담깁니다(⑤). 몬스터가 이미 굴린 공격 패턴 인덱스와 피해 변주는 `MonsterRuntimeSaveData`에 값 자체로 저장됩니다.
+세이브는 난수의 내부 상태를 저장하지 않습니다. 대신 각 인스턴스의 `Consumed`(커서)와, 이미 굴려서 플레이어에게 보인 값(몬스터 공격 패턴 · 피해 변주)을 저장합니다. 복원은 같은 시드로 인스턴스를 새로 만들어 커서까지 `FastForward`하고, 굴린 값은 다시 굴리지 않습니다.
 
-복원은 `RestoreFromSuspend`가 저장된 커서와 값을 읽고(⑥), `RestoreRngCursors`가 같은 시드로 인스턴스를 새로 만들어 `FastForward(Consumed)`로 저장 시점의 자리까지 넘깁니다(⑦). 마지막으로 `planner.RefreshAllIntents(preserveCommittedAttackRolls: true)`가 몬스터 예고의 기하(경로 · 조준 · 도약 착지)만 다시 세우고 굴림은 하나도 하지 않아, 저장된 패턴이 그대로 남습니다(⑧).
+도식의 상자는 각각 이런 역할입니다.
+
+- **MainGameplayController** — 런 시드 발급. 디버그 지정값이 있으면 그것을, 없으면 무작위.
+- **RunSeedStreams** — 번호표. 0 몬스터 배치 · 1 함정 · 2 상자 · 3 서비스 · 4 공격 패턴 · 5 전투 판정 · 6 보스 기물 · 7 보상 · 8 이동 덱 셔플 · 9 행동 덱 셔플. `Derive(runSeed, stream)`으로 스트림 시드를 만듭니다. 번호는 추가만 하고 바꾸지 않습니다.
+- **CountingRandom ×7** — `pushRng`(5) · `monsterAttackPatternRng`(4) · `attackDamageJitterRng`(4′) · `bossPropRng`(6) · `movementShuffleRng`(8) · `actionShuffleRng`(9) · `SeededRewardRandom`(7, 컨트롤러 소유).
+- **CombatSuspendEnvelope / CombatSuspendData / MonsterRuntimeSaveData** — 저장 구조. 봉투가 보상 커서, 데이터가 커서 여섯(`RngCursors`), 몬스터별 저장이 `AttackPatternIndex` · `AttackDamageRollOffset`.
+- **CreateSuspendSnapshot / RestoreFromSuspend** — 저장과 복원 진입점.
+- **RestoreRngCursors** — 같은 시드로 인스턴스를 새로 만들어 `FastForward(Consumed)`.
+- **RefreshAllIntents(preserveCommittedAttackRolls: true)** — 복원 뒤 몬스터 예고의 기하(경로 · 조준 · 도약)만 다시 세우고 굴림은 하지 않습니다.
 
 ### 이 시스템에서 중점을 둔 것
 
-재현 방식을 두 가지로 나눈 점입니다. 아직 굴리지 않은 것은 **시드 + 커서**로 재현하고(A), 이미 굴려서 플레이어에게 보인 것은 **값 자체**로 저장합니다(B). 예고된 공격을 복원 뒤 다시 굴리면 플레이어가 본 것과 다른 공격이 나오므로, 그런 값은 상태로 취급합니다. 용도별 스트림을 나눈 것은 한쪽 소비량이 다른 쪽 결과를 밀지 않게 하기 위해서입니다.
+재현 방식이 둘입니다. 아직 굴리지 않은 것은 시드 + 커서로 재현하고, 이미 굴려서 보인 것은 값 자체로 저장합니다. 예고된 공격을 복원 뒤 다시 굴리면 플레이어가 본 것과 다른 공격이 나오므로 그런 값은 상태로 취급합니다. 용도별 스트림을 나눈 것은 한쪽 소비량이 다른 쪽 결과를 밀지 않게 하기 위해서입니다.
 
 ### 코드
 
@@ -356,19 +402,26 @@ public static int Derive(int runSeed, int stream)
 
 <br>
 
-## 7. 배치 랜덤화
+## 7. 맵 배치 랜덤화
 
-<p align="center"><img src="ReadMeSource/7.Placement.svg" width="900" alt="배치 랜덤화 도식"></p>
+<p align="center"><img src="ReadMeSource/7.Placement.svg" width="900" alt="맵 배치 랜덤화 도식"></p>
 
-맵 에디터에서 저작하는 `HexSparseMapAuthoringSource`의 슬롯은 두 종류입니다. `objectRef`가 있는 점유 슬롯은 항상 그 자리에 그 오브젝트가 놓이고, `RandomizationGroup` 태그만 있고 `objectRef`가 비어 있는 예비 슬롯은 랜덤화가 채울 수 있는 후보 좌표입니다. `TryToHexMapData`가 저작 원본을 `HexMapData`로 바꾸고(②), 이 기본 맵과 시드가 `HexMapPlacementRandomization.TryApplyProfile`에 들어갑니다.
+맵 에디터에서 저작한 슬롯 중 예비 슬롯(그룹 태그만 있고 오브젝트가 비어 있는 칸)을 랜덤화가 채웁니다. 무엇이 올 수 있는가는 에디터의 슬롯 문법이, 무엇이 실제로 오는가는 CSV 프로파일과 시드가 정합니다.
 
-스테이지별 규칙은 CSV 세 장에서 옵니다. `stage_randomization.csv`가 위협 예산 · 안전 반경 · 재롤 상한 · 밀도 상한 · 정예 하한 같은 프로파일을, `_pools.csv`가 그룹별 가중 풀을, `_bans.csv`가 함께 나오면 안 되는 조합을 정하고 `StageRandomizationProfile`로 합쳐집니다(①). 배치는 네 단계를 정해진 순서로 지납니다. 몬스터(`RandomizeWithProfile`)는 그룹별로 슬롯을 비복원 추첨하고 풀에서 종을 고르는데, 이미 뽑힌 종은 가중치가 반감되어 같은 종이 몰리지 않습니다(③). 그 다음 함정(`RandomizeTraps`)(④), 서비스 오브젝트(`PlaceServices`)(⑤), 상자(`ShuffleChests`) 순이며 각 단계는 자기 시드 스트림을 씁니다.
+배치는 몬스터 → 함정 → 서비스 → 상자 네 단계를 정해진 순서로 지나고, 몬스터 배치 결과는 검증 게이트를 통과해야 합니다. 실패하면 재롤하고, 상한을 넘기면 저작 원본으로 진행합니다.
 
-몬스터 배치 결과는 `ValidateProfileAttempt`가 검사합니다(⑥). 플레이어 안전 반경 안에 몬스터가 없는지, 위협 합이 예산 범위인지, 정예 수와 거리가 하한을 넘는지, 종 수가 하한 이상인지, 반경 안 밀도가 상한 이하인지를 보고 하나라도 어긋나면 재롤합니다. 재롤 상한은 프로파일의 `RerollLimit`입니다. 통과하면 랜덤화된 `HexMapData`가 전투로 넘어가고(⑦), 상한을 넘기거나 프로파일이 없으면 저작 원본 그대로 진행합니다(⑧).
+도식의 상자는 각각 이런 역할입니다.
+
+- **HexSparseMapAuthoringSource** — 저작 데이터. `objectRef`가 있는 점유 슬롯은 고정, `RandomizationGroup` 태그만 있는 예비 슬롯(`IsRandomizationSpareSlot`)은 랜덤화 후보.
+- **stage_randomization.csv / _pools.csv / _bans.csv → StageRandomizationProfile** — 스테이지 프로파일(위협 예산 · 안전 반경 · 재롤 상한 · 밀도 · 정예 하한) · 가중 풀 · 금지 조합.
+- **① RandomizeWithProfile** — 몬스터. 그룹별로 슬롯을 비복원 추첨하고, 풀에서 종을 고를 때 이미 뽑힌 종은 가중치를 반감합니다(`WeightedPickWithRepeatDecay`).
+- **② RandomizeTraps / ③ PlaceServices / ④ ShuffleChests** — 함정 · 서비스 오브젝트 · 상자. 각각 시드 스트림 1 · 3 · 2.
+- **ValidateProfileAttempt** — 안전 반경 · 위협 합 범위 · 정예 하한과 거리 · 종 하한 · 밀도 상한을 검사합니다. 하나라도 어긋나면 재롤(상한은 프로파일의 `RerollLimit`).
+- **HexMapData** — 통과하면 랜덤화된 맵이 전투로 갑니다. 실패하거나 프로파일이 없으면 저작 원본 그대로.
 
 ### 이 시스템에서 중점을 둔 것
 
-저작과 랜덤화의 역할 분담입니다. 어디에 무엇이 올 **수 있는가**는 맵 에디터의 슬롯 문법(점유 / 예비 + 그룹 태그)이 정하고, 그중 무엇이 **실제로 오는가**는 CSV 프로파일과 시드가 정합니다. 검증 게이트는 랜덤 결과가 스테이지 의도를 벗어나지 않게 막는 마지막 층이며, 실패 시에도 저작 원본이라는 안전한 결과가 남습니다.
+저작과 랜덤화의 역할 분담입니다. 어디에 무엇이 올 수 있는가는 맵 에디터의 슬롯 문법이 정하고, 그중 무엇이 실제로 오는가는 CSV 프로파일과 시드가 정합니다. 검증 게이트는 랜덤 결과가 스테이지 의도를 벗어나지 않게 막는 마지막 층이며, 실패해도 저작 원본이라는 안전한 결과가 남습니다.
 
 ### 코드
 

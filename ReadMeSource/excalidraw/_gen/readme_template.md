@@ -58,23 +58,7 @@
 `Source/Combat/Runtime/SeoulPlayup.Combat.Runtime.asmdef` — 규칙 어셈블리 정의 전문. 참조는 순수 어셈블리 둘뿐이고 엔진 참조는 꺼져 있습니다.
 
 ```json
-{
-    "name": "SeoulPlayup.Combat.Runtime",
-    "rootNamespace": "SeoulPlayup.Combat.Runtime",
-    "references": [
-        "SeoulPlayup.CardCore",
-        "SeoulPlayup.Map.Runtime"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": true
-}
+{{EX:ex1}}
 ```
 
 <br>
@@ -98,25 +82,7 @@
 `Source/Combat/Runtime/CombatState.cs` — `BeginNextOverallTurn` 본문. 이 19줄이 턴 경계의 전부입니다.
 
 ```csharp
-private void BeginNextOverallTurn(int freshStatusStartIndex)
-{
-    AdvanceOverallTurnCounterStep();
-    ClearPlayerBlockStep();
-    ActivatePendingFieldObjects();
-    ResolveFieldObjectTickStep();
-    ApplyActiveEffectTurnStart(freshStatusStartIndex);
-    RefillKiForNewTurnStep();
-    TickLimitedRelicTurnsStep();
-    ResolveTurnStartRelicTriggers();
-    ApplyCarriedMovementBonusStep();
-    ApplyPendingSelfImmobilize();
-    ApplyPendingProvokeStrength();
-    ResetPerTurnSignalsStep();
-    AdvanceAndExpirePlayerProps();
-    RefreshVisionForNewTurnStep();
-    RefreshMonsterIntentStep();
-    EnterPlayerMovementPhaseStep();
-}
+{{EX:ex2}}
 ```
 
 <br>
@@ -140,29 +106,7 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 `Source/Combat/Runtime/MonsterAiPlanner.cs` — `RefreshAllIntents`의 예약 루프. 죽었거나 휴면인 몬스터는 비활성 계획을 받고, 나머지는 앞 몬스터의 예약 목적지를 넘겨받으며 계획을 세웁니다.
 
 ```csharp
-    var reservedDestinations = new HashSet<HexCoord>();
-    foreach (var monster in context.MonsterActionOrder())
-    {
-        monster.ActivityState = context.ClassifyMonsterActivity(monster);
-        if (monster.Combatant.IsDead || monster.ActivityState == MonsterActivityState.Dormant)
-        {
-            var intent = new EnemyIntent(EnemyIntentType.Patrol, PlayerCoord.DistanceTo(monster.Coord), monster.Coord, PlayerCoord);
-            monster.Intent = intent;
-            monster.LockedFacingIntent = intent;
-            monster.IntentPredictedMoveCoord = monster.Coord;
-            monster.PendingAttackIntent = false;
-            monster.PlannedLeap = false;
-            monster.TurnPlan = MonsterTurnPlan.Inactive(monster.Coord);
-            continue;
-        }
-
-        RefreshTurnPlan(monster, reservedDestinations, preserveCommittedAttackRolls);
-        if (monster.TurnPlan.IsActive)
-        {
-            reservedDestinations.Add(monster.TurnPlan.PlannedMoveCoord);
-        }
-    }
-}
+{{EX:ex3}}
 ```
 
 <br>
@@ -186,44 +130,13 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 `Source/Combat/Runtime/Cards/Attack/A01_Sweep.cs` — 카드 클래스 하나의 전문. 기본 공격 카드라 훅 override 없이 id와 강화 규칙만 선언합니다.
 
 ```csharp
-using SeoulPlayup.CardCore;
-
-namespace SeoulPlayup.Combat.Runtime.Cards
-{
-    /// <summary>A01 휘둘러치기 — 플레이어 주변 {Shape} 내의 적 모두에게 피해 {Damage}를 줍니다. (옛 behaviorId `attack.damage`)</summary>
-    public sealed class A01_Sweep : BasicAttackCard
-    {
-        public override string Id => "A01";
-
-        /// <summary>연마(옛 card_upgrades.csv): 자기 주변 blast라 형상 유지·피해 3→5.</summary>
-        public override CardDefinition Upgrade(CardDefinition card, int level) => card.With(amount: 5);
-    }
-}
+{{EX:ex4a}}
 ```
 
 `Source/Combat/Runtime/CombatState.cs` — `ConsumePlayedCard`. 사용한 카드의 처분을 결정하는 유일한 지점입니다.
 
 ```csharp
-private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
-{
-    if (card == null)
-    {
-        return;
-    }
-
-    switch (CardBehaviorRegistry.Resolve(card).DisposeAfterPlay(this, card))
-    {
-        case CardDisposal.Exile:
-            deck.PermanentRemoveFromHand(card);
-            return;
-        case CardDisposal.HandledByRule:
-            // 규칙이 손패 전체를 버렸다(U01). 재드로우로 같은 카드가 다시 손에 왔다면 그것은 새로 뽑은 손패다 — 건드리지 않는다.
-            return;
-        default:
-            deck.DiscardFromHand(card);
-            return;
-    }
-}
+{{EX:ex4b}}
 ```
 
 <br>
@@ -252,38 +165,7 @@ Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 돌려�
 `Source/Map/Runtime/HexVisibilityRuntime.cs` — `GetSafeCellInfo` 앞부분. 단계별로 무엇을 비우는지가 생성자 인자에 그대로 드러납니다.
 
 ```csharp
-public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
-{
-    if (!Map.TryGetCell(coord, out var cell))
-    {
-        return HexVisibilitySafeCellInfo.Missing(coord);
-    }
-
-    var visibility = GetVisibility(coord);
-    if (visibility == HexCellVisibility.Unknown)
-    {
-        return HexVisibilitySafeCellInfo.Unknown(coord);
-    }
-
-    var isTrapRevealed = trapRevealed.Contains(coord);
-    if (visibility == HexCellVisibility.Hinted)
-    {
-        return new HexVisibilitySafeCellInfo(
-            coord,
-            visibility,
-            true,
-            true,
-            false,
-            string.Empty,
-            cell.TerrainTypeId,
-            cell.BaseMoveCost,
-            cell.BaseWalkable,
-            cell.BaseBlocksVision,
-            string.Empty,
-            string.Empty,
-            cell.VisualFloor,
-            isTrapRevealed);
-    }
+{{EX:ex5}}
 ```
 
 <br>
@@ -307,34 +189,7 @@ public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
 `Source/Map/Runtime/RunSeedStreams.cs` — 번호표 전문과 `Derive`. 각 번호의 주석이 그 스트림이 어디서 소비되는지를 적고 있습니다.
 
 ```csharp
-/// <summary>몬스터 슬롯 셔플·풀 추첨. 파생 없이 원시 시드(번호는 문서용).</summary>
-public const int MonsterPlacement = 0;
-/// <summary>함정 슬롯 승격·프리셋 치환.</summary>
-public const int Traps = 1;
-/// <summary>상자 좌표 셔플.</summary>
-public const int Chests = 2;
-/// <summary>서비스 오브젝트(잡화점·캠핑카) 배치.</summary>
-public const int Services = 3;
-/// <summary>스폰 시 체력 변주(hpVariancePct). 3을 공유하되 spawnRefId로 재혼합.</summary>
-public const int SpawnHpVariance = 3;
-/// <summary>몬스터 공격 패턴 선택 + 피해 변주(<c>MonsterAiPlanner</c>).</summary>
-public const int MonsterAttackPattern = 4;
-/// <summary>전투 판정(<c>CombatState.pushRng</c>): 취약 부위·빠른 거북·순간이동지·전염 대상·되돌릴 부적·제거될 카드.</summary>
-public const int CombatJudgement = 5;
-/// <summary>보스 기물 볼리의 링 회전각.</summary>
-public const int BossProps = 6;
-/// <summary>보상·상점·뽑기·전리품(<c>IRewardRandom</c>).</summary>
-public const int Rewards = 7;
-/// <summary>이동덱 셔플. 행동덱과 갈라 둔다 — 한쪽 소비량이 다른 쪽을 밀면 안 된다.</summary>
-public const int MovementDeckShuffle = 8;
-/// <summary>행동덱 셔플.</summary>
-public const int ActionDeckShuffle = 9;
-
-/// <summary>런 시드에서 <paramref name="stream"/>번 스트림의 시드를 뽑는다.</summary>
-public static int Derive(int runSeed, int stream)
-{
-    return PlacementRandomizer.DeriveSeed(runSeed, stream);
-}
+{{EX:ex6}}
 ```
 
 <br>
@@ -358,31 +213,7 @@ public static int Derive(int runSeed, int stream)
 `Source/Map/Runtime/PlacementRandomizer.cs` — `WeightedPickWithRepeatDecay`. 이미 뽑힌 횟수에 따라 감쇠된 가중치로 룰렛 추첨을 합니다.
 
 ```csharp
-private static StageRandomizationPoolEntry WeightedPickWithRepeatDecay(
-    IReadOnlyList<StageRandomizationPoolEntry> entries,
-    Random rng,
-    IReadOnlyDictionary<string, int> alreadyPicked)
-{
-    var weights = new int[entries.Count];
-    var total = 0;
-    for (var index = 0; index < entries.Count; index++)
-    {
-        weights[index] = DecayedWeight(entries[index], alreadyPicked);
-        total += weights[index];
-    }
-
-    var roll = rng.Next(total);
-    for (var index = 0; index < entries.Count; index++)
-    {
-        roll -= weights[index];
-        if (roll < 0)
-        {
-            return entries[index];
-        }
-    }
-
-    return entries[entries.Count - 1];
-}
+{{EX:ex7}}
 ```
 
 <br>

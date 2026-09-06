@@ -50,43 +50,47 @@ def d1():
     d.box(780, 700, 400, 150, "CombatTimelineAssembler",
           sub="정적 · 순수\nBuild*(버퍼, 전후 스냅샷) → CombatTimeline")
 
-    # Unity side
-    d.box(1360, 200, 200, 70, "Flow", fs=20)
-    d.box(1590, 200, 200, 70, "Combat", fs=20)
-    d.box(1360, 290, 200, 70, "Cards.Unity", fs=20)
-    d.box(1590, 290, 200, 70, "Map.Unity", fs=20)
-    d.note(1900, 265, "MonoBehaviour · UI · 씬", fs=14, color=GRAY)
+    # Unity side — assemblies that reference Combat, then the Combat assembly as a zone
+    d.box(1340, 200, 230, 70, "Flow", fs=20)
+    d.box(1605, 200, 230, 70, "Cards.Unity", fs=20)
+    d.box(1870, 200, 230, 70, "Map.Unity", fs=20)
+    d.note(1720, 172, "Combat 을 참조하는 다른 Unity 어셈블리 (씬 진입 · 카드 UI · 맵 뷰)", fs=14, color=GRAY)
+    d.zone(1340, 330, 760, 1040, "Combat  (어셈블리 · Source/Combat/Unity)", bg="#ffe8cc", label_pos="topleft")
+    for x in (1455, 1720, 1985):
+        d.arrow([(x, 270), (x, 330)], color=BLACK, style="dashed", sw=1.5)
+    d.arrow([(1340, 390), (1200, 390)], color=BLACK, style="dashed", sw=1.5)
+    d.note(1210, 398, "asmdef 참조 (Combat → Combat.Runtime)", fs=13, color=GRAY, anchor="topleft", align="left")
 
-    d.box(1360, 440, 720, 170, "MapCombatController",
-          sub=".Presentation 파셜 — 연출 진입점\nICombatPresentationSink 구현체")
-    d.box(1360, 760, 720, 120, "PresentationScheduler",
+    d.box(1380, 440, 680, 170, "MapCombatController",
+          sub="MonoBehaviour · .Presentation 파셜 — 연출 진입점\nICombatPresentationSink 구현체")
+    d.box(1380, 800, 680, 120, "PresentationScheduler",
           sub="Play(timeline, timing, sink) 코루틴 — 비트 하나씩")
-    d.field(1360, 980, 720, 280, "ICombatPresentationSink",
+    d.field(1380, 1000, 680, 280, "ICombatPresentationSink (인터페이스)",
             ["Wait · MovePlayerStep · MoveEnemyStep", "StartPlayerAttack · StartEnemyAttack",
              "AttackWindup · AttackImpactWait · CommitImpact", "ReactActorHit · ReactActorDeath · DispatchEffect · …"],
             bg="#ffd8a8")
 
     # arrows
-    d.arrow([(1360, 500), (720, 500)], color=RED, sw=3)
-    d.note(1040, 470, "① 규칙 호출 (EndAction · 카드 사용 …)", fs=17, color=RED)
+    d.arrow([(1380, 500), (720, 500)], color=RED, sw=3)
+    d.note(1050, 470, "① 규칙 호출 (EndAction · 카드 사용 …)", fs=17, color=RED)
 
     d.arrow([(440, 710), (440, 750)], color=BLACK, sw=2)
     d.note(470, 716, "② EffectResultEvent 적립", fs=15, anchor="topleft", align="left")
 
-    d.arrow([(1400, 610), (1400, 660), (740, 660), (740, 800), (690, 800)], color=BLUE, sw=3)
-    d.note(1070, 625, "③ BufferedEffects 읽기 — 연출이 규칙 산출물을 가지러 온다", fs=17, color=BLUE)
+    d.arrow([(1420, 610), (1420, 660), (740, 660), (740, 800), (690, 800)], color=BLUE, sw=3)
+    d.note(1080, 625, "③ BufferedEffects 읽기 — 연출이 규칙 산출물을 가지러 온다", fs=17, color=BLUE)
 
-    d.arrow([(1480, 610), (1480, 775), (1180, 775)], color=RED, sw=3)
-    d.note(1330, 735, "④ 버퍼 + 스냅샷 → Build*", fs=17, color=RED)
+    d.arrow([(1500, 610), (1500, 740), (1180, 740)], color=RED, sw=3)
+    d.note(1340, 700, "④ 버퍼 + 스냅샷 → Build*", fs=17, color=RED)
 
-    d.arrow([(980, 850), (980, 900), (1250, 900), (1250, 820), (1360, 820)], color=RED, sw=3)
+    d.arrow([(980, 850), (980, 900), (1250, 900), (1250, 860), (1380, 860)], color=RED, sw=3)
     d.note(1120, 908, "⑤ CombatTimeline → Play", fs=17, color=RED)
 
-    d.arrow([(1720, 880), (1720, 980)], color=GREEN, sw=3)
-    d.note(1740, 912, "⑥ 비트마다 sink 호출", fs=17, color=GREEN, anchor="topleft", align="left")
+    d.arrow([(1720, 920), (1720, 1000)], color=GREEN, sw=3)
+    d.note(1740, 940, "⑥ 비트마다 sink 호출", fs=17, color=GREEN, anchor="topleft", align="left")
 
-    d.arrow([(2080, 1120), (2120, 1120), (2120, 525), (2080, 525)], color=GREEN, sw=2, style="dashed")
-    d.note(2084, 935, "⑦ 구현체", fs=14, color=GREEN, anchor="topleft", align="left")
+    d.arrow([(2060, 1140), (2085, 1140), (2085, 525), (2060, 525)], color=GREEN, sw=2, style="dashed")
+    d.note(1975, 935, "⑦ 구현체", fs=14, color=GREEN, anchor="topleft", align="left")
 
     d.note(440, 1080, "규칙은 연출을 모른다\n연출이 규칙 산출물을 가지러 온다\n경계는 asmdef가 컴파일 단계에서 강제", fs=18, color=RED)
 

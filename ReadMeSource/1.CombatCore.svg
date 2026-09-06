@@ -30,42 +30,47 @@
 <text x="980" y="760" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">CombatTimelineAssembler</text>
 <text x="980" y="788" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">정적 · 순수</text>
 <text x="980" y="808" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Build*(버퍼, 전후 스냅샷) → CombatTimeline</text>
-<rect x="1360" y="200" width="200" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1460" y="242" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Flow</text>
-<rect x="1590" y="200" width="200" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1690" y="242" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Combat</text>
-<rect x="1360" y="290" width="200" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1460" y="332" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Cards.Unity</text>
-<rect x="1590" y="290" width="200" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1690" y="332" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Map.Unity</text>
-<text x="1900" y="279" font-size="14" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonoBehaviour · UI · 씬</text>
-<rect x="1360" y="440" width="720" height="170" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
+<rect x="1340" y="200" width="230" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
+<text x="1455" y="242" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Flow</text>
+<rect x="1605" y="200" width="230" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
+<text x="1720" y="242" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Cards.Unity</text>
+<rect x="1870" y="200" width="230" height="70" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
+<text x="1985" y="242" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Map.Unity</text>
+<text x="1720" y="186" font-size="14" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Combat 을 참조하는 다른 Unity 어셈블리 (씬 진입 · 카드 UI · 맵 뷰)</text>
+<rect x="1340" y="330" width="760" height="1040" rx="16" fill="#ffe8cc" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>
+<text x="1358" y="364" font-size="22" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Combat  (어셈블리 · Source/Combat/Unity)</text>
+<polyline points="1455,270 1455,330" fill="none" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10" marker-end="url(#ah1e1e1e)" />
+<polyline points="1720,270 1720,330" fill="none" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10" marker-end="url(#ah1e1e1e)" />
+<polyline points="1985,270 1985,330" fill="none" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10" marker-end="url(#ah1e1e1e)" />
+<polyline points="1340,390 1200,390" fill="none" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10" marker-end="url(#ah1e1e1e)" />
+<text x="1210" y="411" font-size="13" fill="#868e96" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">asmdef 참조 (Combat → Combat.Runtime)</text>
+<rect x="1380" y="440" width="680" height="170" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1720" y="510" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MapCombatController</text>
-<text x="1720" y="538" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">.Presentation 파셜 — 연출 진입점</text>
+<text x="1720" y="538" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MonoBehaviour · .Presentation 파셜 — 연출 진입점</text>
 <text x="1720" y="558" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ICombatPresentationSink 구현체</text>
-<rect x="1360" y="760" width="720" height="120" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1720" y="815" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">PresentationScheduler</text>
-<text x="1720" y="843" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Play(timeline, timing, sink) 코루틴 — 비트 하나씩</text>
-<rect x="1360" y="980" width="720" height="280" rx="16" fill="url(#hffd8a8)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="1720" y="1012" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ICombatPresentationSink</text>
-<text x="1720" y="1041" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Wait · MovePlayerStep · MoveEnemyStep</text>
-<text x="1720" y="1061" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">StartPlayerAttack · StartEnemyAttack</text>
-<text x="1720" y="1081" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackWindup · AttackImpactWait · CommitImpact</text>
-<text x="1720" y="1101" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ReactActorHit · ReactActorDeath · DispatchEffect · …</text>
-<polyline points="1360,500 720,500" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
-<text x="1040" y="487" font-size="17" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① 규칙 호출 (EndAction · 카드 사용 …)</text>
+<rect x="1380" y="800" width="680" height="120" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
+<text x="1720" y="855" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">PresentationScheduler</text>
+<text x="1720" y="883" font-size="16" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Play(timeline, timing, sink) 코루틴 — 비트 하나씩</text>
+<rect x="1380" y="1000" width="680" height="280" rx="16" fill="url(#hffd8a8)" stroke="#1e1e1e" stroke-width="1.5" />
+<text x="1720" y="1032" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ICombatPresentationSink (인터페이스)</text>
+<text x="1720" y="1061" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Wait · MovePlayerStep · MoveEnemyStep</text>
+<text x="1720" y="1081" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">StartPlayerAttack · StartEnemyAttack</text>
+<text x="1720" y="1101" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">AttackWindup · AttackImpactWait · CommitImpact</text>
+<text x="1720" y="1121" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ReactActorHit · ReactActorDeath · DispatchEffect · …</text>
+<polyline points="1380,500 720,500" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1050" y="487" font-size="17" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">① 규칙 호출 (EndAction · 카드 사용 …)</text>
 <polyline points="440,710 440,750" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
 <text x="470" y="731" font-size="15" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">② EffectResultEvent 적립</text>
-<polyline points="1400,610 1400,660 740,660 740,800 690,800" fill="none" stroke="#1971c2" stroke-width="3"  marker-end="url(#ah1971c2)" />
-<text x="1070" y="642" font-size="17" fill="#1971c2" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ BufferedEffects 읽기 — 연출이 규칙 산출물을 가지러 온다</text>
-<polyline points="1480,610 1480,775 1180,775" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
-<text x="1330" y="752" font-size="17" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ 버퍼 + 스냅샷 → Build*</text>
-<polyline points="980,850 980,900 1250,900 1250,820 1360,820" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<polyline points="1420,610 1420,660 740,660 740,800 690,800" fill="none" stroke="#1971c2" stroke-width="3"  marker-end="url(#ah1971c2)" />
+<text x="1080" y="642" font-size="17" fill="#1971c2" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③ BufferedEffects 읽기 — 연출이 규칙 산출물을 가지러 온다</text>
+<polyline points="1500,610 1500,740 1180,740" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
+<text x="1340" y="717" font-size="17" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ 버퍼 + 스냅샷 → Build*</text>
+<polyline points="980,850 980,900 1250,900 1250,860 1380,860" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
 <text x="1120" y="925" font-size="17" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑤ CombatTimeline → Play</text>
-<polyline points="1720,880 1720,980" fill="none" stroke="#2f9e44" stroke-width="3"  marker-end="url(#ah2f9e44)" />
-<text x="1740" y="929" font-size="17" fill="#2f9e44" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑥ 비트마다 sink 호출</text>
-<polyline points="2080,1120 2120,1120 2120,525 2080,525" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="14,10" marker-end="url(#ah2f9e44)" />
-<text x="2084" y="949" font-size="14" fill="#2f9e44" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑦ 구현체</text>
+<polyline points="1720,920 1720,1000" fill="none" stroke="#2f9e44" stroke-width="3"  marker-end="url(#ah2f9e44)" />
+<text x="1740" y="957" font-size="17" fill="#2f9e44" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑥ 비트마다 sink 호출</text>
+<polyline points="2060,1140 2085,1140 2085,525 2060,525" fill="none" stroke="#2f9e44" stroke-width="2" stroke-dasharray="14,10" marker-end="url(#ah2f9e44)" />
+<text x="1975" y="949" font-size="14" fill="#2f9e44" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑦ 구현체</text>
 <text x="440" y="1098" font-size="18" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">규칙은 연출을 모른다</text>
 <text x="440" y="1120" font-size="18" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">연출이 규칙 산출물을 가지러 온다</text>
 <text x="440" y="1143" font-size="18" fill="#e03131" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">경계는 asmdef가 컴파일 단계에서 강제</text>

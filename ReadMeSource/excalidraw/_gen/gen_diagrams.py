@@ -133,12 +133,15 @@ def d2():
     d.note(780, 810, "④ ResolveMonsterAction()\n(몬스터 공격 실행 후)", fs=15, color=RED, anchor="topleft", align="left")
 
     d.field(60, 420, 470, 560, "BeginNextOverallTurn (턴 경계 16단계 · 순서 고정)",
-            ["AdvanceOverallTurnCounterStep  (턴 번호 +1)", "ClearPlayerBlockStep  (방어도 소거)",
-             "ResolveFieldObjectTickStep  (필드 오브젝트 틱)", "ApplyActiveEffectTurnStart  (상태이상 틱)",
-             "RefillKiForNewTurnStep  (기 회복)", "ResolveTurnStartRelicTriggers  (유물 턴 시작 훅)",
-             "ApplyCarriedMovementBonusStep  (예약 소진)", "…  (AdvanceAndExpirePlayerProps 등)",
-             "RefreshVisionForNewTurnStep  (시야 갱신)", "RefreshMonsterIntentStep  (몬스터 예고 갱신)",
-             "EnterPlayerMovementPhaseStep  (PlayerMovement 진입)"], bg="#ffd8a8", lfs=15, align="left")
+            ["1  AdvanceOverallTurnCounterStep  (턴 번호 +1)", "2  ClearPlayerBlockStep  (방어도 소거)",
+             "3  ActivatePendingFieldObjects  (예약된 필드 오브젝트 활성화)", "4  ResolveFieldObjectTickStep  (필드 오브젝트 틱)",
+             "5  ApplyActiveEffectTurnStart  (상태이상 틱)", "6  RefillKiForNewTurnStep  (기 회복)",
+             "7  TickLimitedRelicTurnsStep  (턴 제한 유물 카운트)", "8  ResolveTurnStartRelicTriggers  (유물 턴 시작 훅)",
+             "9  ApplyCarriedMovementBonusStep  (이동 보너스 · 민첩 예약 적용)", "10  ApplyPendingSelfImmobilize  (자기 속박 예약 적용)",
+             "11  ApplyPendingProvokeStrength  (도발 강화 예약 적용)", "12  ResetPerTurnSignalsStep  (턴 신호 리셋)",
+             "13  AdvanceAndExpirePlayerProps  (플레이어 기물 수명 처리)", "14  RefreshVisionForNewTurnStep  (시야 갱신)",
+             "15  RefreshMonsterIntentStep  (몬스터 예고 갱신)", "16  EnterPlayerMovementPhaseStep  (PlayerMovement 진입)"],
+            bg="#ffd8a8", fs=16, lfs=13, align="left")
     d.arrow([(600, 720), (530, 720)], color=RED, sw=3)
     d.note(565, 690, "⑤", fs=17, color=RED)
 
@@ -151,7 +154,7 @@ def d2():
     d.arrow([(300, 1120), (300, 1170)], color=GREEN, sw=3)
     d.note(320, 995, "⑦", fs=17, color=GREEN, anchor="topleft", align="left")
 
-    d.field(1700, 420, 440, 330, "PendingEffects (다음 턴 발효 예약)",
+    d.field(1700, 420, 440, 330, "PendingEffects (다음 턴에 발동 예약)",
             ["agility  (민첩 · Amount, Turns)", "selfImmobilize  (자기 속박 · Amount, Turns)",
              "provokeStrength  (도발 강화 · Amount, Turns)", "nextTurnKiPenalty  (다음 턴 기 감소)",
              "", "Take*  (턴 경계에서 꺼내며 비운다)"], bg="#b2f2bb", lfs=15, align="left")

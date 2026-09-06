@@ -406,7 +406,7 @@ private static StageRandomizationPoolEntry WeightedPickWithRepeatDecay(
 
 # 🕹️ 인게임 영상
 
-<!-- TODO(D-5): 트레일러 링크 · 스크린샷 -->
+https://www.youtube.com/watch?v=MzOR5wWA2Xk
 
 <br>
 

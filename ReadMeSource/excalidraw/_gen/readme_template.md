@@ -31,6 +31,13 @@
 
 <br>
 
+# 🕹️ 인게임 영상
+
+<p align="center"><a href="https://www.youtube.com/watch?v=MzOR5wWA2Xk"><img src="https://img.youtube.com/vi/MzOR5wWA2Xk/maxresdefault.jpg" width="720" alt="인게임 영상 (YouTube)"></a></p>
+<p align="center"><sub>이미지를 클릭하면 YouTube 영상으로 이동합니다</sub></p>
+
+<br>
+
 # 📜 목차
 
 1. [게임플레이 연산과 화면 연출 처리](#1-게임플레이-연산과-화면-연출-처리)
@@ -40,7 +47,6 @@
 5. [암시야 정보 처리와 렌더](#5-암시야-정보-처리와-렌더)
 6. [세이브와 시드 재현](#6-세이브와-시드-재현)
 7. [맵 배치 랜덤화](#7-맵-배치-랜덤화)
-- [🕹️ 인게임 영상](#️-인게임-영상)
 
 <br>
 
@@ -50,9 +56,13 @@
 
 <p align="center"><img src="ReadMeSource/1.CombatCore.svg" width="900" alt="게임플레이 연산과 화면 연출 처리 도식"></p>
 
+<br>
+
 게임플레이 코드는 **연산**과 **화면 연출**로 나뉩니다. 연산은 순수 C# 어셈블리(`Combat.Runtime` · `Map.Runtime` · `CardCore`)에 있고, 연출은 Unity 어셈블리(`Combat` 등)에 있습니다. 여기서 게임플레이 연산은 스테이지 맵 하나 안에서 일어나는 규칙 전체(이동 · 카드 · 몬스터 · 함정 · 상점 · 시야 · 유물)를 뜻합니다. 코드 이름의 `Combat`은 이 범위를 가리킵니다.
 
 연산 어셈블리는 `noEngineReferences: true`라서 `UnityEngine`을 쓸 수 없습니다. 참조는 Unity → 순수 C# 어셈블리 한 방향으로 이루어집니다. 따라서 연산 코드가 화면을 건드리는 일은 컴파일 단계에서 불가능합니다.
+
+<br>
 
 ### 구성 요소
 
@@ -70,9 +80,13 @@
 
 - **ICombatPresentationSink** — 스케줄러가 내릴 수 있는 화면 지시 목록(인터페이스)입니다. 구현체는 `MapCombatController`입니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 어셈블리를 통해 게임플레이 연산 코드에서는 Unity의 화면 코드를 참조하지 못하도록 강제하였습니다. 그로 인해 `Tests/EditMode/Combat`의 테스트는 Unity 씬 없이 `CombatState`만 만들어 순수 C#만으로 연산을 검증하는 것이 가능했습니다. AI로 작업 시 병렬 세션 간의 맥락 공유가 어려워 잦은 테스트가 요구된다는 점과 Unity 에디터 점유가 한번에 한 세션만 가능하다는 문제 때문에 최대한 구현에서 에디터에 의존하는 경우를 줄이고자 이러한 구조를 채택하였습니다.
+
+<br>
 
 ### 코드
 
@@ -93,14 +107,20 @@
 
 ## 2. 턴 페이즈와 턴 경계 처리
 
-<p align="center"><img src="ReadMeSource/2.TurnFlow.svg" width="900" alt="턴 페이즈와 턴 경계 처리 도식"></p>
-
 <p align="center"><img src="ReadMeSource/0.PhaseOrder.png" width="620" alt="턴 페이즈 순서"></p>
 <p align="center"><sub>한 턴의 페이즈 순서 — 플레이어 이동 → 몬스터 이동 → 플레이어 액션 → 몬스터 액션</sub></p>
+
+<br>
+
+<p align="center"><img src="ReadMeSource/2.TurnFlow.svg" width="900" alt="턴 페이즈와 턴 경계 처리 도식"></p>
+
+<br>
 
 한 턴은 네 페이즈 `PlayerMovement → MonsterMovement → PlayerAction → MonsterAction`을 한 바퀴 돕니다. 페이즈를 바꾸는 함수는 `CombatState` 안에만 있고(`SetPhase`, private), 밖에서 부를 수 있는 진입점은 셋입니다.
 
 턴과 턴 사이의 처리(턴 경계)는 `BeginNextOverallTurn` 한 함수가 16단계를 정해진 순서로 실행합니다. 「다음 턴에 발동하는 효과」는 `PendingEffects`에 예약해 두었다가 이 경계에서 꺼내 적용합니다.
+
+<br>
 
 ### 구성 요소
 
@@ -120,9 +140,13 @@
 
 - **Victory / Defeat** — 해소가 끝날 때마다 `CheckTerminalOutcomeStep`이 승패를 확인합니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 턴 진행은 동기 함수 방식입니다. 진입점을 한 번 부르면 그 페이즈의 규칙과 턴 경계 16단계가 한 번에 끝까지 실행되게 됩니다. 1절에서 연출을 연산 결과로부터의 파생을 결정했는데, 그 영향으로 이러한 구조를 채택했습니다. 연산이 한 번에 끝나야 결과 기록이 완성될 수 있고 그 기록으로부터 연출 재생이 가능하기 때문입니다.
+
+<br>
 
 ### 코드
 
@@ -143,17 +167,23 @@
 
 ## 3. 몬스터 AI 계획과 예고
 
-<p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 계획과 예고 도식"></p>
-
 <p align="center">
 <img src="ReadMeSource/3.IntentPreview_1.png" width="440" alt="몬스터 행동 예고 1">
 <img src="ReadMeSource/3.IntentPreview_2.png" width="440" alt="몬스터 행동 예고 2">
 </p>
 <p align="center"><sub>몬스터의 다음 행동 예고 — 붉게 칠해진 칸이 다음 턴 공격 범위</sub></p>
 
+<br>
+
+<p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 계획과 예고 도식"></p>
+
+<br>
+
 몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
 
 플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
+
+<br>
 
 ### 구성 요소
 
@@ -181,11 +211,15 @@
 
 - **AttackShapeLibrary** — `attack_shapes.csv`의 공격 범위 형상. 정동 방향 기준 오프셋을 `RotateSteps((6 − dir) % 6)`으로 회전해 씁니다. `AttackShapeAdjacency`(Full · None · Open · Body · BodyShell)가 몸체 칸과의 관계를 정합니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 몬스터의 판단은 행동 트리나 유틸리티 AI 같은 별도 체계 대신 if/else 한 함수(`SelectMovementIntent`)로 구현했습니다. 몬스터의 수가 많지 않아 상태 여섯 개와 프로파일 분기 몇 개면 충분히 표현할 수 있다고 판단했기 때문입니다. 함수 하나를 위에서 아래로 읽으면 규칙 전체가 보입니다.
 >
 > 공격 방식은 코드가 아니라 데이터로 정의했습니다. 보스 몬스터를 제외하면 모든 몬스터의 공격이 「형상 + 피해 + 가중치」로 정형화되어 있어서, 패턴은 `monster_attack_patterns.csv`, 형상은 `attack_shapes.csv`에 두고 계획기는 몬스터 종류를 모른 채 데이터만 읽도록 했습니다. 새 몬스터는 행을 추가하는 것으로 끝납니다. 규격을 벗어나는 보스 기믹만 코드(`CombatState.Boss*`)에 있습니다.
+
+<br>
 
 ### 코드
 
@@ -206,18 +240,24 @@
 
 ## 4. 카드 데이터와 카드 클래스
 
-<p align="center"><img src="ReadMeSource/4.CardsAndDecks.svg" width="900" alt="카드 데이터와 카드 클래스 도식"></p>
-
-카드 하나는 두 조각으로 되어 있습니다. 표시 · 밸런스 값은 `cards.csv`의 한 행이고, 규칙은 `Combat.Runtime/Cards/`의 클래스 하나입니다. 둘은 카드 id로만 이어집니다.
-
-스테이지 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
-
 <p align="center">
 <img src="ReadMeSource/4.Card_Move.png" width="240" alt="이동 카드">
 <img src="ReadMeSource/4.Card_Attack.png" width="240" alt="공격 카드">
 <img src="ReadMeSource/4.Card_Scout.png" width="240" alt="정찰 카드">
 </p>
 <p align="center"><sub>이동 · 공격 · 정찰 카드 — 문안과 수치는 CSV, 효과 규칙은 클래스</sub></p>
+
+<br>
+
+<p align="center"><img src="ReadMeSource/4.CardsAndDecks.svg" width="900" alt="카드 데이터와 카드 클래스 도식"></p>
+
+<br>
+
+카드 하나는 두 조각으로 되어 있습니다. 표시 · 밸런스 값은 `cards.csv`의 한 행이고, 규칙은 `Combat.Runtime/Cards/`의 클래스 하나입니다. 둘은 카드 id로만 이어집니다.
+
+스테이지 중 덱은 이동 덱과 행동 덱 두 벌이며, 각각 뽑을 더미 · 손패 · 버림 더미 · 소멸 더미 네 개로 이루어집니다. 카드를 쓰면 `CombatState`가 카드 클래스를 찾아 규칙 훅을 호출하고, 다 쓴 카드의 처분은 `ConsumePlayedCard` 한 곳에서 정합니다.
+
+<br>
 
 ### 구성 요소
 
@@ -243,11 +283,15 @@
 
 - **ConsumePlayedCard** — 다 쓴 카드를 `DisposeAfterPlay`의 답에 따라 버림 더미 · 소멸 더미로 보내거나 그대로 둡니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 카드의 규칙은 데이터가 아니라 클래스로 만들었습니다. 카드는 이동 · 공격 · 방어 · 정찰 · 유틸리티 · 상태 등 타입이 다양하고, 같은 타입 안에서도 목적지를 무작위로 바꾸거나, 대상의 상태이상에 따라 피해를 달리하거나, 손패 전체를 버리고 다시 뽑는 식으로 효과가 제각각입니다. 이런 효과를 데이터 열의 조합으로 표현하려면 열과 파서가 계속 늘어나고, 그래도 표현하지 못하는 효과가 남습니다. 클래스로 두면 훅 하나를 override해 어떤 규칙이든 코드로 쓸 수 있습니다.
 >
 > 3절의 몬스터는 반대였습니다. 보스를 제외하면 공격이 「형상 + 피해 + 가중치」로 정형화되어 있어 데이터로 충분했습니다. 카드는 구현체마다 규칙이 다르기 때문에 클래스를 택했습니다. 표시와 밸런스 값은 여전히 `cards.csv`에 두어 수치 조정은 코드 밖에서 할 수 있게 했습니다.
+
+<br>
 
 ### 코드
 
@@ -279,16 +323,22 @@
 
 ## 5. 암시야 정보 처리와 렌더
 
-<p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 정보 처리와 렌더 도식"></p>
-
 <p align="center"><img src="ReadMeSource/5.FogInGame.png" width="760" alt="인게임 시야"></p>
 <p align="center"><sub>시야 반경 밖의 칸은 어둡게, 본 적 있는 칸은 중간 밝기로 그려진다</sub></p>
+
+<br>
+
+<p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 정보 처리와 렌더 도식"></p>
+
+<br>
 
 기억결에는 시야 시스템이 존재합니다. 플레이어는 주위 3칸의 시야를 가지며, 필드나 정찰 카드를 사용하여 추가 시야를 확보할 수 있습니다.
 
 칸마다 시야 단계가 `Unknown → Hinted → Revealed` 셋 중 하나입니다. 한 번도 못 본 칸, 본 적은 있지만 지금은 안 보이는 칸, 지금 보이는 칸입니다. `CombatState`가 밝힐 칸을 정하고, `HexVisibilityRuntime`이 칸별 단계를 저장합니다.
 
 Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInfo`가 "그 칸에 대해 플레이어가 알아도 되는 것만" 채운 구조체를 돌려주고, 툴팁 · 미니맵 · 오브젝트 표시 · 화면 렌더가 전부 그 구조체만 씁니다.
+
+<br>
 
 ### 구성 요소
 
@@ -310,9 +360,13 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 - **MapVisibilityLit.shader** — URP Lit 변형. 픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱합니다. 출력 전에 NaN을 제거해 블룸이 화면 전체로 번지는 것을 막습니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 정보 은닉을 자료구조에서 처리했습니다. `GetSafeCellInfo`는 원본 맵 데이터 대신 걸러진 사본 `HexVisibilitySafeCellInfo`(readonly struct)를 만들어 돌려주는데, `Hinted` 칸이면 이벤트 id · 랜드마크 id 자리에 원본 값 대신 빈 문자열을 넣습니다. 툴팁 · 미니맵 · 렌더 마스크는 이 사본만 받으므로 모르는 칸의 정보를 그릴 수 없고, 「어느 단계에서 무엇을 보여 주는가」라는 규칙은 이 함수 한 곳에만 있습니다.
+
+<br>
 
 ### 코드
 
@@ -335,11 +389,15 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 <p align="center"><img src="ReadMeSource/6.SaveAndSeed.svg" width="900" alt="세이브와 시드 재현 도식"></p>
 
+<br>
+
 기억결은 로그라이크 장르로서, 시드에 기반하여 스테이지의 재현이 가능하도록 하였습니다.
 
 런 하나에 시드 하나가 발급되고, 용도별로 번호(0~9)를 붙여 파생한 스트림 시드로 난수 인스턴스를 만들었습니다. 각 인스턴스는 `CountingRandom`이라서 지금까지 몇 번 뽑았는지(`Consumed`)를 셉니다. 때문에 하나의 시드로도 여러 분야의 진행 상태를 추적, 복원이 가능하도록 했습니다.
 
 세이브는 난수의 내부 상태를 저장하지 않도록 하였습니다. 이미 뽑아서 상태가 된 값(몬스터 공격 패턴 · 피해 변주)은 체력이나 좌표처럼 값 그대로 저장하고, 아직 뽑지 않은 값은 각 인스턴스의 `Consumed`(커서)만 저장합니다. 복원은 같은 시드로 인스턴스를 새로 만들어 커서까지 `FastForward`하고, 이미 상태가 된 값은 다시 뽑지 않습니다.
+
+<br>
 
 ### 구성 요소
 
@@ -359,11 +417,15 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 - **RefreshAllIntents(preserveCommittedAttackRolls: true)** — 복원 뒤 몬스터 예고의 기하(경로 · 조준 · 도약)만 다시 세우고 다시 뽑지 않습니다.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 시드 하나로 판 전체가 재현되도록 만들었습니다. 플레이 테스트와 버그 제보를 시드 기반으로 하면 「시드 12345, 3턴째」만으로 같은 상황을 그대로 다시 열 수 있어 재현과 수정이 쉬워집니다. 로그라이크 장르에서는 특히 시드를 공유하며 같은 판에 도전하는 유저 커뮤니티와 그 피드백이 중요하기 때문에, 배치 · 셔플 · 공격 패턴 · 보상까지 전부 시드에서 갈라지도록 했습니다.
 >
 > 세이브도 같은 원칙 위에 있습니다. 난수 내부 상태를 통째로 저장하는 대신 시드와 커서만 저장하고, 이미 뽑아서 플레이어에게 보인 값은 다른 상태와 똑같이 값 그대로 저장합니다. 그래서 저장하고 불러와도 앞으로 나올 난수와 이미 예고된 공격이 저장 전과 같습니다. 용도별로 스트림을 나눈 것은 각 파트의 진행도에 따라 다른 쪽 결과가 밀리지 않게 하기 위해서입니다.
+
+<br>
 
 ### 코드
 
@@ -384,16 +446,22 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 ## 7. 맵 배치 랜덤화
 
-<p align="center"><img src="ReadMeSource/7.Placement.svg" width="900" alt="맵 배치 랜덤화 도식"></p>
-
 <p align="center"><img src="ReadMeSource/7.MapEditor.png" width="760" alt="맵 에디터"></p>
 <p align="center"><sub>맵 에디터 — 타일 · 오브젝트 · 슬롯을 저작한다</sub></p>
+
+<br>
+
+<p align="center"><img src="ReadMeSource/7.Placement.svg" width="900" alt="맵 배치 랜덤화 도식"></p>
+
+<br>
 
 로그라이크 장르 특성상, 다회차 플레이가 권장됩니다. 이때, 하나의 맵에 항상 똑같은 배치의 몬스터와 오브젝트가 나와서는 안됩니다. 이에 배치 랜덤화 로직을 작성하였습니다.
 
 자체 구현한 맵 에디터에서 사람이 만든 슬롯 중 예비 슬롯(그룹 태그만 있고 오브젝트가 비어 있는 칸)을 랜덤화가 채웁니다. 어떤 규칙으로 채워지는지는 에디터의 슬롯 문법이, 무엇이 실제로 채워지는지는 CSV 프로파일과 시드가 정합니다.
 
 배치는 몬스터 → 함정 → 서비스 → 상자 네 단계를 정해진 순서로 지나고, 몬스터 배치 결과는 검증 게이트를 통과해야 합니다. 실패하면 재롤하고, 상한을 넘기면 저작 원본으로 진행합니다.
+
+<br>
 
 ### 구성 요소
 
@@ -411,9 +479,13 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 - **HexMapData** — 통과하면 랜덤화된 맵이 스테이지로 갑니다. 실패하거나 프로파일이 없으면 저작 원본 그대로.
 
+<br>
+
 ### 이 시스템에서 중점을 둔 것
 
 > 배치 랜덤화를 하되, 사람이 맵 에디터의 슬롯 문법을 사용하여 어디에 무엇이 올 수 있는가를 정하도록 했습니다. 또한 CSV 프로파일과 시드가 구체적으로 어떤 것이 배치되는지를 결정하도록 하였습니다.
+
+<br>
 
 ### 코드
 
@@ -427,12 +499,6 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 ```
 
 </details>
-
-<br>
-
-# 🕹️ 인게임 영상
-
-https://www.youtube.com/watch?v=MzOR5wWA2Xk
 
 <br>
 

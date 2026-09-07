@@ -87,6 +87,8 @@ def check():
     # 3. image links exist (HTML comments = placeholders, skipped)
     live = re.sub(r"<!--.*?-->", "", md, flags=re.S)
     for src in re.findall(r'src="([^"]+)"', live):
+        if src.startswith("http"):
+            continue
         if not os.path.exists(os.path.join(REPO, src)):
             print("  MISSING IMAGE:", src); ok = False
     # 4. backtick paths exist

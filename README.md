@@ -389,9 +389,9 @@ public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
 
 <p align="center"><img src="ReadMeSource/6.SaveAndSeed.svg" width="900" alt="세이브와 시드 재현 도식"></p>
 
-런 하나에 시드 하나가 발급되고, 용도별로 번호(0~9)를 붙여 파생한 스트림 시드로 난수 인스턴스를 만듭니다. 각 인스턴스는 `CountingRandom`이라서 지금까지 몇 번 뽑았는지(`Consumed`)를 셉니다.
+런 하나에 시드 하나가 발급되고, 용도별로 번호(0~9)를 붙여 파생한 스트림 시드로 난수 인스턴스를 만들었습니다. 각 인스턴스는 `CountingRandom`이라서 지금까지 몇 번 뽑았는지(`Consumed`)를 셉니다. 때문에 하나의 시드로도 여러 분야의 진행 상태를 추적, 복원이 가능하도록 했습니다.
 
-세이브는 난수의 내부 상태를 저장하지 않습니다. 원칙은 하나입니다. 이미 굴려서 상태가 된 값(몬스터 공격 패턴 · 피해 변주)은 체력이나 좌표처럼 값 그대로 저장하고, 아직 굴리지 않은 값은 각 인스턴스의 `Consumed`(커서)만 저장합니다. 복원은 같은 시드로 인스턴스를 새로 만들어 커서까지 `FastForward`하고, 이미 상태가 된 값은 다시 굴리지 않습니다.
+세이브는 난수의 내부 상태를 저장하지 않도록 하였습니다. 이미 뽑아서 상태가 된 값(몬스터 공격 패턴 · 피해 변주)은 체력이나 좌표처럼 값 그대로 저장하고, 아직 뽑지 않은 값은 각 인스턴스의 `Consumed`(커서)만 저장합니다. 복원은 같은 시드로 인스턴스를 새로 만들어 커서까지 `FastForward`하고, 이미 상태가 된 값은 다시 뽑지 않습니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
@@ -401,13 +401,13 @@ public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
 - **CombatSuspendEnvelope / CombatSuspendData / MonsterRuntimeSaveData** — 저장 구조. 봉투가 보상 커서, 데이터가 커서 여섯(`RngCursors`), 몬스터별 저장이 `AttackPatternIndex` · `AttackDamageRollOffset`.
 - **CreateSuspendSnapshot / RestoreFromSuspend** — 저장과 복원 진입점.
 - **RestoreRngCursors** — 같은 시드로 인스턴스를 새로 만들어 `FastForward(Consumed)`.
-- **RefreshAllIntents(preserveCommittedAttackRolls: true)** — 복원 뒤 몬스터 예고의 기하(경로 · 조준 · 도약)만 다시 세우고 굴림은 하지 않습니다.
+- **RefreshAllIntents(preserveCommittedAttackRolls: true)** — 복원 뒤 몬스터 예고의 기하(경로 · 조준 · 도약)만 다시 세우고 다시 뽑지 않습니다.
 
 ### 이 시스템에서 중점을 둔 것
 
 시드 하나로 판 전체가 재현되도록 만들었습니다. 플레이 테스트와 버그 제보를 시드 기반으로 하면 「시드 12345, 3턴째」만으로 같은 상황을 그대로 다시 열 수 있어 재현과 수정이 쉬워집니다. 로그라이크 장르에서는 특히 시드를 공유하며 같은 판에 도전하는 유저 커뮤니티와 그 피드백이 중요하기 때문에, 배치 · 셔플 · 공격 패턴 · 보상까지 전부 시드에서 갈라지도록 했습니다.
 
-세이브도 같은 원칙 위에 있습니다. 난수 내부 상태를 통째로 저장하는 대신 시드와 커서만 저장하고, 이미 굴려서 플레이어에게 보인 값은 다른 상태와 똑같이 값 그대로 저장합니다. 그래서 저장하고 불러와도 앞으로 나올 난수와 이미 예고된 공격이 저장 전과 같습니다. 용도별로 스트림을 나눈 것은 한쪽에서 난수를 많이 써도 다른 쪽 결과가 밀리지 않게 하기 위해서입니다.
+세이브도 같은 원칙 위에 있습니다. 난수 내부 상태를 통째로 저장하는 대신 시드와 커서만 저장하고, 이미 뽑아서 플레이어에게 보인 값은 다른 상태와 똑같이 값 그대로 저장합니다. 그래서 저장하고 불러와도 앞으로 나올 난수와 이미 예고된 공격이 저장 전과 같습니다. 용도별로 스트림을 나눈 것은 각 파트의 진행도에 따라 다른 쪽 결과가 밀리지 않게 하기 위해서입니다.
 
 ### 코드
 

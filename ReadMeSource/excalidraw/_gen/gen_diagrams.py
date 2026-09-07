@@ -321,20 +321,23 @@ def d5():
     d.note(360, 112, "① RefreshVisionForNewTurnStep (턴 경계) · 이동 뒤", fs=15, color=RED, anchor="topleft", align="left")
 
     d.zone(700, 140, 760, 1060, "Map.Runtime (순수 C#)", bg=BG_BLUE)
-    d.box(740, 200, 680, 80, "HexVisibilityRuntime", sub="칸별 시야 단계 관리", fs=26, sfs=13)
-    d.field(740, 310, 680, 200, "집합 4",
-            ["states  (칸별 단계 Unknown / Hinted / Revealed · 저장 대상)", "temporaryRevealed  (이번 갱신에 보인 칸)",
-             "permanentlyRevealed  (영구히 밝혀진 칸)", "trapRevealed  (함정이 드러난 칸)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
-    d.box(740, 560, 320, 100, "ForceVisibility", sub="단계 내리기 허용 — 세이브 복원 전용 (private)", fs=22, sfs=12)
-    d.box(1100, 560, 320, 100, "SetVisibility", sub="단계 올리기만 (단조) · Version++", fs=22, sfs=12)
+    d.box(740, 200, 680, 80, "HexVisibilityRuntime", sub="칸별 시야 단계를 저장하고, 물어보면 걸러서 답한다", fs=26, sfs=13)
+    d.field(740, 310, 680, 200, "가지고 있는 컬렉션",
+            ["states : Dictionary<HexCoord, HexCellVisibility>  (칸별 단계 · 저장 대상)",
+             "temporaryRevealed : HashSet<HexCoord>  (이번 갱신에 시야에 든 칸)",
+             "permanentlyRevealed : HashSet<HexCoord>  (영구 공개 칸)",
+             "trapRevealed : HashSet<HexCoord>  (함정이 드러난 칸 · 시야와 별개)"], bg="#a5d8ff", fs=16, lfs=13, align="left")
+    d.box(740, 560, 320, 100, "ForceVisibility", sub="단계 내리기 (private)\n시야 이탈 Revealed→Hinted · 세이브 복원", fs=22, sfs=12)
+    d.box(1100, 560, 320, 100, "SetVisibility", sub="단계 올리기만 (public)\n낮은 값 요청은 무시 · 바뀌면 Version++", fs=22, sfs=12)
     d.arrow([(900, 560), (900, 510)], color=BLACK, sw=2, style="dashed")
     d.arrow([(1260, 560), (1260, 510)], color=BLACK, sw=2)
     d.note(1280, 520, "③", fs=16, anchor="topleft", align="left")
     d.note(1080, 690, "Unknown  →  Hinted  →  Revealed", fs=18, color=GRAY)
-    d.box(740, 760, 680, 90, "GetSafeCellInfo(coord)", sub="단계에 맞게 거른 칸 정보 반환", fs=24, sfs=13)
-    d.field(740, 890, 680, 260, "HexVisibilitySafeCellInfo (단계별로 거른 정보)",
-            ["Unknown  (좌표만)", "Hinted  (지형 · 이동 비용 · 걷기 가능 — EventId · LandmarkId 는 비움)",
-             "Revealed  (전부 · TileDefinitionId 포함)", "TrapRevealed  (별도 축)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
+    d.box(740, 760, 680, 90, "GetSafeCellInfo(coord)", sub="칸 정보 중 플레이어가 알아도 되는 것만 채운 구조체를 돌려준다", fs=24, sfs=13)
+    d.field(740, 890, 680, 260, "HexVisibilitySafeCellInfo (단계별로 채워지는 필드)",
+            ["Unknown  →  Coord 만", "Hinted  →  TerrainTypeId · BaseMoveCost · BaseWalkable",
+             "              (EventId · LandmarkId · TileDefinitionId 는 빈 값)",
+             "Revealed  →  전부", "TrapRevealed  (함정 발견 여부 · 단계와 무관)"], bg="#a5d8ff", fs=16, lfs=14, align="left")
     d.arrow([(1080, 850), (1080, 890)], color=BLACK, sw=2)
     d.arrow([(1080, 510), (1080, 760)], color=BLACK, sw=1.5, style="dotted")
 
@@ -342,18 +345,18 @@ def d5():
     d.note(586, 462, "② Refresh\nTemporary\nRevealedCells", fs=13, color=RED, anchor="topleft", align="left")
 
     d.zone(1540, 140, 600, 460, "Unity 소비 ① — 정보 표시", bg=BG_GREEN)
-    d.box(1580, 200, 520, 80, "CombatVisibilityPresenter", sub="칸 툴팁", fs=20, sfs=13)
+    d.box(1580, 200, 520, 80, "CombatVisibilityPresenter", sub="칸 툴팁 문장 생성", fs=20, sfs=13)
     d.box(1580, 310, 520, 80, "TacticalMinimapView", sub="미니맵", fs=20, sfs=13)
     d.box(1580, 420, 520, 100, "MapObjectVisualRegistry", sub="ShouldShowForVisibility (오브젝트 표시 여부)", fs=20, sfs=13)
     d.arrow([(1580, 240), (1500, 240), (1500, 800), (1420, 800)], color=BLUE, sw=3)
     d.arrow([(1580, 350), (1500, 350)], color=BLUE, sw=3, head=False)
     d.arrow([(1580, 470), (1500, 470)], color=BLUE, sw=3, head=False)
-    d.note(1510, 640, "④ 거른\n정보만", fs=15, color=BLUE, anchor="topleft", align="left")
+    d.note(1510, 640, "④ 걸러진\n구조체만", fs=15, color=BLUE, anchor="topleft", align="left")
 
     d.zone(1540, 680, 600, 640, "Unity 소비 ② — 화면 렌더", bg=BG_GREEN)
-    d.box(1580, 740, 520, 150, "VisibilityLightingMaskService", sub="칸 단계 → 바이트 마스크 텍스처\n바뀐 슬롯 없으면 업로드 생략", fs=20, sfs=13)
-    d.box(1580, 950, 520, 80, "_SP_VisibilityMask", sub="셰이더 전역 텍스처", fs=18, sfs=12)
-    d.box(1580, 1090, 520, 200, "MapVisibilityLit.shader", sub="URP Lit 변형\n월드 좌표 → 마스크 UV 샘플 (셀 스냅)\n출력 전 NaN 제거 (max / min)", fs=20, sfs=13)
+    d.box(1580, 740, 520, 150, "VisibilityLightingMaskService", sub="칸마다 밝기 1바이트 → R8 텍스처 (맵을 위에서 본 밝기 격자)\n지난번과 값이 같으면 GPU 업로드 생략", fs=20, sfs=12)
+    d.box(1580, 950, 520, 80, "_SP_VisibilityMask", sub="셰이더 전역 텍스처로 업로드", fs=18, sfs=12)
+    d.box(1580, 1090, 520, 200, "MapVisibilityLit.shader", sub="URP Lit 변형\n픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱한다\n출력 전 NaN 제거 (max / min)", fs=20, sfs=13)
     d.arrow([(1580, 830), (1420, 830)], color=BLUE, sw=3)
     d.note(1445, 845, "⑤", fs=16, color=BLUE, anchor="topleft", align="left")
     d.arrow([(1840, 890), (1840, 950)], color=GREEN, sw=3)

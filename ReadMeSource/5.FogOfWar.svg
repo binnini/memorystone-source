@@ -17,32 +17,35 @@
 <text x="1080" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Map.Runtime (순수 C#)</text>
 <rect x="740" y="200" width="680" height="80" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1080" y="239" font-size="26" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">HexVisibilityRuntime</text>
-<text x="1080" y="264" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸별 시야 단계 관리</text>
+<text x="1080" y="264" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸별 시야 단계를 저장하고, 물어보면 걸러서 답한다</text>
 <rect x="740" y="310" width="680" height="200" rx="16" fill="url(#ha5d8ff)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="1080" y="338" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">집합 4</text>
-<text x="760" y="364" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">states  (칸별 단계 Unknown / Hinted / Revealed · 저장 대상)</text>
-<text x="760" y="382" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">temporaryRevealed  (이번 갱신에 보인 칸)</text>
-<text x="760" y="399" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">permanentlyRevealed  (영구히 밝혀진 칸)</text>
-<text x="760" y="416" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">trapRevealed  (함정이 드러난 칸)</text>
+<text x="1080" y="338" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">가지고 있는 컬렉션</text>
+<text x="760" y="363" font-size="13" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">states : Dictionary&lt;HexCoord, HexCellVisibility&gt;  (칸별 단계 · 저장 대상)</text>
+<text x="760" y="379" font-size="13" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">temporaryRevealed : HashSet&lt;HexCoord&gt;  (이번 갱신에 시야에 든 칸)</text>
+<text x="760" y="396" font-size="13" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">permanentlyRevealed : HashSet&lt;HexCoord&gt;  (영구 공개 칸)</text>
+<text x="760" y="412" font-size="13" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">trapRevealed : HashSet&lt;HexCoord&gt;  (함정이 드러난 칸 · 시야와 별개)</text>
 <rect x="740" y="560" width="320" height="100" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="900" y="608" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ForceVisibility</text>
-<text x="900" y="631" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">단계 내리기 허용 — 세이브 복원 전용 (private)</text>
+<text x="900" y="600" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">ForceVisibility</text>
+<text x="900" y="624" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">단계 내리기 (private)</text>
+<text x="900" y="639" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">시야 이탈 Revealed→Hinted · 세이브 복원</text>
 <rect x="1100" y="560" width="320" height="100" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1260" y="608" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">SetVisibility</text>
-<text x="1260" y="631" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">단계 올리기만 (단조) · Version++</text>
+<text x="1260" y="600" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">SetVisibility</text>
+<text x="1260" y="624" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">단계 올리기만 (public)</text>
+<text x="1260" y="639" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">낮은 값 요청은 무시 · 바뀌면 Version++</text>
 <polyline points="900,560 900,510" fill="none" stroke="#1e1e1e" stroke-width="2" stroke-dasharray="14,10" marker-end="url(#ah1e1e1e)" />
 <polyline points="1260,560 1260,510" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
 <text x="1280" y="536" font-size="16" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">③</text>
 <text x="1080" y="708" font-size="18" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Unknown  →  Hinted  →  Revealed</text>
 <rect x="740" y="760" width="680" height="90" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1080" y="803" font-size="24" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">GetSafeCellInfo(coord)</text>
-<text x="1080" y="828" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">단계에 맞게 거른 칸 정보 반환</text>
+<text x="1080" y="828" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸 정보 중 플레이어가 알아도 되는 것만 채운 구조체를 돌려준다</text>
 <rect x="740" y="890" width="680" height="260" rx="16" fill="url(#ha5d8ff)" stroke="#1e1e1e" stroke-width="1.5" />
-<text x="1080" y="918" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">HexVisibilitySafeCellInfo (단계별로 거른 정보)</text>
-<text x="760" y="944" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Unknown  (좌표만)</text>
-<text x="760" y="962" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Hinted  (지형 · 이동 비용 · 걷기 가능 — EventId · LandmarkId 는 비움)</text>
-<text x="760" y="979" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Revealed  (전부 · TileDefinitionId 포함)</text>
-<text x="760" y="996" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">TrapRevealed  (별도 축)</text>
+<text x="1080" y="918" font-size="16" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">HexVisibilitySafeCellInfo (단계별로 채워지는 필드)</text>
+<text x="760" y="944" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Unknown  →  Coord 만</text>
+<text x="760" y="962" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Hinted  →  TerrainTypeId · BaseMoveCost · BaseWalkable</text>
+<text x="760" y="979" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">              (EventId · LandmarkId · TileDefinitionId 는 빈 값)</text>
+<text x="760" y="996" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Revealed  →  전부</text>
+<text x="760" y="1014" font-size="14" fill="#1e1e1e" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">TrapRevealed  (함정 발견 여부 · 단계와 무관)</text>
 <polyline points="1080,850 1080,890" fill="none" stroke="#1e1e1e" stroke-width="2"  marker-end="url(#ah1e1e1e)" />
 <polyline points="1080,510 1080,760" fill="none" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="4,6" marker-end="url(#ah1e1e1e)" />
 <polyline points="580,450 660,450 660,410 740,410" fill="none" stroke="#e03131" stroke-width="3"  marker-end="url(#ahe03131)" />
@@ -53,7 +56,7 @@
 <text x="1840" y="174" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Unity 소비 ① — 정보 표시</text>
 <rect x="1580" y="200" width="520" height="80" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1840" y="236" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">CombatVisibilityPresenter</text>
-<text x="1840" y="260" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸 툴팁</text>
+<text x="1840" y="260" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸 툴팁 문장 생성</text>
 <rect x="1580" y="310" width="520" height="80" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1840" y="346" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">TacticalMinimapView</text>
 <text x="1840" y="370" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">미니맵</text>
@@ -63,21 +66,21 @@
 <polyline points="1580,240 1500,240 1500,800 1420,800" fill="none" stroke="#1971c2" stroke-width="3"  marker-end="url(#ah1971c2)" />
 <polyline points="1580,350 1500,350" fill="none" stroke="#1971c2" stroke-width="3"   />
 <polyline points="1580,470 1500,470" fill="none" stroke="#1971c2" stroke-width="3"   />
-<text x="1510" y="655" font-size="15" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ 거른</text>
-<text x="1510" y="674" font-size="15" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">정보만</text>
+<text x="1510" y="655" font-size="15" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">④ 걸러진</text>
+<text x="1510" y="674" font-size="15" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">구조체만</text>
 <rect x="1540" y="680" width="600" height="640" rx="16" fill="#ebfbee" stroke="#1e1e1e" stroke-width="1.5" stroke-dasharray="14,10"/>
 <text x="1840" y="714" font-size="22" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">Unity 소비 ② — 화면 렌더</text>
 <rect x="1580" y="740" width="520" height="150" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
-<text x="1840" y="803" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">VisibilityLightingMaskService</text>
-<text x="1840" y="827" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸 단계 → 바이트 마스크 텍스처</text>
-<text x="1840" y="844" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">바뀐 슬롯 없으면 업로드 생략</text>
+<text x="1840" y="804" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">VisibilityLightingMaskService</text>
+<text x="1840" y="828" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">칸마다 밝기 1바이트 → R8 텍스처 (맵을 위에서 본 밝기 격자)</text>
+<text x="1840" y="842" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">지난번과 값이 같으면 GPU 업로드 생략</text>
 <rect x="1580" y="950" width="520" height="80" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1840" y="986" font-size="18" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">_SP_VisibilityMask</text>
-<text x="1840" y="1009" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">셰이더 전역 텍스처</text>
+<text x="1840" y="1009" font-size="12" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">셰이더 전역 텍스처로 업로드</text>
 <rect x="1580" y="1090" width="520" height="200" rx="16" fill="none" stroke="#1e1e1e" stroke-width="2" />
 <text x="1840" y="1170" font-size="20" fill="#1e1e1e" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">MapVisibilityLit.shader</text>
 <text x="1840" y="1194" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">URP Lit 변형</text>
-<text x="1840" y="1210" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">월드 좌표 → 마스크 UV 샘플 (셀 스냅)</text>
+<text x="1840" y="1210" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱한다</text>
 <text x="1840" y="1227" font-size="13" fill="#868e96" text-anchor="middle" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">출력 전 NaN 제거 (max / min)</text>
 <polyline points="1580,830 1420,830" fill="none" stroke="#1971c2" stroke-width="3"  marker-end="url(#ah1971c2)" />
 <text x="1445" y="861" font-size="16" fill="#1971c2" text-anchor="start" font-family="Virgil, 'Segoe Print', 'Comic Sans MS', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif" font-weight="normal">⑤</text>

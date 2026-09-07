@@ -308,18 +308,20 @@ private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
 
 <p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 정보 처리와 렌더 도식"></p>
 
-칸마다 시야 단계가 `Unknown → Hinted → Revealed` 셋 중 하나입니다. `CombatState`가 시야 반경 · 필드 오브젝트 · 정찰 카드를 합쳐 밝힐 칸을 정하고, `HexVisibilityRuntime`이 단계를 관리합니다.
+칸마다 시야 단계가 `Unknown → Hinted → Revealed` 셋 중 하나입니다. 한 번도 못 본 칸, 본 적은 있지만 지금은 안 보이는 칸, 지금 보이는 칸입니다. `CombatState`가 밝힐 칸을 정하고, `HexVisibilityRuntime`이 칸별 단계를 저장합니다.
 
-Unity 쪽은 칸의 상태를 직접 읽지 않고 `GetSafeCellInfo`가 단계에 맞게 걸러 준 구조체만 받습니다. 툴팁 · 미니맵 · 오브젝트 표시가 이 구조체를 쓰고, 화면의 어둠도 같은 구조체에서 마스크 텍스처로 만들어 셰이더가 샘플링합니다.
+Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInfo`가 "그 칸에 대해 플레이어가 알아도 되는 것만" 채운 구조체를 돌려주고, 툴팁 · 미니맵 · 오브젝트 표시 · 화면 렌더가 전부 그 구조체만 씁니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
-- **RefreshPlayerVision** — 시야 반경(`GetEffectivePlayerVisionRange`) · 필드 오브젝트(`FieldObjects`) · 이번 턴 정찰(`scoutRevealedThisTurn`)을 합쳐 밝힐 칸 집합을 만듭니다. 턴 경계와 이동 뒤에 불립니다.
-- **HexVisibilityRuntime** — 칸별 단계 `states`(저장 대상)와 보조 집합(`temporaryRevealed` · `permanentlyRevealed` · `trapRevealed`)을 가집니다. `SetVisibility`는 단계를 올리기만 하고, 내리는 `ForceVisibility`는 세이브 복원에만 씁니다.
-- **GetSafeCellInfo → HexVisibilitySafeCellInfo** — 단계별로 거른 정보. `Unknown`은 좌표만, `Hinted`는 지형 · 이동 비용만(이벤트 · 랜드마크 id는 비움), `Revealed`는 전부.
-- **CombatVisibilityPresenter / TacticalMinimapView / MapObjectVisualRegistry** — 툴팁 · 미니맵 · 오브젝트 표시 여부. 전부 걸러진 구조체만 봅니다.
-- **VisibilityLightingMaskService** — 칸 단계를 바이트 마스크 텍스처로 굽습니다. 바뀐 슬롯이 없으면 업로드를 건너뜁니다.
-- **MapVisibilityLit.shader** — URP Lit 변형. 픽셀의 월드 좌표를 마스크 UV로 바꿔 샘플링해 밝기를 정하고, 출력 전에 NaN을 씻습니다.
+- **RefreshPlayerVision** — 지금 보이는 칸을 정합니다. 시야 반경 안의 칸, 횃불 같은 필드 오브젝트가 비추는 칸, 이번 턴 정찰 카드로 밝힌 칸을 합칩니다. 턴 경계와 플레이어 이동 뒤에 불립니다.
+- **HexVisibilityRuntime** — 칸별 단계를 `Dictionary<HexCoord, HexCellVisibility>`(`states`)에 저장합니다. 이번 갱신에 시야에 든 칸, 영구 공개 칸, 함정이 드러난 칸은 각각 `HashSet<HexCoord>`로 따로 둡니다.
+- **SetVisibility** — 단계를 올리기만 하는 public 함수입니다. 낮은 값을 쓰라는 요청은 무시하므로 정찰 · 유물 · 이벤트가 어떤 순서로 불러도 안전합니다.
+- **ForceVisibility** — 단계를 내리는 private 함수입니다. 시야에서 벗어난 칸을 `Revealed → Hinted`로 내릴 때와 세이브 복원 때만 씁니다.
+- **GetSafeCellInfo → HexVisibilitySafeCellInfo** — 단계에 따라 채워지는 필드가 다릅니다. `Unknown`은 좌표만, `Hinted`는 지형 · 이동 비용 · 걷기 가능 여부만(이벤트 id · 랜드마크 id는 빈 값), `Revealed`는 전부.
+- **CombatVisibilityPresenter / TacticalMinimapView / MapObjectVisualRegistry** — 칸 툴팁 문장 · 미니맵 · 맵 오브젝트 표시 여부. 셋 다 걸러진 구조체만 봅니다.
+- **VisibilityLightingMaskService** — 칸마다 밝기 한 바이트를 담은 작은 텍스처(맵을 위에서 본 밝기 격자)를 만듭니다. 지난번과 값이 하나도 다르지 않으면 GPU 업로드를 건너뜁니다.
+- **MapVisibilityLit.shader** — URP Lit 변형. 픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱합니다. 출력 전에 NaN을 제거해 블룸이 화면 전체로 번지는 것을 막습니다.
 
 <p align="center">
 <img src="ReadMeSource/5.FogRenderAB_1.png" width="440" alt="LightingMask 렌더. 시야 원판을 중심으로 밝기가 방사형으로 떨어진다.">

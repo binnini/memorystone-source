@@ -9,7 +9,7 @@
 
 - **도구** : Unity 6000.3 · C# · Plastic SCM · Claude Code / Codex + Unity MCP
 
-- **팀** : 2인 (프로그래밍 1 · 아트 1)
+- **팀** : 3인 (프로그래밍 1 · 아트 1 · QA 1)
 
 - **플랫폼** : PC
 

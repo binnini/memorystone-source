@@ -20,14 +20,6 @@
 
 플레이어는 카드를 사용하여 이동, 전투, 정찰을 하고 육각 타일 맵을 탐험합니다.
 
-턴 페이즈의 흐름은 다음 사진과 같습니다. 
-
-(사진 첨부 예정)
-
-몬스터는 다음 턴의 행동을 미리 예고합니다.
-
-(사진 첨부 예정)
-
 코드는 세 축으로 나뉩니다. **규칙층은 순수 C#**(UnityEngine 참조가 컴파일 단계에서 금지된 어셈블리 3개)이고, **화면 연출은 규칙의 결과로부터 파생**되며, **데이터의 원본은 코드가 아니라 CSV로 관리**됩니다. 모든 구현은 AI 도구(Claude Code · Codex)로 했고, 설계 판단과 검증은 사람이 맡았습니다.
 
 아래 7개 절은 대표 시스템에 대해서 설명합니다.
@@ -100,13 +92,13 @@
 
 <p align="center"><img src="ReadMeSource/2.TurnFlow.svg" width="900" alt="턴 페이즈와 턴 경계 처리 도식"></p>
 
-한 턴은 네 페이즈 `PlayerMovement → MonsterMovement → PlayerAction → MonsterAction`을 한 바퀴 돕니다. 페이즈를 바꾸는 함수는 `CombatState` 안에만 있고(`SetPhase`, private), 밖에서 부를 수 있는 진입점은 셋입니다.
-
-턴과 턴 사이의 처리(턴 경계)는 `BeginNextOverallTurn` 한 함수가 16단계를 정해진 순서로 실행합니다. 「다음 턴에 발동하는 효과」는 `PendingEffects`에 예약해 두었다가 이 경계에서 꺼내 적용합니다.
-
 <!-- TODO(이미지): 턴 페이즈 순서 정리 그림 — ReadMeSource/2.TurnPhaseOrder.png -->
 <!-- <p align="center"><img src="ReadMeSource/2.TurnPhaseOrder.png" width="700" alt="턴 페이즈 순서"></p> -->
 (턴 페이즈 순서 그림 첨부 예정)
+
+한 턴은 네 페이즈 `PlayerMovement → MonsterMovement → PlayerAction → MonsterAction`을 한 바퀴 돕니다. 페이즈를 바꾸는 함수는 `CombatState` 안에만 있고(`SetPhase`, private), 밖에서 부를 수 있는 진입점은 셋입니다.
+
+턴과 턴 사이의 처리(턴 경계)는 `BeginNextOverallTurn` 한 함수가 16단계를 정해진 순서로 실행합니다. 「다음 턴에 발동하는 효과」는 `PendingEffects`에 예약해 두었다가 이 경계에서 꺼내 적용합니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
@@ -154,13 +146,13 @@ private void BeginNextOverallTurn(int freshStatusStartIndex)
 
 <p align="center"><img src="ReadMeSource/3.MonsterAi.svg" width="900" alt="몬스터 AI 계획과 예고 도식"></p>
 
-몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
-
-플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
-
 <!-- TODO(이미지): 인게임 행동 예고 오버레이 스크린샷 — ReadMeSource/3.IntentPreview.png -->
 <!-- <p align="center"><img src="ReadMeSource/3.IntentPreview.png" width="700" alt="몬스터 행동 예고 오버레이"></p> -->
 (행동 예고 오버레이 이미지 첨부 예정)
+
+몬스터 AI는 `MonsterAiPlanner` 한 클래스가 몬스터마다 위에서 아래로 한 번 흐르는 계획기입니다. 입력은 `IMonsterPlanningContext` 인터페이스로만 읽고, 결과는 `MonsterRuntime.TurnPlan`에 씁니다. 실제 피해와 이동을 적용하는 해소는 플래너에 없고 `CombatState`에 있습니다.
+
+플레이어에게 보이는 예고와 다음 턴에 실행되는 행동은 같은 `TurnPlan`에서 나옵니다. 예고를 만들 때 AI를 다시 돌리지 않습니다.
 
 도식의 상자는 각각 이런 역할입니다.
 
@@ -308,13 +300,15 @@ private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
 
 <p align="center"><img src="ReadMeSource/5.FogOfWar.svg" width="900" alt="암시야 정보 처리와 렌더 도식"></p>
 
+<!-- TODO(이미지): 인게임 시야 3단계 스크린샷 (Unknown · Hinted · Revealed 가 한 화면에 보이는 장면) — ReadMeSource/5.FogStages.png -->
+<!-- <p align="center"><img src="ReadMeSource/5.FogStages.png" width="700" alt="시야 3단계 인게임 화면"></p> -->
+(시야 인게임 스크린샷 첨부 예정)
+
+기억결에는 시야 시스템이 존재합니다. 플레이어는 주위 3칸의 시야를 가지며, 필드나 정찰 카드를 사용하여 추가 시야를 확보할 수 있습니다.
+
 칸마다 시야 단계가 `Unknown → Hinted → Revealed` 셋 중 하나입니다. 한 번도 못 본 칸, 본 적은 있지만 지금은 안 보이는 칸, 지금 보이는 칸입니다. `CombatState`가 밝힐 칸을 정하고, `HexVisibilityRuntime`이 칸별 단계를 저장합니다.
 
 Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInfo`가 "그 칸에 대해 플레이어가 알아도 되는 것만" 채운 구조체를 돌려주고, 툴팁 · 미니맵 · 오브젝트 표시 · 화면 렌더가 전부 그 구조체만 씁니다.
-
-<!-- TODO(이미지): 인게임 시야 3단계 스크린샷 (Unknown · Hinted · Revealed 가 한 화면에 보이는 장면) — ReadMeSource/5.FogStages.png -->
-<!-- <p align="center"><img src="ReadMeSource/5.FogStages.png" width="700" alt="시야 3단계 인게임 화면"></p> -->
-(시야 3단계 인게임 스크린샷 첨부 예정)
 
 도식의 상자는 각각 이런 역할입니다.
 
@@ -333,12 +327,6 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 <img src="ReadMeSource/5.Tooltip_Hinted.png" width="440" alt="Hinted 칸 툴팁">
 <img src="ReadMeSource/5.Tooltip_Revealed.png" width="440" alt="Revealed 칸 툴팁">
 </p> -->
-(Hinted / Revealed 칸 툴팁 비교 이미지 2장 첨부 예정)
-
-<p align="center">
-<img src="ReadMeSource/5.FogRenderAB_1.png" width="440" alt="LightingMask 렌더. 시야 원판을 중심으로 밝기가 방사형으로 떨어진다.">
-<img src="ReadMeSource/5.FogRenderAB_2.png" width="440" alt="OverlayTint 렌더. 칸 단위로 계단진다.">
-</p>
 
 ### 이 시스템에서 중점을 둔 것
 
@@ -388,6 +376,8 @@ public HexVisibilitySafeCellInfo GetSafeCellInfo(HexCoord coord)
 ## 6. 세이브와 시드 재현
 
 <p align="center"><img src="ReadMeSource/6.SaveAndSeed.svg" width="900" alt="세이브와 시드 재현 도식"></p>
+
+기억결은 로그라이크 장르로서, 시드에 기반하여 스테이지의 재현이 가능하도록 하였습니다.
 
 런 하나에 시드 하나가 발급되고, 용도별로 번호(0~9)를 붙여 파생한 스트림 시드로 난수 인스턴스를 만들었습니다. 각 인스턴스는 `CountingRandom`이라서 지금까지 몇 번 뽑았는지(`Consumed`)를 셉니다. 때문에 하나의 시드로도 여러 분야의 진행 상태를 추적, 복원이 가능하도록 했습니다.
 
@@ -449,6 +439,8 @@ public static int Derive(int runSeed, int stream)
 ## 7. 맵 배치 랜덤화
 
 <p align="center"><img src="ReadMeSource/7.Placement.svg" width="900" alt="맵 배치 랜덤화 도식"></p>
+
+(맵 에디터 이미지 추가)
 
 로그라이크 장르 특성상, 다회차 플레이가 권장됩니다. 이때, 하나의 맵에 항상 똑같은 배치의 몬스터와 오브젝트가 나와서는 안됩니다. 이에 배치 랜덤화 로직을 작성하였습니다.
 

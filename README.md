@@ -312,6 +312,10 @@ private void ConsumePlayedCard(CardDeckState deck, CardDefinition card)
 
 Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInfo`가 "그 칸에 대해 플레이어가 알아도 되는 것만" 채운 구조체를 돌려주고, 툴팁 · 미니맵 · 오브젝트 표시 · 화면 렌더가 전부 그 구조체만 씁니다.
 
+<!-- TODO(이미지): 인게임 시야 3단계 스크린샷 (Unknown · Hinted · Revealed 가 한 화면에 보이는 장면) — ReadMeSource/5.FogStages.png -->
+<!-- <p align="center"><img src="ReadMeSource/5.FogStages.png" width="700" alt="시야 3단계 인게임 화면"></p> -->
+(시야 3단계 인게임 스크린샷 첨부 예정)
+
 도식의 상자는 각각 이런 역할입니다.
 
 - **RefreshPlayerVision** — 지금 보이는 칸을 정합니다. 시야 반경 안의 칸, 횃불 같은 필드 오브젝트가 비추는 칸, 이번 턴 정찰 카드로 밝힌 칸을 합칩니다. 턴 경계와 플레이어 이동 뒤에 불립니다.
@@ -322,6 +326,14 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 - **CombatVisibilityPresenter / TacticalMinimapView / MapObjectVisualRegistry** — 칸 툴팁 문장 · 미니맵 · 맵 오브젝트 표시 여부. 셋 다 걸러진 구조체만 봅니다.
 - **VisibilityLightingMaskService** — 칸마다 밝기 한 바이트를 담은 작은 텍스처(맵을 위에서 본 밝기 격자)를 만듭니다. 지난번과 값이 하나도 다르지 않으면 GPU 업로드를 건너뜁니다.
 - **MapVisibilityLit.shader** — URP Lit 변형. 픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱합니다. 출력 전에 NaN을 제거해 블룸이 화면 전체로 번지는 것을 막습니다.
+
+<!-- TODO(이미지): 같은 칸의 툴팁 비교 2장 — Hinted (지형만) vs Revealed (이벤트 · 랜드마크 포함)
+     ReadMeSource/5.Tooltip_Hinted.png · 5.Tooltip_Revealed.png -->
+<!-- <p align="center">
+<img src="ReadMeSource/5.Tooltip_Hinted.png" width="440" alt="Hinted 칸 툴팁">
+<img src="ReadMeSource/5.Tooltip_Revealed.png" width="440" alt="Revealed 칸 툴팁">
+</p> -->
+(Hinted / Revealed 칸 툴팁 비교 이미지 2장 첨부 예정)
 
 <p align="center">
 <img src="ReadMeSource/5.FogRenderAB_1.png" width="440" alt="LightingMask 렌더. 시야 원판을 중심으로 밝기가 방사형으로 떨어진다.">

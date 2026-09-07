@@ -321,19 +321,19 @@ def d5():
     d.note(360, 112, "① RefreshVisionForNewTurnStep (턴 경계) · 이동 뒤", fs=15, color=RED, anchor="topleft", align="left")
 
     d.zone(700, 140, 760, 1060, "Map.Runtime (순수 C#)", bg=BG_BLUE)
-    d.box(740, 200, 680, 80, "HexVisibilityRuntime", sub="칸별 시야 단계를 저장하고, 물어보면 걸러서 답한다", fs=26, sfs=13)
-    d.field(740, 310, 680, 200, "가지고 있는 컬렉션",
-            ["states : Dictionary<HexCoord, HexCellVisibility>  (칸별 단계 · 저장 대상)",
-             "temporaryRevealed : HashSet<HexCoord>  (이번 갱신에 시야에 든 칸)",
+    d.box(740, 200, 680, 80, "HexVisibilityRuntime", sub="칸별 시야 단계를 저장하고, 요청 시 필터링 후 응답", fs=26, sfs=13)
+    d.field(740, 310, 680, 200, "정보",
+            ["states : Dictionary<HexCoord, HexCellVisibility>  (칸별 단계 Unknown · Hinted · Known, 저장 대상)",
+             "temporaryRevealed : HashSet<HexCoord>  (이번 갱신에 시야에 들어온 칸)",
              "permanentlyRevealed : HashSet<HexCoord>  (영구 공개 칸)",
-             "trapRevealed : HashSet<HexCoord>  (함정이 드러난 칸 · 시야와 별개)"], bg="#a5d8ff", fs=16, lfs=13, align="left")
-    d.box(740, 560, 320, 100, "ForceVisibility", sub="단계 내리기 (private)\n시야 이탈 Revealed→Hinted · 세이브 복원", fs=22, sfs=12)
-    d.box(1100, 560, 320, 100, "SetVisibility", sub="단계 올리기만 (public)\n낮은 값 요청은 무시 · 바뀌면 Version++", fs=22, sfs=12)
+             "trapRevealed : HashSet<HexCoord>  (함정이 드러난 칸)"], bg="#a5d8ff", fs=16, lfs=13, align="left")
+    d.box(740, 560, 320, 100, "ForceVisibility", sub="단계 내리기 (private)\n시야 이탈 케이스. Revealed→Hinted · 세이브 로드시 복원에 사용", fs=22, sfs=12)
+    d.box(1100, 560, 320, 100, "SetVisibility", sub="단계 올리기만 (public)\n낮은 값 요청은 무시.", fs=22, sfs=12)
     d.arrow([(900, 560), (900, 510)], color=BLACK, sw=2, style="dashed")
     d.arrow([(1260, 560), (1260, 510)], color=BLACK, sw=2)
     d.note(1280, 520, "③", fs=16, anchor="topleft", align="left")
     d.note(1080, 690, "Unknown  →  Hinted  →  Revealed", fs=18, color=GRAY)
-    d.box(740, 760, 680, 90, "GetSafeCellInfo(coord)", sub="칸 정보 중 플레이어가 알아도 되는 것만 채운 구조체를 돌려준다", fs=24, sfs=13)
+    d.box(740, 760, 680, 90, "GetSafeCellInfo(coord)", sub="칸 정보 중 플레이어에게 제공할 정보만 채운 구조체를 돌려준다", fs=24, sfs=13)
     d.field(740, 890, 680, 260, "HexVisibilitySafeCellInfo (단계별로 채워지는 필드)",
             ["Unknown  →  Coord 만", "Hinted  →  TerrainTypeId · BaseMoveCost · BaseWalkable",
              "              (EventId · LandmarkId · TileDefinitionId 는 빈 값)",
@@ -356,7 +356,7 @@ def d5():
     d.zone(1540, 680, 600, 640, "Unity 소비 ② — 화면 렌더", bg=BG_GREEN)
     d.box(1580, 740, 520, 150, "VisibilityLightingMaskService", sub="칸마다 밝기 1바이트 → R8 텍스처 (맵을 위에서 본 밝기 격자)\n지난번과 값이 같으면 GPU 업로드 생략", fs=20, sfs=12)
     d.box(1580, 950, 520, 80, "_SP_VisibilityMask", sub="셰이더 전역 텍스처로 업로드", fs=18, sfs=12)
-    d.box(1580, 1090, 520, 200, "MapVisibilityLit.shader", sub="URP Lit 변형\n픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱한다\n출력 전 NaN 제거 (max / min)", fs=20, sfs=13)
+    d.box(1580, 1090, 520, 200, "MapVisibilityLit.shader", sub="URP Lit 변형\n픽셀의 월드 좌표로 마스크 값을 읽어 색에 곱해 밝기 표현\n출력 전 NaN 제거 (max / min)", fs=20, sfs=13)
     d.arrow([(1580, 830), (1420, 830)], color=BLUE, sw=3)
     d.note(1445, 845, "⑤", fs=16, color=BLUE, anchor="topleft", align="left")
     d.arrow([(1840, 890), (1840, 950)], color=GREEN, sw=3)

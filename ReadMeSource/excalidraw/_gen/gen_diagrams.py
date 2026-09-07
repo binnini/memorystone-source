@@ -406,29 +406,29 @@ def d6():
     d.text(1450, 722, "CombatSuspendEnvelope  —  RewardCursor  (보상 난수 커서 · 스트림 7)", fs=18, anchor="top")
     d.rect(840, 770, 1220, 250, stroke=BLACK, bg="#b2f2bb", fill="solid", sw=1.5)
     d.text(1450, 782, "CombatSuspendData  —  RngCursors ×6  (Judgement · AttackPattern · DamageJitter · BossProps · MovementShuffle · ActionShuffle)", fs=15, anchor="top")
-    d.field(880, 830, 1140, 160, "MonsterRuntimeSaveData (몬스터마다)",
-            ["AttackPatternIndex  (이미 굴린 공격 패턴)", "AttackDamageRollOffset  (이미 굴린 피해 변주)",
-             "난수 내부 상태는 저장하지 않는다 — 굴린 값이 곧 상태"], bg="#8ce99a", fs=16, lfs=14)
+    d.field(880, 830, 1140, 160, "MonsterRuntimeSaveData",
+            ["AttackPatternIndex  (이미 사용한 공격 패턴)", "AttackDamageRollOffset  (이미 사용한 피해 변주)",
+             "사용한 값(커서)을 저장하여 재현성 확보"], bg="#8ce99a", fs=16, lfs=14)
     d.arrow([(960, 580), (960, 710)], color=BLUE, sw=3)
-    d.note(980, 610, "④ CreateSuspendSnapshot\n(CaptureRngCursors + 굴린 값 저장)", fs=15, color=BLUE, anchor="topleft", align="left")
+    d.note(980, 610, "④ CreateSuspendSnapshot\n(CaptureRngCursors + 사용한 값 저장)", fs=15, color=BLUE, anchor="topleft", align="left")
     d.arrow([(620, 300), (700, 300), (700, 730), (800, 730)], color=BLUE, sw=2.5)
     d.note(560, 470, "⑤ RewardCursor", fs=14, color=BLUE, anchor="topleft", align="left")
 
     d.box(1240, 1140, 400, 100, "RestoreFromSuspend", sub="복원 진입점", fs=22, sfs=13)
     d.arrow([(1440, 1080), (1440, 1140)], color=GREEN, sw=3)
-    d.note(1460, 1095, "⑥ 커서 + 굴린 값 읽기", fs=15, color=GREEN, anchor="topleft", align="left")
-    d.box(1240, 1300, 400, 120, "RestoreRngCursors", sub="같은 시드로 인스턴스를 새로 만들어\nFastForward(Consumed) 로 같은 자리까지", fs=22, sfs=13)
+    d.note(1460, 1095, "⑥ 커서 + 사용한 값 읽기", fs=15, color=GREEN, anchor="topleft", align="left")
+    d.box(1240, 1300, 400, 120, "RestoreRngCursors", sub="같은 시드로 인스턴스를 새로 만들어\nFastForward(Consumed)로 같은 커서까지 복원", fs=22, sfs=13)
     d.arrow([(1440, 1240), (1440, 1300)], color=GREEN, sw=3)
     d.note(1460, 1255, "⑦", fs=16, color=GREEN, anchor="topleft", align="left")
-    d.box(1700, 1300, 440, 120, "planner.RefreshAllIntents(\n preserveCommittedAttackRolls: true)", sub="예고의 경로 · 조준만 재계산 · 굴림 없음", fs=17, sfs=13)
+    d.box(1700, 1300, 440, 120, "planner.RefreshAllIntents(\n preserveCommittedAttackRolls: true)", sub="예고의 경로 · 조준만 재계산", fs=17, sfs=13)
     d.arrow([(1640, 1360), (1700, 1360)], color=GREEN, sw=3)
     d.note(1655, 1325, "⑧", fs=16, color=GREEN, anchor="topleft", align="left")
 
-    d.field(60, 1140, 1100, 280, "재현 방식 둘",
-            ["(A) 스트림 재현  — 시드 + 커서만 저장, 복원 때 FastForward 로 같은 자리에 선다",
-             "      셔플 · 전투 판정 · 보스 기물 · 보상",
-             "(B) 굴린 값 저장  — 이미 확정되어 플레이어에게 보인 값은 값 자체를 저장, 다시 굴리지 않는다",
-             "      몬스터 공격 패턴 · 피해 변주 (예고 유지)"], bg="#ffec99", fs=16, lfs=15, align="left")
+    d.field(60, 1140, 1100, 280, "원칙: 상태는 저장, 미래의 난수는 시드 + 커서로 재현",
+            ["이미 굴려서 상태가 된 값  — 몬스터 공격 패턴 · 피해 변주 · 체력 · 좌표 …",
+             "      → 다른 상태와 똑같이 값 그대로 저장 (다시 굴리지 않는다)",
+             "아직 굴리지 않은 값  — 셔플 · 전투 판정 · 보스 기물 · 보상",
+             "      → 시드 + 커서(Consumed)만 저장, 복원 때 FastForward 로 같은 자리에 선다"], bg="#ffec99", fs=16, lfs=15, align="left")
     emit(d, "6.SaveAndSeed")
 
 

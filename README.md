@@ -342,7 +342,7 @@ Unity 쪽 코드는 맵 데이터를 직접 읽지 않습니다. `GetSafeCellInf
 
 ### 이 시스템에서 중점을 둔 것
 
-정보 은닉을 자료구조에서 처리했습니다. `GetSafeCellInfo`는 원본 맵 데이터 대신 걸러진 사본 `HexVisibilitySafeCellInfo`(readonly struct)를 만들어 돌려주는데, `Hinted` 칸이면 이벤트 id · 랜드마크 id 자리에 원본 값 대신 빈 문자열을 넣습니다. 툴팁 · 미니맵 · 렌더 마스크는 이 사본만 받으므로 모르는 칸의 정보를 그릴 수 없고, 「어느 단계에서 무엇을 보여 주는가」라는 규칙은 이 함수 한 곳에만 있습니다.
+`GetSafeCellInfo`는 원본 맵 데이터 대신 걸러진 사본 `HexVisibilitySafeCellInfo`(readonly struct)를 만들어 돌려주는데, `Hinted` 칸이면 이벤트 id · 랜드마크 id 자리에 원본 값 대신 빈 문자열을 넣습니다. 툴팁 · 미니맵 · 렌더 마스크는 이 사본만 받으므로 모르는 칸의 정보를 그릴 수 없고, 「어느 단계에서 무엇을 보여 주는가」라는 규칙은 Unity 표현 계층으로 책임이 넘어가지 않도록 주의하였습니다.
 
 ### 코드
 
